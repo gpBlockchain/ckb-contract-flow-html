@@ -10,6 +10,8 @@
 - [ ] 来源已引用（源码 commit 链接 + code_hash/hash_type 官方来源） / Sources cited (source at a commit + official code_hash/hash_type source)
 - [ ] `spec.json` 的 limits 与源码中的 `return ERROR_*` 逐条核对，无虚构 / `spec.json` limits checked against every `return ERROR_*`, nothing invented
 - [ ] 所有自然语言文本为 `{"zh","en"}` / All natural-language text is bilingual `{"zh","en"}`
+- [ ] `meta.json`：tags 来自 `contracts/tags.json`；source.repo + 完整 commit + paths；已运行 `node scripts/check-deployments.js --write --only <id>` / tags from `contracts/tags.json`; source.repo + full commit + paths; ran `check-deployments.js --write --only <id>`
+- [ ] （可选，欢迎）在 `meta.json` 的 `contributors` 中加上你的 GitHub 用户名 / (optional, encouraged) add your GitHub username to `contributors` in `meta.json`
 - [ ] `node gen.js --all out` 成功 / succeeds
 - [ ] `node scripts/check.js` 通过 / passes
 - [ ] `node scripts/test-tx.js <id>` 通过（`tests.json` 含至少 1 笔真实交易） / passes (`tests.json` has ≥ 1 real tx)

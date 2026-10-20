@@ -12,4 +12,8 @@ for(const f of fs.readdirSync('out')){const h=fs.readFileSync('out/'+f,'utf8');
  if(st.length)mis+=st.length;
  const ok=!mis&&!zhOut&&!enOnly&&zhCnt===enCnt;if(!ok)bad++;
  console.log(f.padEnd(14),'tags',mis?'BAD':'ok','zh/en spans',zhCnt,enCnt,ok?'OK':'FAIL');}
+// meta.json: tags (contracts/tags.json), contributors (optional, valid GitHub usernames), source + deployments provenance
+{const M=require('../lib/meta.js'),CK=require('../lib/contracts.js').loadAll();
+ for(const c of require('../lib/contracts.js').list()){const errs=M.validate(c.id,M.load(c.id),CK.PLUGINS.find(p=>p.id===c.id));errs.forEach(e=>console.log('META',e));if(errs.length)bad++;}
+ console.log('meta.json',bad?'see above':'OK');}
 process.exit(bad?1:0);

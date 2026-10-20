@@ -5,6 +5,9 @@
 // 任意文本字段可为字符串（语言无关）或 {"zh": "...", "en": "..."}。
 'use strict';
 const fs = require('fs'), path = require('path');
+const META = require('./lib/meta.js');
+let _mh; const MH = () => _mh || (_mh = require('./lib/meta-html.js')(T, esc));
+const pluginOf = id => { try { return require('./lib/contracts.js').loadAll().PLUGINS.find(p => p.id === id); } catch (e) { return null; } };
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 // {{text}} → highlight
@@ -97,7 +100,10 @@ ${b.note ? `<div class="note">${T(b.note)}</div>` : ''}</div>`;
 const box = b => b.layout ? layoutBox(b) : `<div class="cell"><span class="n">${T(b.label)}</span>${T(b.body)}</div>`;
 const sep = c => /^[≤≥=<>]/.test(plain(c, 'zh')) ? ' ' : T(UI.colon, esc);
 
-function render(spec) {
+function render(spec, id) {
+  const meta = id ? META.load(id) : null, plugin = id ? pluginOf(id) : null;
+  const head = meta ? MH().chips(META.tagsOf(meta, plugin)) + MH().credit(meta) : '';
+  const prov = meta ? `<div class="card">${MH().provenance(meta)}</div>` : '';
   const cards = (spec.transitions || []).map(t => `
 <div class="card">
 <h2><span>${T(t.tag, esc)}</span>${T(t.title, esc)}</h2>
@@ -117,15 +123,15 @@ ${t.limits.map(l => `<li><b>${T(l.field, esc)}</b>${sep(l.cond)}${T(l.cond)}${l.
   return tpl.replace('{{DOC_TITLE}}', esc(plain(title, 'zh') === plain(title, 'en') ? plain(title, 'en') : plain(title, 'zh') + ' / ' + plain(title, 'en')))
     .replace('{{TOGGLE}}', T(UI.toggle, esc))
     .replace('{{TITLE}}', T(title, esc))
-    .replace('{{SUBTITLE}}', T(spec.subtitle))
-    .replace('{{CARDS}}', cards)
+    .replace('{{SUBTITLE}}', T(spec.subtitle) + head)
+    .replace('{{CARDS}}', () => cards + prov)
     .replace('{{FOOTER}}', spec.notes ? `<div class="sub">${(Array.isArray(spec.notes) ? spec.notes : [spec.notes]).map(n => T(n)).join('<br>')}</div>` : '');
 }
 
-function build(inFile, outFile) {
+function build(inFile, outFile, id) {
   const spec = loadSpec(inFile);
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
-  fs.writeFileSync(outFile, render(spec));
+  fs.writeFileSync(outFile, render(spec, id));
   console.log(`${inFile} -> ${outFile}`);
   return spec;
 }
@@ -138,6 +144,7 @@ function buildTx(outFile) {
   const lib = fs.readFileSync(path.join(__dirname, 'lib/ckb.js'), 'utf8'), app = fs.readFileSync(path.join(__dirname, 'tx-app.js'), 'utf8');
   const C = require('./lib/contracts.js');
   const EX = C.list().filter(c => c.tests).flatMap(c => JSON.parse(fs.readFileSync(c.tests, 'utf8')).map(t => [t.tx, t.name || c.id, t.net || 'mainnet'])).filter((x, i, a) => a.findIndex(y => y[0] === x[0]) === i);
+  const METAHTML = Object.fromEntries(C.list().map(c => { const m = META.load(c.id); return m ? [c.id, MH().chips(META.tagsOf(m, pluginOf(c.id))) + MH().credit(m) + MH().provenance(m, { compact: true })] : null; }).filter(Boolean));
   const plugins = C.ordered().map(c => `// ---- contracts/${c.id}/plugin.js ----\n` + fs.readFileSync(c.plugin, 'utf8')).join('\n');
   const form = `<div class="card"><div class="form">
 <select id="net"><option value="https://mainnet.ckb.dev/rpc">mainnet · https://mainnet.ckb.dev/rpc</option><option value="https://testnet.ckb.dev/rpc">testnet · https://testnet.ckb.dev/rpc</option><option value="custom">${T({ zh: '自定义 RPC', en: 'custom RPC' }, esc)}</option></select>
@@ -150,7 +157,7 @@ function buildTx(outFile) {
     .replace('{{TITLE}}', T(UI.txTitle, esc)).replace('{{SUBTITLE}}', T({ zh: '输入交易 hash，解码为 cell 流转卡片并做无签名约束检查', en: 'Enter a tx hash to decode it into cell-flow cards with signature-free constraint checks' }))
     .replace('{{CARDS}}', form).replace('{{FOOTER}}', '')
     .replace('</style>', () => css.replace('<style>', '').replace('</style>', '') + '</style>');
-    const scripts = `<script>\n${lib.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${plugins.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${app.replace(/<\/script/gi, '<\\/script')}\n</script>`;
+    const scripts = `<script>window.CKB_META_HTML=${JSON.stringify(METAHTML).replace(/</g, '\\u003c')};</script><script>\n${lib.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${plugins.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${app.replace(/<\/script/gi, '<\\/script')}\n</script>`;
   const html2 = html.replace('</body>', () => scripts + '</body>');
   fs.mkdirSync(path.dirname(outFile), { recursive: true }); fs.writeFileSync(outFile, html2); console.log(`(tx decoder) -> ${outFile}`);
 }
@@ -160,14 +167,28 @@ function main() {
   if (!a.length) { console.error('Usage / 用法: node gen.js <spec.json|yaml> [out.html]\n                 node gen.js --all [outDir=out]   (discovers contracts/*/spec.json)'); process.exit(1); }
   if (a[0] === '--all') {
     const od = a[1] || 'out', items = [];
-    for (const c of require('./lib/contracts.js').list()) if (c.spec) items.push([c.id, build(c.spec, path.join(od, c.id + '.html')).title || c.id]);
+    for (const c of require('./lib/contracts.js').list()) if (c.spec) items.push([c.id, build(c.spec, path.join(od, c.id + '.html'), c.id).title || c.id]);
     buildTx(path.join(od, 'tx.html'));
     items.push(['tx', UI.txTitle]);
-    const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
-    const list = `<div class="card"><ul class="idx">${items.map(([n, t]) => `<li><a href="${n}.html">${T(t, esc)}</a></li>`).join('')}</ul></div>`;
+    const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8'), mh = MH(), counts = {};
+    const cards = items.filter(([n]) => n !== 'tx').map(([n, t]) => { const m = META.load(n) || {}, tags = META.tagsOf(m, pluginOf(n));
+      (m.contributors || []).forEach(u => counts[u] = (counts[u] || 0) + 1);
+      const text = [n, plain(t, 'zh'), plain(t, 'en'), ...tags.map(x => META.TAX.tags[x] ? META.TAX.tags[x].zh + ' ' + META.TAX.tags[x].en : x)].join(' ').toLowerCase();
+      return `<li class="ci" data-tags="${esc(tags.join(' '))}" data-text="${esc(text)}"><a href="${n}.html">${T(t, esc)}</a> ${mh.badge(m)}<div class="mono small">${esc(n)}</div>${mh.chips(tags)}${(m.contributors || []).length ? `<div class="avs">${m.contributors.map(mh.avatar).join('')}</div>` : ''}</li>`; }).join('');
+    const groups = Object.entries(META.TAX.groups).map(([g, d]) => `<div class="fg"><b>${T(d.label, esc)}</b> ${Object.entries(META.TAX.tags).filter(([, x]) => x.group === g).map(([k, x]) => `<button class="tag g-${g}" data-f="${k}" data-g="${g}" aria-pressed="false">${T({ zh: x.zh, en: x.en }, esc)}</button>`).join('')}</div>`).join('');
+    const people = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const list = `<div class="card"><div class="form"><input id="q" type="search" placeholder="search / 搜索 (id, name, tag)" aria-label="search"></div>
+<div class="filters">${groups}</div><div class="small" id="cnt"></div><ul class="cards">${cards}</ul>
+<div class="small"><a href="tx.html">${T(UI.txTitle, esc)}</a></div></div>
+<div class="card"><h2>${T({ zh: '贡献者', en: 'Contributors' }, esc)}</h2>${people.length ? `<ul class="people">${people.map(([u, k]) => `<li>${mh.avatar(u)} <a href="https://github.com/${esc(u)}">@${esc(u)}</a> · ${k}</li>`).join('')}</ul>` : ''}
+<div class="small">${T({ zh: '欢迎贡献新合约：见 docs/ADD_CONTRACT.md，并在 meta.json 的 contributors 中加上你的 GitHub 用户名。', en: 'New contracts welcome: see docs/ADD_CONTRACT.md and add your GitHub username to contributors in meta.json.' }, esc)}</div></div>
+<script>(function(){var on={},q=document.getElementById('q'),li=[].slice.call(document.querySelectorAll('.ci')),cnt=document.getElementById('cnt');
+function run(){var s=(q.value||'').toLowerCase().trim(),n=0;li.forEach(function(e){var t=' '+e.getAttribute('data-tags')+' ',ok=Object.keys(on).every(function(g){var a=on[g];return !a.length||a.some(function(k){return t.indexOf(' '+k+' ')>=0})})&&(!s||e.getAttribute('data-text').indexOf(s)>=0);e.style.display=ok?'':'none';if(ok)n++});cnt.textContent=n+' / '+li.length}
+[].forEach.call(document.querySelectorAll('.filters button'),function(b){b.onclick=function(){var g=b.getAttribute('data-g'),k=b.getAttribute('data-f'),a=on[g]=on[g]||[],i=a.indexOf(k);if(i>=0)a.splice(i,1);else a.push(k);b.setAttribute('aria-pressed',i<0);run()}});
+q.oninput=run;run()})();</script>`;
     fs.writeFileSync(path.join(od, 'index.html'), tpl.replace('{{DOC_TITLE}}', esc(UI.indexTitle.zh + ' / ' + UI.indexTitle.en))
       .replace('{{TOGGLE}}', T(UI.toggle, esc)).replace('{{TITLE}}', T(UI.indexTitle, esc)).replace('{{SUBTITLE}}', '')
-      .replace('{{CARDS}}', list).replace('{{FOOTER}}', ''));
+      .replace('{{CARDS}}', () => list).replace('{{FOOTER}}', ''));
   } else {
     build(a[0], a[1] || path.join('out', path.basename(a[0]).replace(/\.(json|ya?ml)$/i, '') + '.html'));
   }

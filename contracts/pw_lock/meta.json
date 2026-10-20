@@ -1,0 +1,85 @@
+{
+  "tags": [
+    "identity",
+    "community",
+    "open-source"
+  ],
+  "contributors": [],
+  "source": {
+    "repo": "https://github.com/lay2dev/pw-lock",
+    "commit": "9445db0aece263df76255d84c55c3b538b188435",
+    "paths": [
+      "c/secp256k1_keccak256_sighash_all_acpl.c"
+    ],
+    "commit_note": "default-branch HEAD recorded at backfill 2026-10-21; spec/plugin were written from the default branch shortly before (exact read commit not recorded)",
+    "binary": {
+      "status": "unverified",
+      "per": [
+        {
+          "data_hash": "0xd6a5a0edb152e88e8bbc702e164441cb3890fae35da672b408d28ca9a1bde3ee",
+          "evidence": [],
+          "matches_commit": false
+        },
+        {
+          "data_hash": "0xeffe377419256d150d68368d7cb5731edad39d1805a8c2c73ce8e9615b9f9878",
+          "evidence": [],
+          "matches_commit": false
+        }
+      ],
+      "note": "no binary or checksum at the recorded commit matched the deployed data hash (reproducible build not attempted)"
+    }
+  },
+  "deployments": [
+    {
+      "network": "mainnet",
+      "code_hash": "0xbf43c3602455798c1a61a596e0d95278864c552fafe231c063b3fabf97a8febc",
+      "hash_type": "type",
+      "constant_source": "ccc KnownScript.PWLock",
+      "cell_dep": {
+        "out_point": {
+          "index": "0x0",
+          "tx_hash": "0x1d60cb8f4666e039f418ea94730b1a8c5aa0bf2f7781474406387462924d15d4"
+        },
+        "dep_type": "code"
+      },
+      "code_cell": {
+        "index": "0x0",
+        "tx_hash": "0x1d60cb8f4666e039f418ea94730b1a8c5aa0bf2f7781474406387462924d15d4"
+      },
+      "type_script": {
+        "args": "0x42ade2f25eb938b5dbfd3d8f07b8b07aa593d848e7ff14bdfbbea5aeb6175261",
+        "code_hash": "0x00000000000000000000000000000000000000000000000000545950455f4944",
+        "hash_type": "type"
+      },
+      "data_hash": "0xd6a5a0edb152e88e8bbc702e164441cb3890fae35da672b408d28ca9a1bde3ee",
+      "deploy_tx": "0x1d60cb8f4666e039f418ea94730b1a8c5aa0bf2f7781474406387462924d15d4",
+      "deploy_block": 2479211
+    },
+    {
+      "network": "testnet",
+      "code_hash": "0x58c5f491aba6d61678b7cf7edf4910b1f5e00ec0cde2f42e0abb4fd9aff25a63",
+      "hash_type": "type",
+      "constant_source": "ccc KnownScript.PWLock",
+      "cell_dep": {
+        "out_point": {
+          "index": "0x0",
+          "tx_hash": "0x57a62003daeab9d54aa29b944fc3b451213a5ebdf2e232216a3cfed0dde61b38"
+        },
+        "dep_type": "code"
+      },
+      "code_cell": {
+        "index": "0x0",
+        "tx_hash": "0x57a62003daeab9d54aa29b944fc3b451213a5ebdf2e232216a3cfed0dde61b38"
+      },
+      "type_script": {
+        "args": "0xf6d90bfe3041d0fd7e01c45770241697f5f837974bd6ae1672a7ec0f9f523268",
+        "code_hash": "0x00000000000000000000000000000000000000000000000000545950455f4944",
+        "hash_type": "type"
+      },
+      "data_hash": "0xeffe377419256d150d68368d7cb5731edad39d1805a8c2c73ce8e9615b9f9878",
+      "deploy_tx": "0x57a62003daeab9d54aa29b944fc3b451213a5ebdf2e232216a3cfed0dde61b38",
+      "deploy_block": 412378
+    }
+  ],
+  "checked_at": "2026-10-20"
+}

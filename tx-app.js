@@ -24,7 +24,7 @@ function render(bundle,a){
       extra+=`<div class="cell"><span class="n">witness[${g.witnessIndex}] ${B('（解锁本组）','(unlocks this group)')}</span>${w&&w.args?`WitnessArgs{\n  lock: ${esc(short(w.args.lock||'None'))}${w.args.lock?' ('+(w.args.lock.length-2)/2+'B)':''},\n  input_type: ${esc(short(w.args.input_type||'None'))},\n  output_type: ${esc(short(w.args.output_type||'None'))}\n}`:esc(w?(w.error?'parse error: '+w.error:'empty'):'missing')}</div>`;
     }
     extra+=hexRows(g.parsed.fields)+(g.parsed.layouts||[]).map(layoutHtml).join('');
-    h+=`<div class="card"><h2><span>${g.inputs.length} → ${g.outputs.length}</span>${title} ${nm(g.script)}</h2><div class="kv"><span>script hash</span> ${g.hash}</div>
+    h+=`<div class="card"><h2><span>${g.inputs.length} → ${g.outputs.length}</span>${title} ${nm(g.script)}</h2><div class="kv"><span>script hash</span> ${g.hash}</div>${(g.plugin&&(window.CKB_META_HTML||{})[g.plugin.id])||''}
 <div class="flow"><div class="col">${ins||`<div class="small">${B('（无输入）','(no inputs)')}</div>`}</div><div class="arrow">➜</div><div class="col">${outs}</div></div>${extra}${g.checks.length?chk(g.checks):`<div class="small">${B('未知脚本：无可检查的约束','unknown script: no constraints checked')}</div>`}</div>`;
   }
   return h;

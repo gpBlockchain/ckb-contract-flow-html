@@ -1,0 +1,83 @@
+{
+  "tags": [
+    "channel",
+    "nervos",
+    "open-source"
+  ],
+  "contributors": [],
+  "source": {
+    "repo": "https://github.com/nervosnetwork/fiber-scripts",
+    "commit": "e7e1c9ba512960819b852362b1931991e3f4124a",
+    "paths": [
+      "contracts/commitment-lock/src/main.rs"
+    ],
+    "commit_note": "commit read when writing this spec",
+    "binary": {
+      "status": "unverified",
+      "per": [
+        {
+          "data_hash": "0x7e35b1d77d1ec4967ff81829f3af9022572ad8ce3197f7b58ea062a09de666df",
+          "evidence": [
+            "listed in deployment/mainnet/migrations/2026-01-14-030304.json",
+            "listed in deployment/testnet/migrations/2025-11-25-060540.json"
+          ],
+          "matches_commit": false
+        }
+      ],
+      "note": "hash appears in the repo only as a deployment record or doc, which does not prove the recorded commit builds this binary (reproducible build not attempted)"
+    }
+  },
+  "deployments": [
+    {
+      "network": "mainnet",
+      "code_hash": "0x2d45c4d3ed3e942f1945386ee82a5d1b7e4bb16d7fe1ab015421174ab747406c",
+      "hash_type": "type",
+      "constant_source": "nervosnetwork/fiber config/mainnet/config.yml",
+      "cell_dep": {
+        "out_point": {
+          "index": "0x2",
+          "tx_hash": "0x95006eee7b4c0c8ad66e0514c88ed0ae43fc8db27793427de86a348ec720b9d6"
+        },
+        "dep_type": "code"
+      },
+      "code_cell": {
+        "index": "0x2",
+        "tx_hash": "0x95006eee7b4c0c8ad66e0514c88ed0ae43fc8db27793427de86a348ec720b9d6"
+      },
+      "type_script": {
+        "args": "0xdb16e6dcb17f670e5fb7c556d81e522ec5edb069ad2fa3e898e7ccea6c26a39f",
+        "code_hash": "0x00000000000000000000000000000000000000000000000000545950455f4944",
+        "hash_type": "type"
+      },
+      "data_hash": "0x7e35b1d77d1ec4967ff81829f3af9022572ad8ce3197f7b58ea062a09de666df",
+      "deploy_tx": "0x95006eee7b4c0c8ad66e0514c88ed0ae43fc8db27793427de86a348ec720b9d6",
+      "deploy_block": 18372567
+    },
+    {
+      "network": "testnet",
+      "code_hash": "0x740dee83f87c6f309824d8fd3fbdd3c8380ee6fc9acc90b1a748438afcdf81d8",
+      "hash_type": "type",
+      "constant_source": "nervosnetwork/fiber config/testnet/config.yml",
+      "cell_dep": {
+        "out_point": {
+          "index": "0x2",
+          "tx_hash": "0x12c569a258dd9c5bd99f632bb8314b1263b90921ba31496467580d6b79dd14a7"
+        },
+        "dep_type": "code"
+      },
+      "code_cell": {
+        "index": "0x2",
+        "tx_hash": "0x12c569a258dd9c5bd99f632bb8314b1263b90921ba31496467580d6b79dd14a7"
+      },
+      "type_script": {
+        "args": "0xf7e458887495cf70dd30d1543cad47dc1dfe9d874177bf19291e4db478d5751b",
+        "code_hash": "0x00000000000000000000000000000000000000000000000000545950455f4944",
+        "hash_type": "type"
+      },
+      "data_hash": "0x7e35b1d77d1ec4967ff81829f3af9022572ad8ce3197f7b58ea062a09de666df",
+      "deploy_tx": "0x12c569a258dd9c5bd99f632bb8314b1263b90921ba31496467580d6b79dd14a7",
+      "deploy_block": 19249889
+    }
+  ],
+  "checked_at": "2026-10-20"
+}

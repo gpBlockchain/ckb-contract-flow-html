@@ -149,3 +149,9 @@ scripts/new-contract.js  scaffold a contract
 docs/ADD_CONTRACT.md   how to add a contract (zh/en), plugin API, AI prompt, contributing
 out/                   build output (git-ignored; built by CI)
 ```
+
+## 欢迎贡献 / Contributions welcome
+
+缺少某个合约？按 [docs/ADD_CONTRACT.md](docs/ADD_CONTRACT.md) 添加 `contracts/<id>/` 并提 PR，在 `meta.json` 的 `contributors` 里写上你的 GitHub 用户名，合约页和首页会显示你的头像与署名。
+
+Missing a contract? Add `contracts/<id>/` following [docs/ADD_CONTRACT.md](docs/ADD_CONTRACT.md) and open a PR. Put your GitHub username in `contributors` in `meta.json` and the contract page and index will credit you with your avatar.

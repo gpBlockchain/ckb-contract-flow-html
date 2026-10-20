@@ -2,7 +2,7 @@
 
 [中文](#中文) | [English](#english)
 
-典型流程 / Typical flow: **合约仓库 URL → AI 阅读源码 → 生成 `contracts/<id>/`（spec.json、plugin.js、tests.json）→ 构建 HTML → （可选）向 `gpBlockchain/ckb-contract-flow-html` 提 PR**
+典型流程 / Typical flow: **合约仓库 URL → AI 阅读源码 → 生成 `contracts/<id>/`（spec.json、plugin.js、tests.json、meta.json）→ 构建 HTML → （可选）向 `gpBlockchain/ckb-contract-flow-html` 提 PR**
 
 ---
 
@@ -15,10 +15,15 @@
 3. **写 `spec.json`**（静态约束页）：每个状态转换一张卡；所有自然语言文本写成 `{"zh","en"}`；被检查字段用 `{{ }}` 高亮；`limits` 只写源码中真实存在的检查与其**数值**错误码；结构化字节（args / witness / data）用 `layouts`。格式见 README。
 4. **写 `plugin.js`**（链上解码插件）：填 `match`（已核实常量）、`parse`、`check`，API 见下文。无法离线校验的（签名、VM 执行、扩展脚本）用 `R.NOT_CHECKED`。
 5. **写 `tests.json`**：至少 1 笔真实链上交易（`get_transactions` 按 script 前缀搜索可找到），`expect` 列出必须被识别的插件 id。
+5b. **写 `meta.json`**：
+   - `tags`：取自 `contracts/tags.json`，≥1 个分类（system / token / nft / defi / identity / channel / btc / proxy / quantum）、1 个源码状态（open-source / no-source）、1 个维护方（nervos / cryptape / community）；kind 与 network 自动推导。
+   - `contributors`（可选，欢迎）：你的 GitHub 用户名，页面会显示“Contributed by @你”。
+   - `source`：`repo`（https://github.com/owner/repo）、`commit`（你阅读的完整 40 位 sha）、`paths`、`commit_note`。
+   - 部署与二进制核验：运行 `node scripts/check-deployments.js --write --only <id>`，自动从链上解析 cell_dep、type_id、数据哈希、部署交易，并比对该 commit 的二进制 / checksum 文件（verified / unverified / mismatch / no-source / builtin）。
 6. **构建与测试**：
    ```bash
    node gen.js --all out        # 静态页 + tx.html + index.html
-   node scripts/check.js        # 标签闭合 + 双语覆盖
+   node scripts/check.js        # 标签闭合 + 双语覆盖 + meta.json（tags / contributors / source / deployments）
    node scripts/test-tx.js <id> # 真实交易：识别 + 所有检查不为 ✗ + 双语
    ```
 7. **人工核对**：逐条对照源码 `return ERROR_*` / `CHECK2(..., ERROR_*)`，确认无遗漏、无虚构。
@@ -89,6 +94,11 @@ Repo: <合约仓库 URL>  Contract: <文件路径>  Deployment: <code_hash/hash_
 3. **Write `spec.json`** (static constraint page): one card per state transition; every natural-language string as `{"zh","en"}`; checked fields wrapped in `{{ }}`; `limits` lists only checks that exist in the source with their **numeric** error codes; use `layouts` for structured bytes (args / witness / data). Format: see README.
 4. **Write `plugin.js`** (on-chain decoder plugin): fill `match` (verified constants), `parse`, `check` — API below. Use `R.NOT_CHECKED` for anything that cannot be checked offline (signatures, VM execution, extension scripts).
 5. **Write `tests.json`**: at least one real on-chain tx (find via `get_transactions` with a script prefix search); `expect` lists plugin ids that must be recognized.
+5b. **Write `meta.json`**:
+   - `tags`: ids from `contracts/tags.json`: ≥1 category (system / token / nft / defi / identity / channel / btc / proxy / quantum), 1 source status (open-source / no-source), 1 maintainer (nervos / cryptape / community). Kind and network are derived.
+   - `contributors` (optional, encouraged): your GitHub username; pages show "Contributed by @you".
+   - `source`: `repo` (https://github.com/owner/repo), `commit` (the full 40-hex sha you read), `paths`, `commit_note`.
+   - Deployments + binary check: run `node scripts/check-deployments.js --write --only <id>`. It resolves the cell_dep, type_id, data hash and deploy tx from chain, then compares them against binaries / checksum files at that commit (verified / unverified / mismatch / no-source / builtin).
 6. **Build & test**:
    ```bash
    node gen.js --all out        # static pages + tx.html + index.html
@@ -135,3 +145,9 @@ Never invent constants or error codes; put uncertain items in note marked "unver
 - Cite sources: source links pinned to a commit, deployment constants from RFC / official docs / official SDK.
 - Must pass `node gen.js --all out`, `node scripts/check.js`, `node scripts/test-tx.js <id>`.
 - Do not commit `out/` (CI builds and publishes it to Pages).
+
+### 部署漂移检查 / Deployment drift
+
+`node scripts/check-deployments.js` 重新读取链上 cell，在 code cell 移动、type_id 脚本变化、数据哈希变化（合约升级）或上游源码路径在记录的 commit 之后有改动时报告；`.github/workflows/deployments.yml` 每周运行，发现漂移时开 issue。
+
+`node scripts/check-deployments.js` re-reads the on-chain cells and reports when a code cell moved, the type_id script changed, the data hash changed (an upgrade), or upstream source paths changed after the recorded commit. `.github/workflows/deployments.yml` runs it weekly and opens an issue on drift.

@@ -1,0 +1,31 @@
+name: Deployment drift check
+on:
+  schedule:
+    - cron: '17 3 * * 1'   # weekly, Monday 03:17 UTC
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          node scripts/check-deployments.js --report drift.md
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+      - if: steps.check.outputs.code != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Deployment drift detected ($(date -u +%F))"
+          existing=$(gh issue list --state open --label deployment-drift --json number --jq '.[0].number')
+          gh label create deployment-drift --color d93f0b --force >/dev/null 2>&1 || true
+          if [ -n "$existing" ]; then gh issue comment "$existing" --body-file drift.md; else gh issue create --title "$title" --label deployment-drift --body-file drift.md; fi

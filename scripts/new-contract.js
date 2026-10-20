@@ -52,6 +52,12 @@ fs.writeFileSync(path.join(dir, 'spec.json'), JSON.stringify({
   }],
   notes: [{ zh: 'TODO：只写源码中真实存在的检查', en: 'TODO: list only checks that exist in the source' }],
 }, null, 2) + '\n');
+fs.writeFileSync(path.join(dir, 'meta.json'), JSON.stringify({
+  _doc: 'tags: ids from contracts/tags.json (≥1 category, 1 source, 1 maintainer; kind + network are derived). contributors: optional GitHub usernames (add yours!). source: repo + full commit sha you read + paths. deployments + source.binary: fill with `node scripts/check-deployments.js --write --only ' + id + '`.',
+  tags: ['TODO_category', 'open-source', 'community'],
+  contributors: [],
+  source: { repo: 'https://github.com/TODO/TODO', commit: 'TODO_40_hex_commit_sha', paths: ['TODO/path/to/main.rs'], commit_note: 'commit read when writing this spec' },
+}, null, 2) + '\n');
 fs.writeFileSync(path.join(dir, 'tests.json'), JSON.stringify([{ tx: '0xTODO_real_tx_hash_using_this_script', net: 'mainnet', name: `${id} example`, expect: [id] }], null, 2) + '\n');
-console.log(`created contracts/${id}/{plugin.js,spec.json,tests.json}
-next: fill TODOs → node gen.js --all out && node scripts/check.js && node scripts/test-tx.js ${id}`);
+console.log(`created contracts/${id}/{plugin.js,spec.json,tests.json,meta.json}
+next: fill TODOs → node scripts/check-deployments.js --write --only ${id} && node gen.js --all out && node scripts/check.js && node scripts/test-tx.js ${id}`);
