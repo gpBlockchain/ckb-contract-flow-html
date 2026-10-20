@@ -15,7 +15,7 @@ hash_type in parentheses. "same" = identical on both networks.
 |---|---|---|---|---|---|---|
 | secp256k1_blake160 | SECP256K1/blake160 sighash | `0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8` (type) | same | RFC 0024, ccc | nervosnetwork/ckb-system-scripts `c/secp256k1_blake160_sighash_all.c` | added |
 | multisig_legacy | SECP256K1/multisig (legacy) | `0x5c5069eb0857efc65e1bca0c07df34c31663b3622fd3876c876320fc9634e2a8` (type) | same | RFC 0024, ccc | ckb-system-scripts `c/secp256k1_blake160_multisig_all.c` | added |
-| multisig_v2_beta | Multisig V2 beta (PR #98) | `0xd1a9f877aed3f5e07cb9c52b61ab96d06f250ae6883cc7f0a2423db0976fc821` (type) | `0x765b3ed6ae264b335d07e73ac332bf2c0f38f8d3340ed521cb447b4c42dd5f09` (type) | ccc | ckb-system-scripts (PR #98) | todo (match in multisig plugin) |
+| multisig_v2_beta | Multisig V2 beta (PR #98) | `0xd1a9f877aed3f5e07cb9c52b61ab96d06f250ae6883cc7f0a2423db0976fc821` (type) | `0x765b3ed6ae264b335d07e73ac332bf2c0f38f8d3340ed521cb447b4c42dd5f09` (type) | ccc | ckb-system-scripts (PR #98) | added (matched by multisig_v2 plugin) |
 | multisig_v2 | Multisig V2 (PR #99) | `0x36c971b8d41fbd94aabca77dc75e826729ac98447b46f91e00796155dddb0d29` (data1) | same | ccc, ckb-sdk | ckb-system-scripts (PR #99) | added |
 | nervos_dao | NervosDAO | `0x82d76d1b75fe2fd9a27dfbaa65a039221a380d76c926f378d3f81cf3e7e13f2e` (type) | same | RFC 0024, ccc | ckb-system-scripts `c/dao.c` | added |
 | type_id | Type ID (built-in) | `0x00000000000000000000000000000000000000000000000000545950455f4944` (type) | same | RFC 0024, ccc | nervosnetwork/ckb `script/src/type_id.rs` | added |
