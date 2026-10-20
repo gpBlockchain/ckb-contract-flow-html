@@ -40,7 +40,7 @@ hash_type in parentheses. "same" = identical on both networks.
 | pw_lock | PW lock | `0xbf43c3602455798c1a61a596e0d95278864c552fafe231c063b3fabf97a8febc` (type) | `0x58c5f491aba6d61678b7cf7edf4910b1f5e00ec0cde2f42e0abb4fd9aff25a63` (type) | ccc | lay2dev/pw-lock `c/secp256k1_keccak256_sighash_all_acpl.c` (deployed variant assumed, unverified) | added |
 | did_ckb | DID CKB | `0x4a06164dc34dccade5afe3e847a97b6db743e79f5477fa3295acf02849c5984a` (type) | `0x510150477b10d6ab551a509b71265f3164e9fd4137fcb5a4322f49f03092c7c5` (type) | ccc | web5fans/did-ckb | todo |
 | always_success | Always success (proxy-locks) | `0x3b521cc4b552f109d092d8cc468a8048acb53c5952dbe769d2b2f9cf6e47f7f1` (data1) | same | ccc | ckb-devrel/ckb-proxy-locks | added |
-| input_type_proxy_lock | Input type proxy lock | `0x5123908965c711b0ffd8aec642f1ede329649bda1ebdca6bd24124d3796f768a` (data1) | same | ccc | ckb-proxy-locks | todo |
+| input_type_proxy_lock | Input type proxy lock | `0x5123908965c711b0ffd8aec642f1ede329649bda1ebdca6bd24124d3796f768a` (data1) | same | ccc | ckb-proxy-locks | added |
 | output_type_proxy_lock | Output type proxy lock | `0x2df53b592db3ae3685b7787adcfef0332a611edb83ca3feca435809964c3aff2` (data1) | same | ccc | ckb-proxy-locks | todo |
 | lock_proxy_lock | Lock proxy lock | `0x5d41e32e224c15f152b7e6529100ebeac83b162f5f692a5365774dad2c1a1d02` (data1) | same | ccc | ckb-proxy-locks | todo |
 | single_use_lock | Single use lock | `0x8290467a512e5b9a6b816469b0edabba1f4ac474e28ffdd604c2a7c76446bbaf` (data1) | same | ccc | ckb-proxy-locks | todo |
