@@ -1,4 +1,5 @@
 // anyone_can_pay — RFC 0026, ckb-production-scripts/c/anyone_can_pay.c@e570c11
+// Exposes R.acp {parse, check, payment} for pw_lock (same payment rules).
 (function (R) {
   const H = R.hexToBytes;
   const pow10 = x => 10n ** BigInt(x);
@@ -7,7 +8,7 @@
   function parse(g, ctx) {
     const a = H(g.script.args), w = ctx.witnesses[g.witnessIndex], lock = w && w.args && w.args.lock;
     const p = { argsLen: a.length, ckbMinExp: a.length > 20 ? a[20] : null, udtMinExp: a.length > 21 ? a[21] : null,
-      hasSig: !!lock && H(lock).length === 65 };
+      hasSig: !!lock && H(lock).length === 65, lockLen: lock ? H(lock).length : 0 };
     p.minCkb = p.ckbMinExp == null ? 0n : pow10(p.ckbMinExp); p.minUdt = p.udtMinExp == null ? 0n : pow10(p.udtMinExp);
     p.ins = g.inputs.map(i => [i, wallet(ctx.inputs[i].output, ctx.inputs[i].data)]);
     p.outs = g.outputs.map(j => [j, wallet(ctx.tx.outputs[j], ctx.tx.outputs_data[j])]);
@@ -22,6 +23,10 @@
   function check(g, ctx, p) {
     const c = [R.check(p.argsLen >= 20 && p.argsLen <= 22, `args 长度 ${p.argsLen} ∈ [20,22]`, `args length ${p.argsLen} in [20,22]`, -1)];
     if (p.hasSig) { c.push(R.NOT_CHECKED('签名恢复 blake160(pubkey) = args[0..20]（未检查）', 'recovered blake160(pubkey) = args[0..20] (not checked)', -31)); return c; }
+    return c.concat(payment(g, ctx, p));
+  }
+  function payment(g, ctx, p) {
+    const c = [];
     c.push(R.check(p.ins.length <= 256, '同 lock 输入数 ≤ 256', 'group inputs ≤ 256', -43));
     const enc = [...p.ins, ...p.outs].every(([, x]) => x.type ? x.udt != null : x.dataLen === 0);
     c.push(R.check(enc, '无 type 的 cell data 为空；有 type 的 data ≥ 16 字节', 'cells without type have empty data; with type data ≥ 16 bytes', -2));
@@ -38,6 +43,7 @@
     cnt.forEach((n, k) => c.push(R.check(n === 1, `in[${p.ins[k][0]}] 恰好对应一个输出`, `in[${p.ins[k][0]}] pairs with exactly one output`, n === 0 ? -44 : -46)));
     return c;
   }
+  R.acp = { parse, check, payment };
   R.register({ id: 'acp', kind: 'lock', name: { zh: 'Anyone-can-pay', en: 'Anyone-can-pay' }, match: [
     { code_hash: '0xd369597ff47f29fbc0d47d2e3775370d1250b85140c670e4718af712983a2354', hash_type: 'type', net: 'mainnet', src: 'RFC 0026' },
     { code_hash: '0x3419a1c09eb2567f6552ee7a8ecffd64155cffe0f1796e6e61ec088d740c1356', hash_type: 'type', net: 'testnet', src: 'RFC 0026' }], parse, check });
