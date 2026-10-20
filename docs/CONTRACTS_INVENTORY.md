@@ -43,7 +43,7 @@ hash_type in parentheses. "same" = identical on both networks.
 | input_type_proxy_lock | Input type proxy lock | `0x5123908965c711b0ffd8aec642f1ede329649bda1ebdca6bd24124d3796f768a` (data1) | same | ccc | ckb-proxy-locks | added |
 | output_type_proxy_lock | Output type proxy lock | `0x2df53b592db3ae3685b7787adcfef0332a611edb83ca3feca435809964c3aff2` (data1) | same | ccc | ckb-proxy-locks | added |
 | lock_proxy_lock | Lock proxy lock | `0x5d41e32e224c15f152b7e6529100ebeac83b162f5f692a5365774dad2c1a1d02` (data1) | same | ccc | ckb-proxy-locks | added (no on-chain tx found; no test tx) |
-| single_use_lock | Single use lock | `0x8290467a512e5b9a6b816469b0edabba1f4ac474e28ffdd604c2a7c76446bbaf` (data1) | same | ccc | ckb-proxy-locks | todo |
+| single_use_lock | Single use lock | `0x8290467a512e5b9a6b816469b0edabba1f4ac474e28ffdd604c2a7c76446bbaf` (data1) | same | ccc | ckb-proxy-locks | added |
 | type_burn_lock | Type burn lock | `0xff78bae0abf17d7a404c0be0f9ad9c9185b3f88dcc60403453d5ba8e1f22f53a` (data1) | same | ccc | ckb-proxy-locks | todo |
 | easy_to_discover_type | Easy-to-discover type | `0xaba4430cc7110d699007095430a1faa72973edf2322ddbfd4d1d219cacf237af` (data1) | same | ccc | ckb-proxy-locks | todo |
 | time_lock | Time lock (proxy-locks) | `0x6fac4b2e89360a1e692efcddcb3a28656d8446549fb83da6d896db8b714f4451` (data1) | same | ccc | ckb-proxy-locks | todo |
