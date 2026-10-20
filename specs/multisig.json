@@ -3,25 +3,196 @@
   "subtitle": "来源：ckb-system-scripts / c/secp256k1_blake160_multisig_all.c + c/common.h　·　这是 lock script：只在解锁（消耗 cell）时运行",
   "transitions": [
     {
-      "tag": "1 → N", "title": "解锁花费 multisig cell",
+      "tag": "1 → N",
+      "title": "解锁花费 multisig cell",
       "inputs": [
-        { "label": "input（同一 lock 的 script group，可多个）", "body": "Cell{\n  capacity: …,\n  lock: { codeHash: MULTISIG,\n          args: {{blake160(multisig_script) 20B}} {{[+ since u64 LE 8B]}} },\n  since: {{满足 args 中的 since（若有）}}\n}" },
-        { "label": "witness[group 第 1 个 input 的位置]", "body": "WitnessArgs{\n  lock: {{multisig_script}} ‖ {{M 个签名 × 65B}}\n}\n\nmultisig_script =\n  {{S}}(0x00) | {{R}}(require_first_n) | {{M}}(threshold) | {{N}}(pubkeys_cnt)\n  ‖ blake160(pubkey_1) … blake160(pubkey_N)   // 每个 20B" }
+        {
+          "label": "input（同一 lock 的 script group，可多个）",
+          "body": "Cell{\n  capacity: …,\n  lock: { codeHash: MULTISIG,\n          args: {{blake160(multisig_script) 20B}} {{[+ since u64 LE 8B]}} },\n  since: {{满足 args 中的 since（若有）}}\n}"
+        },
+        {
+          "label": "witness[group 第 1 个 input 的位置]",
+          "body": "WitnessArgs{\n  lock: {{multisig_script}} ‖ {{signature[0..M-1]}}\n}\n长度必须 = 4 + 20·N + 65·M"
+        }
       ],
-      "outputs": [{ "label": "outputs：任意 cell", "body": "Cell{\n  capacity: …,\n  lock: 任意,\n  type: 任意\n}" }],
+      "outputs": [
+        {
+          "label": "outputs：任意 cell",
+          "body": "Cell{\n  capacity: …,\n  lock: 任意,\n  type: 任意\n}"
+        }
+      ],
       "limits": [
-        { "field": "args", "cond": "长度为 20 或 28 字节", "err": "-1" },
-        { "field": "args 中的 since", "cond": "本 group 每个 input 的 since flags 必须与之完全相同", "err": "-23" },
-        { "field": "input.since 值", "cond": "≥ args 中的 since 值（epoch 按分数比较）", "err": "-24" },
-        { "field": "witness", "cond": "WitnessArgs 合法且 lock 不为空", "err": "-2" },
-        { "field": "witness 大小", "cond": "≤ 32KB；lock ≥ 4 字节；且 lock 长度 = 4 + 20·N + 65·M", "err": "-22" },
-        { "field": "S", "cond": "必须为 0", "err": "-41" },
-        { "field": "N", "cond": "必须 > 0", "err": "-42" },
-        { "field": "M", "cond": "0 < M ≤ N", "err": "-43" },
-        { "field": "R", "cond": "R ≤ M", "err": "-44" },
-        { "field": "blake160(multisig_script)", "cond": "等于 args 前 20 字节", "err": "-51" },
-        { "field": "签名", "cond": "M 个签名各自恢复出 N 个公钥中不同的一个；前 R 个公钥必须都签名", "err": "-52" },
-        { "field": "签名格式", "cond": "无法解析 / 无法恢复公钥 / 无法序列化", "err": "-14 / -11 / -15" }
+        {
+          "field": "args",
+          "cond": "长度为 20 或 28 字节",
+          "err": "-1"
+        },
+        {
+          "field": "args 中的 since",
+          "cond": "本 group 每个 input 的 since flags 必须与之完全相同",
+          "err": "-23"
+        },
+        {
+          "field": "input.since 值",
+          "cond": "≥ args 中的 since 值（epoch 按分数比较）",
+          "err": "-24"
+        },
+        {
+          "field": "witness",
+          "cond": "WitnessArgs 合法且 lock 不为空",
+          "err": "-2"
+        },
+        {
+          "field": "witness 大小",
+          "cond": "≤ 32KB；lock ≥ 4 字节；且 lock 长度 = 4 + 20·N + 65·M",
+          "err": "-22"
+        },
+        {
+          "field": "blake160(multisig_script)",
+          "cond": "等于 args 前 20 字节",
+          "err": "-51"
+        },
+        {
+          "field": "签名",
+          "cond": "M 个签名各自恢复出 N 个公钥中不同的一个；前 R 个公钥必须都签名",
+          "err": "-52"
+        },
+        {
+          "field": "签名格式",
+          "cond": "无法解析 / 无法恢复公钥 / 无法序列化",
+          "err": "-14 / -11 / -15"
+        }
+      ],
+      "layouts": [
+        {
+          "label": "witness.lock 字节布局（multisig_script ‖ signatures）",
+          "layout": [
+            {
+              "name": "S",
+              "size": "1B",
+              "role": "保留字段（lock[0]）",
+              "cons": "必须为 0",
+              "err": "-41",
+              "color": 0
+            },
+            {
+              "name": "R",
+              "size": "1B",
+              "role": "require_first_n（lock[1]）：pubkey_hash[0..R-1] 必须全部签名",
+              "cons": "R ≤ M",
+              "err": "-44；未满足 -52",
+              "color": 1
+            },
+            {
+              "name": "M",
+              "size": "1B",
+              "role": "threshold（lock[2]）：需要的签名个数",
+              "cons": "0 < M ≤ N",
+              "err": "-43",
+              "color": 2
+            },
+            {
+              "name": "N",
+              "size": "1B",
+              "role": "pubkeys_cnt（lock[3]）：公钥总数",
+              "cons": "N > 0",
+              "err": "-42",
+              "color": 3
+            },
+            {
+              "name": "pubkey_hash[0..N-1]",
+              "size": "20B × N",
+              "flex": 4,
+              "role": "blake160(33 字节压缩公钥)，顺序有意义（R 引用前 R 个）",
+              "cons": "每个签名恢复出的公钥哈希须匹配其中一个尚未使用的",
+              "err": "-52",
+              "color": 4
+            },
+            {
+              "name": "signature[0..M-1]",
+              "size": "65B × M",
+              "flex": 4,
+              "role": "可恢复 secp256k1 签名：r‖s(64B) + recid(1B)；签名时这部分置 0 参与消息哈希",
+              "cons": "可解析 / 可恢复公钥 / 可序列化",
+              "err": "-14 / -11 / -15",
+              "color": 5
+            }
+          ],
+          "note": "multisig_script = 前 4+20·N 字节（S|R|M|N|pubkey_hashes）；lock 总长 ≠ 4+20·N+65·M → (-22)；lock < 4 字节 → (-22)"
+        },
+        {
+          "label": "lock.args 推导",
+          "layout": [
+            {
+              "name": "blake160(multisig_script)",
+              "size": "20B",
+              "flex": 3,
+              "role": "blake2b-256(personal=\"ckb-default-hash\")(multisig_script) 取前 20 字节",
+              "cons": "必须等于 args[0..20]",
+              "err": "-51",
+              "color": 4
+            },
+            {
+              "name": "since（可选）",
+              "size": "8B u64 LE",
+              "flex": 2,
+              "role": "时间锁：本 group 所有 input 的 since flags 必须相同，值 ≥ 此值",
+              "cons": "args 长度只能 20 或 28",
+              "err": "-1；flags -23；值 -24",
+              "color": 2
+            }
+          ]
+        },
+        {
+          "label": "例：2-of-3，R=0（pubkey_hash 为示例值）",
+          "layout": [
+            {
+              "name": "S=00",
+              "size": "1B",
+              "color": 0
+            },
+            {
+              "name": "R=00",
+              "size": "1B",
+              "color": 1
+            },
+            {
+              "name": "M=02",
+              "size": "1B",
+              "color": 2
+            },
+            {
+              "name": "N=03",
+              "size": "1B",
+              "color": 3
+            },
+            {
+              "name": "11…11 / 22…22 / 33…33",
+              "size": "3 × 20B",
+              "flex": 4,
+              "color": 4
+            }
+          ],
+          "hex": [
+            [
+              "multisig_script",
+              "0x{{00}}{{00}}{{02}}{{03}}111111111111111111111111111111111111111122222222222222222222222222222222222222223333333333333333333333333333333333333333  (64B)"
+            ],
+            [
+              "args (20B)",
+              "0xbf96e998f1616a35247a9ab89bfd3f485af397fe"
+            ],
+            [
+              "args + since (28B)",
+              "0xbf96e998f1616a35247a9ab89bfd3f485af397fe6400000000010020  ← since=0x2000010000000064（绝对 epoch 100）LE"
+            ],
+            [
+              "witness.lock 长度",
+              "4 + 20×3 + 65×2 = 194 字节（签名时后 130 字节为 0）"
+            ]
+          ],
+          "note": "任意 2 个不同成员签名即可；若 R=1，则 pubkey_hash[0] 必须是签名者之一"
+        }
       ]
     }
   ],

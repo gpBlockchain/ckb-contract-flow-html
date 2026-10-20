@@ -43,6 +43,7 @@ node gen.js --all specs out           # 构建全部 + 生成 out/index.html
 }
 ```
 
+- 字节布局 box：在 `inputs`/`outputs` 里或 transition 的 `layouts` 中放 `{ "label": "...", "layout": [ { "name": "S", "size": "1B", "role": "作用", "cons": "约束", "err": "-41", "flex": 1, "color": 0 } ], "hex": [["名称", "0x.."]], "note": "..." }`，渲染为彩色字节条 + 字段说明（见 `specs/multisig.json`）。
 - `body` 原样按等宽字体显示（保留换行/缩进），用 `{{...}}` 标记需要高亮的被约束字段。
 - `cond` 以 `≤ ≥ = < >` 开头时不加冒号。
 - 也支持 `.yaml`（简单子集：映射、`- ` 列表、标量、`|` 多行块）；复杂内容请用 JSON。

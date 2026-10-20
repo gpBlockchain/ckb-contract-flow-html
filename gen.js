@@ -72,7 +72,13 @@ function parseYaml(src) {
   return node(ind(lines[i] || ''));
 }
 
-const box = b => `<div class="cell"><span class="n">${hl(b.label || '')}</span>${hl(b.body || '')}</div>`;
+// 字节布局 box：{ label, layout:[{name,size,color,role,cons,err}], hex?, note? }
+const layoutBox = b => `<div class="layout"><span class="n">${hl(b.label || '')}</span>
+<div class="strip">${b.layout.map((f, i) => `<div class="seg c${f.color != null ? f.color : i % 6}" style="flex:${f.flex || 1}"><b>${esc(f.name)}</b><small>${esc(f.size)}</small></div>`).join('')}</div>
+<ul class="fields">${b.layout.map((f, i) => `<li><span class="dot c${f.color != null ? f.color : i % 6}"></span><b>${esc(f.name)}</b> <span class="sz">${esc(f.size)}</span>　${hl(f.role || '')}${f.cons ? `　<span class="cons">${hl(f.cons)}</span>` : ''}${f.err ? ` <span class="e">(${esc(f.err)})</span>` : ''}</li>`).join('')}</ul>
+${b.hex ? `<div class="hex">${b.hex.map(h => `<div><span class="hk">${esc(h[0])}</span>${hl(h[1])}</div>`).join('')}</div>` : ''}
+${b.note ? `<div class="note">${hl(b.note)}</div>` : ''}</div>`;
+const box = b => b.layout ? layoutBox(b) : `<div class="cell"><span class="n">${hl(b.label || '')}</span>${hl(b.body || '')}</div>`;
 
 function render(spec) {
   const cards = (spec.transitions || []).map(t => `
@@ -83,6 +89,7 @@ function render(spec) {
 <div class="arrow">➜</div>
 <div class="col">${(t.outputs || []).map(box).join('\n')}</div>
 </div>
+${(t.layouts || []).map(layoutBox).join('\n')}
 ${(t.extras || []).map(x => `<div class="extra">${hl(x)}</div>`).join('\n')}
 ${t.limits && t.limits.length ? `<div class="limits"><h3>限制</h3><ul>
 ${t.limits.map(l => `<li><b>${esc(l.field)}</b>${/^[≤≥=<>]/.test(l.cond) ? ' ' : '：'}${hl(l.cond)}${l.err != null && l.err !== '' ? ` <span class="e">(${esc(l.err)})</span>` : ''}${l.note ? ` <span class="note">（${hl(l.note)}）</span>` : ''}</li>`).join('\n')}
