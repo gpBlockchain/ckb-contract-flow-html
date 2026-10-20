@@ -1,4 +1,4 @@
-// TYPE_ID — built-in system script, nervosnetwork/ckb script/src/type_id.rs
+// TYPE_ID — built-in (also exposes R.typeId(ctx, outputIndex)) system script, nervosnetwork/ckb script/src/type_id.rs
 (function (R) {
   const H = R.hexToBytes;
   const u64le = n => { const b = new Uint8Array(8); let v = BigInt(n); for (let i = 0; i < 8; i++) { b[i] = Number(v & 0xffn); v >>= 8n; } return b; };
@@ -6,6 +6,7 @@
   const cat = (...a) => { const o = new Uint8Array(a.reduce((s, x) => s + x.length, 0)); let k = 0; for (const x of a) { o.set(x, k); k += x.length; } return o; };
   // CellInput { since: u64, previous_output: OutPoint { tx_hash: Byte32, index: u32 } } (struct, 44 bytes)
   const cellInput = i => cat(u64le(i.since), H(i.previous_output.tx_hash), u32le(parseInt(i.previous_output.index, 16)));
+  R.typeId = (ctx, outIndex) => ctx.tx.inputs.length ? R.ckbHash(cat(cellInput(ctx.tx.inputs[0]), u64le(outIndex))) : null;
   function parse(g, ctx) {
     const p = { argsLen: H(g.script.args).length, creating: g.inputs.length === 0 };
     if (p.creating && g.outputs.length && ctx.tx.inputs.length) p.expected = R.ckbHash(cat(cellInput(ctx.tx.inputs[0]), u64le(g.outputs[0])));
