@@ -51,3 +51,11 @@ hash_type in parentheses. "same" = identical on both networks.
 | fiber_commitment_lock | Fiber commitment lock | `0x2d45c4d3ed3e942f1945386ee82a5d1b7e4bb16d7fe1ab015421174ab747406c` (type) | `0x740dee83f87c6f309824d8fd3fbdd3c8380ee6fc9acc90b1a748438afcdf81d8` (type) | nervosnetwork/fiber config/*/config.yml | nervosnetwork/fiber-scripts | added (HEAD source; 36/56-byte args of earlier versions not decoded; signatures not checked) |
 | sphincs_lock | Quantum-resistant SPHINCS+ lock | `0x302d35982f865ebcbedb9a9360e40530ed32adb8e10b42fbbe70d8312ff7cedf` (type) | `0x147ecbb5c5127d982ee1362d2c2bb4267803da2eb006d150e88af6caaa0a7eaf` (data1) | quantum-resistant-lock-script README.md | cryptape/quantum-resistant-lock-script | added (SPHINCS+ signatures not checked) |
 | utxo_airdrop_badge / token_metadata | RGB++ airdrop badge / token metadata types | `0xf5da9003e31fa9301a3915fe304de9bdb80524b5f0d8fc325fb699317998ee7a` / `0x0c7dc8caec145b51b142e13f47fe4262c80628213d1b6c3d9c1aa6a62088804e` (type) | same | rgbpp-sdk | not located | no-source |
+
+## 仍缺的值得关注的合约 / Notable contracts still missing (re-scan 2026-10-21)
+
+Re-scan: every ccc KnownScript constant (mainnet + testnet) is now matched. Not added:
+- **ML-DSA / Falcon post-quantum locks**: community repo toastmanAu/ckb-mldsa-lock; testnet only, unaudited (its README says so). Not official, so skipped. The official quantum-safe lock is `sphincs_lock`.
+- **Spore extensions**: cluster_proxy / cluster_agent / mutant / lua (testnet only, spore-sdk). Still todo.
+- **RGB++ airdrop badge / token metadata types**: no public source located (see row above).
+- **Fiber UDT whitelist entries** in nervosnetwork/fiber config (e.g. USDI on mainnet, RUSD on testnet): these are xUDT tokens, which the xudt plugin already decodes.
