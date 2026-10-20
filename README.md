@@ -1,78 +1,116 @@
 # ckb-contract-flow-html
 
-一键把 CKB 合约的 **Cell 流转约束** 生成极简 HTML：每个状态转换一张卡片，`输入 Cell → 输出 Cell`，被约束的字段高亮，下方列出 `字段：条件 (错误码)`。
+[中文](#中文) | [English](#english)
+
+---
+
+## 中文
+
+一键把 CKB 合约的 **Cell 流转约束** 生成极简、**中英双语** 的 HTML：每个状态转换一张卡片，`输入 Cell → 输出 Cell`，被约束的字段高亮，下方列出 `字段：条件 (错误码)`。页面右上角有 中文/EN 切换按钮，选择保存在 localStorage，默认跟随浏览器语言。
 
 零依赖，只需 Node.js ≥ 16。
 
-## 用法
+### 用法
 
 ```bash
 node gen.js specs/dao.json            # -> out/dao.html
 node gen.js specs/sudt.json my.html   # 指定输出
-node gen.js --all specs out           # 构建全部 + 生成 out/index.html
+node gen.js --all specs out           # 构建全部 + out/index.html
+node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在仓库根目录运行）
 ```
-
-内置示例：
 
 | spec | 合约 |
 | --- | --- |
 | `specs/dao.json` | NervosDAO（`ckb-system-scripts/c/dao.c`） |
 | `specs/sudt.json` | Simple UDT（RFC 0025，`simple_udt.c`） |
-| `specs/multisig.json` | `secp256k1_blake160_multisig_all.c`（lock script） |
-| `specs/example.yaml` | YAML 格式最小示例 |
+| `specs/multisig.json` | `secp256k1_blake160_multisig_all.c`（lock script，含字节布局） |
+| `specs/example.yaml` | YAML 最小示例 |
 
-推送到 `main` 后，`.github/workflows/pages.yml` 会构建所有 spec 并发布到 GitHub Pages（需在仓库 Settings → Pages 中把 Source 选为 *GitHub Actions*）。
+推送到 `main` 后，`.github/workflows/pages.yml` 构建所有 spec 并发布到 GitHub Pages（需在 Settings → Pages 把 Source 设为 *GitHub Actions*）。
 
-## Spec 格式
+### Spec 格式
+
+**任意文本字段**可以是字符串（语言无关，如 `"Cell{ capacity: X }"`），或双语对象 `{"zh": "...", "en": "..."}`。含中文的文本必须写成双语对象（`scripts/check.js` 会检查）。
 
 ```jsonc
 {
-  "title": "页面标题",
-  "subtitle": "来源说明",
+  "title": { "zh": "页面标题", "en": "Page title" },
+  "subtitle": { "zh": "来源说明", "en": "Source" },
   "transitions": [
     {
-      "tag": "0 → 1",                 // 左上角标签，如 0 → 1 / 1 → 1 / 1 → 0
-      "title": "存款",
-      "inputs":  [ { "label": "input[i]：xxx", "body": "Cell{\n  capacity: X,\n  data: {{高亮}}\n}" } ],
-      "outputs": [ { "label": "...", "body": "..." } ],
-      "extras":  [ "header_deps: [ {{D}} ]" ],          // 可选，卡片下方的附加行
-      "limits":  [ { "field": "data", "cond": "恰好 8 字节", "err": "-19", "note": "可选备注" } ]
+      "tag": "0 → 1",
+      "title": { "zh": "存款", "en": "Deposit" },
+      "inputs":  [ { "label": { "zh": "输入", "en": "input" }, "body": "Cell{\n  data: {{高亮/highlight}}\n}" } ],
+      "outputs": [ { "label": "...", "body": { "zh": "...", "en": "..." } } ],
+      "layouts": [ { "label": "...", "layout": [ { "name": "S", "size": "1B", "role": {...}, "cons": {...}, "err": "-41", "flex": 1, "color": 0 } ],
+                     "hex": [["name", "0x.."]], "note": {...} } ],
+      "extras":  [ "header_deps: [ {{D}} ]" ],
+      "limits":  [ { "field": "data", "cond": { "zh": "恰好 8 字节", "en": "exactly 8 bytes" }, "err": "-19", "note": {...} } ]
     }
   ],
-  "notes": ["可选，页脚说明"]
+  "notes": [ { "zh": "页脚", "en": "footer" } ]
 }
 ```
 
-- 字节布局 box：在 `inputs`/`outputs` 里或 transition 的 `layouts` 中放 `{ "label": "...", "layout": [ { "name": "S", "size": "1B", "role": "作用", "cons": "约束", "err": "-41", "flex": 1, "color": 0 } ], "hex": [["名称", "0x.."]], "note": "..." }`，渲染为彩色字节条 + 字段说明（见 `specs/multisig.json`）。
-- `body` 原样按等宽字体显示（保留换行/缩进），用 `{{...}}` 标记需要高亮的被约束字段。
+- `body` 按等宽字体原样显示；`{{...}}` 标记高亮的被约束字段。
+- `layouts` / 带 `layout` 的 box：彩色字节条 + 字段说明（见 `specs/multisig.json`）。
 - `cond` 以 `≤ ≥ = < >` 开头时不加冒号。
-- 也支持 `.yaml`（简单子集：映射、`- ` 列表、标量、`|` 多行块）；复杂内容请用 JSON。
+- 也支持 `.yaml`（简单子集），复杂内容建议 JSON。
 
-## 用 AI 从合约源码写 spec（推荐流程）
+### 用 AI 从合约源码写 spec
 
-1. 准备合约源码（及其 include 的 `common.h` 等），以及相关 RFC。
-2. 把下面的提示词连同源码交给 AI：
+把下面的提示词（见 English 部分的 *AI prompt*，中英通用）连同合约源码（及 `common.h` 等 include）交给 AI，保存输出为 `specs/<name>.json`，运行 `node gen.js --all && node scripts/check.js`，然后**逐条对照源码的 `return ERROR_*` 人工核对**。
+
+---
+
+## English
+
+Generate a minimal, **bilingual (Chinese/English)** HTML page describing a CKB contract's **cell-flow constraints**: one card per state transition, `input cells → output cells`, constrained fields highlighted, followed by `field: condition (error code)`. A 中文/EN toggle sits at the top right; the choice is stored in localStorage and defaults to the browser language.
+
+Zero dependencies; Node.js ≥ 16.
+
+### Usage
+
+```bash
+node gen.js specs/dao.json            # -> out/dao.html
+node gen.js --all specs out           # build all + out/index.html
+node scripts/check.js                 # tag balance + bilingual coverage (run from repo root)
+```
+
+Pushing to `main` runs `.github/workflows/pages.yml`, which builds every spec and deploys `out/` to GitHub Pages (set Settings → Pages → Source to *GitHub Actions*).
+
+### Spec format
+
+Any text field is either a plain string (language-neutral, e.g. code-like `Cell{ … }`) or `{"zh": "...", "en": "..."}`. Text containing Chinese must be bilingual (enforced by `scripts/check.js`). See the jsonc example in the Chinese section and the files in `specs/`. `{{...}}` highlights a constrained field; `layout` boxes render byte layouts.
+
+### AI prompt
 
 ```text
-你是 CKB 合约审阅者。阅读下面的合约源码，输出一个符合 ckb-contract-flow-html spec 格式的 JSON：
-- 按 cell 生命周期列出每种状态转换（tag 如 "0 → 1" / "1 → 1" / "1 → 0"，title 为中文动作名）。
-- inputs/outputs 用 Cell{ capacity, lock, type:{codeHash, args}, data } 伪结构表示，
-  witness、header_deps、since 等需要的额外结构也画成 box 或 extras；
-  被合约检查的字段用 {{ }} 包起来高亮。
-- limits 只写源码里**真实存在**的检查：字段、条件、对应的 return 错误码（数值），
-  不要编造；源码未检查但通常由节点/共识/其他脚本保证的，写到 note 并注明“非本合约检查”。
-- 错误码以源码 #define 为准（注意 common.h 里的公共定义）。
-只输出 JSON。
+You are a CKB smart-contract reviewer. Read the contract source below (and its included
+headers such as common.h) and output ONE JSON spec for ckb-contract-flow-html:
+
+- One transition per lifecycle step (tag like "0 → 1" / "1 → 1" / "1 → 0" / "1 → N").
+- Every human-readable text field MUST be bilingual: {"zh": "<简体中文>", "en": "<technical English>"}.
+  Code-like strings with no natural language (e.g. "header_deps: [ {{D}} ]") may stay plain strings.
+- inputs/outputs: pseudo-structs Cell{ capacity, lock, type:{codeHash, args}, data, since };
+  add witness / header_deps boxes or extras when the script reads them.
+  Wrap every field the script actually checks in {{ }}.
+- For structured byte data (args, witness lock, cell data), add a "layouts" box:
+  [{name, size, role, cons, err}] in byte order, plus a small concrete hex example if useful.
+- limits: ONLY checks that really exist in the source: field, condition, and the numeric error
+  code it returns (resolve #define values, including those in common.h). Do not invent rules.
+  Things not checked by this script (consensus, other scripts) go into "note", marked as such.
+Output only the JSON.
 ```
 
-3. 保存为 `specs/<name>.json`，运行 `node gen.js specs/<name>.json`，浏览器打开检查。
-4. **人工核对**：逐条对照源码中的 `return ERROR_*`，确认没有遗漏/虚构；有疑问的规则写进 `note`。
+Then save it as `specs/<name>.json`, run `node gen.js --all specs out && node scripts/check.js`, open the page, and **manually verify every `return ERROR_*` against the source**.
 
-## 目录
+### Layout
 
 ```
-gen.js          生成器（零依赖）
-template.html   页面模板（{{TITLE}} {{SUBTITLE}} {{CARDS}} {{FOOTER}}）
-specs/          spec 文件
-out/            生成结果（不入库，CI 生成）
+gen.js            generator
+template.html     page template ({{DOC_TITLE}} {{TOGGLE}} {{TITLE}} {{SUBTITLE}} {{CARDS}} {{FOOTER}})
+specs/            spec files
+scripts/check.js  tag-balance & bilingual coverage check
+out/              build output (git-ignored; built by CI)
 ```

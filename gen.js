@@ -1,12 +1,26 @@
 #!/usr/bin/env node
-// 零依赖生成器：node gen.js specs/dao.json [out/dao.html]
-// 也支持一次构建全部：node gen.js --all specs out
+// Zero-dependency generator / 零依赖生成器
+//   node gen.js specs/dao.json [out/dao.html]
+//   node gen.js --all [specs] [out]
+// 任意文本字段可为字符串（语言无关）或 {"zh": "...", "en": "..."}。
 'use strict';
 const fs = require('fs'), path = require('path');
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-// {{text}} → 高亮；其余转义
+// {{text}} → highlight
 const hl = s => esc(s).replace(/\{\{([\s\S]*?)\}\}(?!\})/g, '<span class="hl">$1</span>');
+const isI18n = x => x && typeof x === 'object' && !Array.isArray(x) && ('zh' in x || 'en' in x);
+// render text: bilingual → two spans; plain string → as is
+const T = (x, f = hl) => x == null ? '' : isI18n(x)
+  ? `<span data-l="zh">${f(x.zh != null ? x.zh : x.en)}</span><span data-l="en">${f(x.en != null ? x.en : x.zh)}</span>` : f(x);
+const plain = (x, lang) => x == null ? '' : isI18n(x) ? (x[lang] != null ? x[lang] : x.zh || x.en) : String(x);
+const UI = {
+  limits: { zh: '限制', en: 'Constraints' },
+  colon: { zh: '：', en: ': ' },
+  toggle: { zh: 'EN', en: '中文' },
+  defTitle: { zh: 'CKB 合约约束', en: 'CKB Contract Constraints' },
+  indexTitle: { zh: 'CKB 合约 Cell 流转约束', en: 'CKB Contract Cell-Flow Constraints' },
+};
 
 function loadSpec(file) {
   const txt = fs.readFileSync(file, 'utf8');
@@ -72,57 +86,66 @@ function parseYaml(src) {
   return node(ind(lines[i] || ''));
 }
 
-// 字节布局 box：{ label, layout:[{name,size,color,role,cons,err}], hex?, note? }
-const layoutBox = b => `<div class="layout"><span class="n">${hl(b.label || '')}</span>
-<div class="strip">${b.layout.map((f, i) => `<div class="seg c${f.color != null ? f.color : i % 6}" style="flex:${f.flex || 1}"><b>${esc(f.name)}</b><small>${esc(f.size)}</small></div>`).join('')}</div>
-<ul class="fields">${b.layout.map((f, i) => `<li><span class="dot c${f.color != null ? f.color : i % 6}"></span><b>${esc(f.name)}</b> <span class="sz">${esc(f.size)}</span>　${hl(f.role || '')}${f.cons ? `　<span class="cons">${hl(f.cons)}</span>` : ''}${f.err ? ` <span class="e">(${esc(f.err)})</span>` : ''}</li>`).join('')}</ul>
-${b.hex ? `<div class="hex">${b.hex.map(h => `<div><span class="hk">${esc(h[0])}</span>${hl(h[1])}</div>`).join('')}</div>` : ''}
-${b.note ? `<div class="note">${hl(b.note)}</div>` : ''}</div>`;
-const box = b => b.layout ? layoutBox(b) : `<div class="cell"><span class="n">${hl(b.label || '')}</span>${hl(b.body || '')}</div>`;
+// Byte-layout box / 字节布局 box：{ label, layout:[{name,size,color,flex,role,cons,err}], hex?:[[k,v]], note? }
+const col = (f, i) => f.color != null ? f.color : i % 6;
+const layoutBox = b => `<div class="layout"><span class="n">${T(b.label)}</span>
+<div class="strip">${b.layout.map((f, i) => `<div class="seg c${col(f, i)}" style="flex:${f.flex || 1}"><b>${T(f.name, esc)}</b><small>${T(f.size, esc)}</small></div>`).join('')}</div>
+<ul class="fields">${b.layout.filter(f => f.role || f.cons || f.err).map((f, i) => `<li><span class="dot c${col(f, b.layout.indexOf(f))}"></span><b>${T(f.name, esc)}</b> <span class="sz">${T(f.size, esc)}</span>　${T(f.role)}${f.cons ? `　<span class="cons">${T(f.cons)}</span>` : ''}${f.err ? ` <span class="e">(${esc(f.err)})</span>` : ''}</li>`).join('')}</ul>
+${b.hex ? `<div class="hex">${b.hex.map(h => `<div><span class="hk">${T(h[0], esc)}</span>${T(h[1])}</div>`).join('')}</div>` : ''}
+${b.note ? `<div class="note">${T(b.note)}</div>` : ''}</div>`;
+const box = b => b.layout ? layoutBox(b) : `<div class="cell"><span class="n">${T(b.label)}</span>${T(b.body)}</div>`;
+const sep = c => /^[≤≥=<>]/.test(plain(c, 'zh')) ? ' ' : T(UI.colon, esc);
 
 function render(spec) {
   const cards = (spec.transitions || []).map(t => `
 <div class="card">
-<h2><span>${esc(t.tag || '')}</span>${esc(t.title || '')}</h2>
+<h2><span>${T(t.tag, esc)}</span>${T(t.title, esc)}</h2>
 <div class="flow">
 <div class="col">${(t.inputs || []).map(box).join('\n')}</div>
 <div class="arrow">➜</div>
 <div class="col">${(t.outputs || []).map(box).join('\n')}</div>
 </div>
 ${(t.layouts || []).map(layoutBox).join('\n')}
-${(t.extras || []).map(x => `<div class="extra">${hl(x)}</div>`).join('\n')}
-${t.limits && t.limits.length ? `<div class="limits"><h3>限制</h3><ul>
-${t.limits.map(l => `<li><b>${esc(l.field)}</b>${/^[≤≥=<>]/.test(l.cond) ? ' ' : '：'}${hl(l.cond)}${l.err != null && l.err !== '' ? ` <span class="e">(${esc(l.err)})</span>` : ''}${l.note ? ` <span class="note">（${hl(l.note)}）</span>` : ''}</li>`).join('\n')}
+${(t.extras || []).map(x => `<div class="extra">${T(x)}</div>`).join('\n')}
+${t.limits && t.limits.length ? `<div class="limits"><h3>${T(UI.limits, esc)}</h3><ul>
+${t.limits.map(l => `<li><b>${T(l.field, esc)}</b>${sep(l.cond)}${T(l.cond)}${l.err != null && l.err !== '' ? ` <span class="e">(${esc(l.err)})</span>` : ''}${l.note ? ` <span class="note">(${T(l.note)})</span>` : ''}</li>`).join('\n')}
 </ul></div>` : ''}
 </div>`).join('\n');
+  const title = spec.title || UI.defTitle;
   const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
-  return tpl.replace(/\{\{TITLE\}\}/g, esc(spec.title || 'CKB 合约约束'))
-            .replace('{{SUBTITLE}}', hl(spec.subtitle || ''))
-            .replace('{{CARDS}}', cards)
-            .replace('{{FOOTER}}', spec.notes ? `<div class="sub">${(Array.isArray(spec.notes) ? spec.notes : [spec.notes]).map(hl).join('<br>')}</div>` : '');
+  return tpl.replace('{{DOC_TITLE}}', esc(plain(title, 'zh') === plain(title, 'en') ? plain(title, 'en') : plain(title, 'zh') + ' / ' + plain(title, 'en')))
+    .replace('{{TOGGLE}}', T(UI.toggle, esc))
+    .replace('{{TITLE}}', T(title, esc))
+    .replace('{{SUBTITLE}}', T(spec.subtitle))
+    .replace('{{CARDS}}', cards)
+    .replace('{{FOOTER}}', spec.notes ? `<div class="sub">${(Array.isArray(spec.notes) ? spec.notes : [spec.notes]).map(n => T(n)).join('<br>')}</div>` : '');
 }
 
 function build(inFile, outFile) {
-  const html = render(loadSpec(inFile));
+  const spec = loadSpec(inFile);
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
-  fs.writeFileSync(outFile, html);
+  fs.writeFileSync(outFile, render(spec));
   console.log(`${inFile} -> ${outFile}`);
+  return spec;
 }
 
 function main() {
-const a = process.argv.slice(2);
-if (!a.length) { console.error('用法: node gen.js <spec.json|yaml> [out.html]\n      node gen.js --all [specsDir=specs] [outDir=out]'); process.exit(1); }
-if (a[0] === '--all') {
-  const sd = a[1] || 'specs', od = a[2] || 'out', items = [];
-  for (const f of fs.readdirSync(sd).filter(f => /\.(json|ya?ml)$/i.test(f)).sort()) {
-    const name = f.replace(/\.(json|ya?ml)$/i, ''); build(path.join(sd, f), path.join(od, name + '.html'));
-    items.push([name, loadSpec(path.join(sd, f)).title || name]);
+  const a = process.argv.slice(2);
+  if (!a.length) { console.error('Usage / 用法: node gen.js <spec.json|yaml> [out.html]\n                 node gen.js --all [specsDir=specs] [outDir=out]'); process.exit(1); }
+  if (a[0] === '--all') {
+    const sd = a[1] || 'specs', od = a[2] || 'out', items = [];
+    for (const f of fs.readdirSync(sd).filter(f => /\.(json|ya?ml)$/i.test(f)).sort()) {
+      const name = f.replace(/\.(json|ya?ml)$/i, '');
+      items.push([name, build(path.join(sd, f), path.join(od, name + '.html')).title || name]);
+    }
+    const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
+    const list = `<div class="card"><ul class="idx">${items.map(([n, t]) => `<li><a href="${n}.html">${T(t, esc)}</a></li>`).join('')}</ul></div>`;
+    fs.writeFileSync(path.join(od, 'index.html'), tpl.replace('{{DOC_TITLE}}', esc(UI.indexTitle.zh + ' / ' + UI.indexTitle.en))
+      .replace('{{TOGGLE}}', T(UI.toggle, esc)).replace('{{TITLE}}', T(UI.indexTitle, esc)).replace('{{SUBTITLE}}', '')
+      .replace('{{CARDS}}', list).replace('{{FOOTER}}', ''));
+  } else {
+    build(a[0], a[1] || path.join('out', path.basename(a[0]).replace(/\.(json|ya?ml)$/i, '') + '.html'));
   }
-  fs.writeFileSync(path.join(od, 'index.html'), `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>CKB 合约 Cell 流转约束</title><style>body{font:18px/1.9 -apple-system,"PingFang SC",sans-serif;max-width:800px;margin:60px auto;padding:0 24px}a{color:#2f6fed}</style></head><body><h1>CKB 合约 Cell 流转约束</h1><ul>${items.map(([n, t]) => `<li><a href="${n}.html">${esc(t)}</a></li>`).join('')}</ul></body></html>`);
-} else {
-  const out = a[1] || path.join('out', path.basename(a[0]).replace(/\.(json|ya?ml)$/i, '') + '.html');
-  build(a[0], out);
-}
 }
 if (require.main === module) main();
-module.exports = { render, parseYaml };
+module.exports = { render, parseYaml, T };

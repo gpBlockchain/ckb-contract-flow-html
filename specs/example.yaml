@@ -1,9 +1,12 @@
-# YAML 示例（支持简单子集；复杂内容建议用 JSON）
-title: 示例合约约束
-subtitle: YAML 格式示例
+# YAML example (simple subset). Bilingual fields use zh/en sub-keys.
+title:
+  zh: 示例合约约束（YAML）
+  en: Example Contract Constraints (YAML)
 transitions:
   - tag: 0 → 1
-    title: 创建
+    title:
+      zh: 创建
+      en: Create
     inputs:
       - label: input
         body: |
@@ -15,9 +18,11 @@ transitions:
         body: |
           Cell{
             type: { codeHash: X, args: {{0x}} },
-            data: {{8 字节}}
+            data: {{8B}}
           }
     limits:
       - field: data
-        cond: 长度必须为 8
+        cond:
+          zh: 长度必须为 8 字节
+          en: length must be 8 bytes
         err: -1

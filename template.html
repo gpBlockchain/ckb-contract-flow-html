@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{TITLE}}</title>
+<html lang="zh-CN" data-lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{DOC_TITLE}}</title>
 <style>
 body{margin:0;background:#f7f8fa;color:#222;font:18px/1.8 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
 main{max-width:1100px;margin:auto;padding:48px 24px 80px}
@@ -24,7 +24,13 @@ h1{font-size:30px;margin:0 0 8px}.sub{color:#777;margin-bottom:40px}
 .fields{list-style:none;padding:0;margin:0}.fields li{margin:6px 0;font-size:16px}.fields b{font-family:Menlo,monospace}.sz{font:13px Menlo,monospace;color:#888}
 .dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:middle}.cons{color:#b45309}
 .hex{margin-top:12px;font:14px/1.7 Menlo,monospace;word-break:break-all;background:#fff;border:1px dashed #ccc;border-radius:8px;padding:10px 14px}.hk{color:#888;display:inline-block;min-width:150px}
-</style></head><body><main>
+html[data-lang=zh] [data-l=en],html[data-lang=en] [data-l=zh]{display:none}
+#lang{position:fixed;top:18px;right:22px;font:15px -apple-system,sans-serif;padding:6px 16px;border:1px solid #ccc;border-radius:20px;background:#fff;cursor:pointer;box-shadow:0 1px 4px #0001}
+.idx{font-size:20px;line-height:2.2}.idx a{color:#2f6fed;text-decoration:none}
+</style>
+<script>(function(){var k='ckb-flow-lang',l=null;try{l=localStorage.getItem(k)}catch(e){}if(l!=='zh'&&l!=='en')l=/^zh/i.test(navigator.language||'')?'zh':'en';document.documentElement.setAttribute('data-lang',l);document.documentElement.lang=l==='zh'?'zh-CN':'en';
+window.toggleLang=function(){var n=document.documentElement.getAttribute('data-lang')==='zh'?'en':'zh';document.documentElement.setAttribute('data-lang',n);document.documentElement.lang=n==='zh'?'zh-CN':'en';try{localStorage.setItem(k,n)}catch(e){}};})();</script></head><body><button id="lang" onclick="toggleLang()" aria-label="Switch language / 切换语言">{{TOGGLE}}</button>
+<main>
 <h1>{{TITLE}}</h1>
 <div class="sub">{{SUBTITLE}}</div>
 {{CARDS}}
