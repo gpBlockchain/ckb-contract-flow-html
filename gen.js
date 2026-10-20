@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Zero-dependency generator / 零依赖生成器
 //   node gen.js specs/dao.json [out/dao.html]
-//   node gen.js --all [specs] [out]
+//   node gen.js --all [out]   (builds contracts/*/spec.json + tx.html + index.html)
 // 任意文本字段可为字符串（语言无关）或 {"zh": "...", "en": "..."}。
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -136,34 +136,31 @@ function buildTx(outFile) {
   const extra = fs.readFileSync(path.join(__dirname, 'tx-template.html'), 'utf8');
   const css = extra.slice(extra.indexOf('<style>'), extra.indexOf('</style>') + 8);
   const lib = fs.readFileSync(path.join(__dirname, 'lib/ckb.js'), 'utf8'), app = fs.readFileSync(path.join(__dirname, 'tx-app.js'), 'utf8');
-  const EX = [['0xbaa72648c975a63097ae1500336475d70aa7ba8f0daf71405f883bd2b6e55dbb', 'DAO phase 2'], ['0x44d70abd4ed8c73c9ec7a6039aa1e35a22ef1455758c45b70bfef5a5fce93838', 'DAO phase 1'],
-    ['0x80136926c075b54911f6cdf420ab6fb47e1b6f39367c2b0eb1583a23e5bcd71f', 'multisig legacy 7/12'], ['0x1a4d5e3838d72dda8b3aa1119116e7c82bedb22098b15500b57c72f4bf119470', 'multisig v2 2/3'],
-    ['0xf7e4ead2242e204ff2e4797e6f3170dc289445593127896099867bacc0c01ecb', 'sUDT'], ['0xdcc1d1f0289a0df2ce56094bc0fe873baa03bf5d361545aa908c49778fe11429', 'xUDT']];
+  const C = require('./lib/contracts.js');
+  const EX = C.list().filter(c => c.tests).flatMap(c => JSON.parse(fs.readFileSync(c.tests, 'utf8')).map(t => [t.tx, t.name || c.id, t.net || 'mainnet'])).filter((x, i, a) => a.findIndex(y => y[0] === x[0]) === i);
+  const plugins = C.ordered().map(c => `// ---- contracts/${c.id}/plugin.js ----\n` + fs.readFileSync(c.plugin, 'utf8')).join('\n');
   const form = `<div class="card"><div class="form">
 <select id="net"><option value="https://mainnet.ckb.dev/rpc">mainnet · https://mainnet.ckb.dev/rpc</option><option value="https://testnet.ckb.dev/rpc">testnet · https://testnet.ckb.dev/rpc</option><option value="custom">${T({ zh: '自定义 RPC', en: 'custom RPC' }, esc)}</option></select>
 <input id="custom" style="display:none" placeholder="http://127.0.0.1:8114">
 <input id="hash" placeholder="0x… tx hash"><button class="go" id="go">${T({ zh: '解码', en: 'Decode' }, esc)}</button></div>
-<div class="small">${T({ zh: '主网示例：', en: 'Mainnet examples: ' }, esc)}${EX.map(([h, n]) => `<a href="#" class="ex" data-h="${h}">${n}</a>`).join(' · ')}</div>
-<div class="small">${T({ zh: '说明：按 lock / type script hash 分组；识别 secp256k1_blake160、multisig（旧版/V2）、NervosDAO、sUDT、xUDT；签名不校验（标记 ○）。数据仅从你选择的 RPC 读取。', en: 'Notes: grouped by lock / type script hash; recognizes secp256k1_blake160, multisig (legacy/V2), NervosDAO, sUDT, xUDT; signatures are NOT verified (marked ○). Data is read only from the RPC you choose.' })}</div></div>
+<div class="small">${T({ zh: '主网示例：', en: 'Mainnet examples: ' }, esc)}${EX.map(([h, n, net]) => `<a href="#" class="ex" data-h="${h}" data-net="${net}">${esc(n)}</a>`).join(' · ')}</div>
+<div class="small">${T({ zh: `说明：按 lock / type script hash 分组；已加载插件：${C.ordered().map(c => c.id).join('、')}；签名不校验（标记 ○）。数据仅从你选择的 RPC 读取。`, en: `Notes: grouped by lock / type script hash; loaded plugins: ${C.ordered().map(c => c.id).join(', ')}; signatures are NOT verified (marked ○). Data is read only from the RPC you choose.` })}</div></div>
 <div id="result"></div>`;
   const html = tpl.replace('{{DOC_TITLE}}', esc(UI.txTitle.zh + ' / ' + UI.txTitle.en)).replace('{{TOGGLE}}', T(UI.toggle, esc))
     .replace('{{TITLE}}', T(UI.txTitle, esc)).replace('{{SUBTITLE}}', T({ zh: '输入交易 hash，解码为 cell 流转卡片并做无签名约束检查', en: 'Enter a tx hash to decode it into cell-flow cards with signature-free constraint checks' }))
     .replace('{{CARDS}}', form).replace('{{FOOTER}}', '')
     .replace('</style>', () => css.replace('<style>', '').replace('</style>', '') + '</style>');
-    const scripts = `<script>\n${lib.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${app.replace(/<\/script/gi, '<\\/script')}\n</script>`;
+    const scripts = `<script>\n${lib.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${plugins.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${app.replace(/<\/script/gi, '<\\/script')}\n</script>`;
   const html2 = html.replace('</body>', () => scripts + '</body>');
   fs.mkdirSync(path.dirname(outFile), { recursive: true }); fs.writeFileSync(outFile, html2); console.log(`(tx decoder) -> ${outFile}`);
 }
 
 function main() {
   const a = process.argv.slice(2);
-  if (!a.length) { console.error('Usage / 用法: node gen.js <spec.json|yaml> [out.html]\n                 node gen.js --all [specsDir=specs] [outDir=out]'); process.exit(1); }
+  if (!a.length) { console.error('Usage / 用法: node gen.js <spec.json|yaml> [out.html]\n                 node gen.js --all [outDir=out]   (discovers contracts/*/spec.json)'); process.exit(1); }
   if (a[0] === '--all') {
-    const sd = a[1] || 'specs', od = a[2] || 'out', items = [];
-    for (const f of fs.readdirSync(sd).filter(f => /\.(json|ya?ml)$/i.test(f)).sort()) {
-      const name = f.replace(/\.(json|ya?ml)$/i, '');
-      items.push([name, build(path.join(sd, f), path.join(od, name + '.html')).title || name]);
-    }
+    const od = a[1] || 'out', items = [];
+    for (const c of require('./lib/contracts.js').list()) if (c.spec) items.push([c.id, build(c.spec, path.join(od, c.id + '.html')).title || c.id]);
     buildTx(path.join(od, 'tx.html'));
     items.push(['tx', UI.txTitle]);
     const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');

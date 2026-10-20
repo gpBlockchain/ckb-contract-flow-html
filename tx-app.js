@@ -4,8 +4,10 @@ const B=(zh,en)=>`<span data-l="zh">${zh}</span><span data-l="en">${en}</span>`;
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const short=h=>h&&h.length>22?h.slice(0,12)+'…'+h.slice(-8):h;
 const ckb=v=>{v=BigInt(v);const i=v/100000000n,f=(v%100000000n).toString().padStart(8,'0').replace(/0+$/,'');return i.toLocaleString('en-US')+(f?'.'+f:'')+' CKB'};
-const NAME={secp256k1_blake160:'SECP256K1/blake160',multisig_legacy:B('Multisig（旧版）','Multisig (legacy)'),multisig_v2:'Multisig V2',nervos_dao:'NervosDAO',sudt:'sUDT',xudt:'xUDT'};
-const nm=s=>{const k=C.identify(s);return k?`<span class="tagk">${NAME[k.id]}</span>`:`<span class="tagk tagu">${B('未知脚本','unknown script')}</span>`};
+const L=x=>x==null?'':typeof x==='object'?B(esc(x.zh!=null?x.zh:x.en),esc(x.en!=null?x.en:x.zh)):esc(x);
+const nm=s=>{const p=C.identify(s);return p?`<span class="tagk">${L(p.name||p.id)}</span>`:`<span class="tagk tagu">${B('未知脚本','unknown script')}</span>`};
+const hexRows=rows=>rows&&rows.length?`<div class="hex">${rows.map(([k,v])=>`<div><span class="hk">${L(k)}</span>${L(v)}</div>`).join('')}</div>`:'';
+const layoutHtml=l=>`<div class="layout"><span class="n">${L(l.label)}</span>${l.layout?`<div class="strip">${l.layout.map((f,i)=>`<div class="seg c${f.color!=null?f.color:i%6}" style="flex:${f.flex||1}"><b>${L(f.name)}</b><small>${L(f.size)}</small></div>`).join('')}</div>`:''}${hexRows(l.hex)}</div>`;
 const scr=s=>s?`{ ${nm(s)}codeHash: ${short(s.code_hash)}, hashType: ${s.hash_type}, args: ${esc(short(s.args))} }`:'null';
 const cellBox=(label,o,d,extra)=>`<div class="cell"><span class="n">${label}</span>Cell{\n  capacity: ${ckb(o.capacity)},\n  lock: ${scr(o.lock)},\n  type: ${scr(o.type)},\n  data: ${esc(short(d))}${extra||''}\n}</div>`;
 const chk=list=>`<div class="limits"><h3>${B('检查','Checks')}</h3><ul class="chk">${list.map(c=>`<li class="${c.ok===null?'unk':c.ok?'ok':'bad'}">${c.ok===null?'○':c.ok?'✓':'✗'} ${B(esc(c.zh),esc(c.en))}${c.code?` <span class="e">(${esc(c.code)})</span>`:''}</li>`).join('')}</ul></div>`;
@@ -20,12 +22,8 @@ function render(bundle,a){
     let extra='';
     if(g.kind==='lock'){const w=a.witnesses[g.witnessIndex];
       extra+=`<div class="cell"><span class="n">witness[${g.witnessIndex}] ${B('（解锁本组）','(unlocks this group)')}</span>${w&&w.args?`WitnessArgs{\n  lock: ${esc(short(w.args.lock||'None'))}${w.args.lock?' ('+(w.args.lock.length-2)/2+'B)':''},\n  input_type: ${esc(short(w.args.input_type||'None'))},\n  output_type: ${esc(short(w.args.output_type||'None'))}\n}`:esc(w?(w.error?'parse error: '+w.error:'empty'):'missing')}</div>`;
-      const m=g.parsed.multisig;
-      if(m&&!m.error)extra+=`<div class="layout"><span class="n">multisig_script</span><div class="strip"><div class="seg c0"><b>S=${m.S}</b><small>1B</small></div><div class="seg c1"><b>R=${m.R}</b><small>1B</small></div><div class="seg c2"><b>M=${m.M}</b><small>1B</small></div><div class="seg c3"><b>N=${m.N}</b><small>1B</small></div><div class="seg c4" style="flex:4"><b>pubkey_hash × ${m.pubkeyHashes.length}</b><small>20B</small></div><div class="seg c5" style="flex:4"><b>signature × ${m.signatures.length}</b><small>65B</small></div></div>
-<div class="hex">${m.pubkeyHashes.map((p,i)=>`<div><span class="hk">pubkey_hash[${i}]</span>${p}${i<m.R?' <span class="hl">'+B('必须签名','must sign')+'</span>':''}</div>`).join('')}${m.signatures.map((s,i)=>`<div><span class="hk">signature[${i}]</span>${short(s)}</div>`).join('')}<div><span class="hk">blake160</span>${m.scriptBlake160}</div>${g.parsed.argsSince?`<div><span class="hk">args since</span>${esc(g.parsed.argsSince.raw)}</div>`:''}</div></div>`;
     }
-    if(g.parsed.dao)extra+=g.parsed.dao.map(e=>`<div class="layout"><span class="n">${e.phase===0?B(`output[${e.output}]：新存款`,`output[${e.output}]: new deposit`):e.phase===1?B(`input[${e.input}]：提取第一阶段（存款区块 ${e.depositBlock}）`,`input[${e.input}]: withdraw phase 1 (deposit block ${e.depositBlock})`):B(`input[${e.input}]：提取第二阶段`,`input[${e.input}]: withdraw phase 2`)}</span>${e.phase===2&&e.D?`<div class="hex"><div><span class="hk">D</span>block ${e.D.number} · epoch ${e.D.epoch} · AR ${e.D.ar}</div><div><span class="hk">W</span>block ${e.W.number} · epoch ${e.W.epoch} · AR ${e.W.ar}</div><div><span class="hk">lock</span>${e.lockEpochs} epochs · min since ${e.minSince}</div><div><span class="hk">occupied</span>${ckb(e.occupied)}</div><div><span class="hk">max withdraw</span><span class="hl">${ckb(e.maxWithdraw)}</span> (${B('补贴','compensation')} ${ckb(e.maxWithdraw-e.capacity)})</div></div>`:''}</div>`).join('');
-    if(g.parsed.amounts)extra+=`<div class="hex">${g.parsed.amounts.in.map(([i,v])=>`<div><span class="hk">in[${i}] amount</span>${v}</div>`).join('')}${g.parsed.amounts.out.map(([j,v])=>`<div><span class="hk">out[${j}] amount</span>${v}</div>`).join('')}<div><span class="hk">Σin / Σout</span>${g.parsed.sum.in} / ${g.parsed.sum.out}${g.parsed.ownerMode?' · owner mode':''}</div></div>`;
+    extra+=hexRows(g.parsed.fields)+(g.parsed.layouts||[]).map(layoutHtml).join('');
     h+=`<div class="card"><h2><span>${g.inputs.length} → ${g.outputs.length}</span>${title} ${nm(g.script)}</h2><div class="kv"><span>script hash</span> ${g.hash}</div>
 <div class="flow"><div class="col">${ins||`<div class="small">${B('（无输入）','(no inputs)')}</div>`}</div><div class="arrow">➜</div><div class="col">${outs}</div></div>${extra}${g.checks.length?chk(g.checks):`<div class="small">${B('未知脚本：无可检查的约束','unknown script: no constraints checked')}</div>`}</div>`;
   }
@@ -43,7 +41,7 @@ window.__txRender=render;
 window.addEventListener('DOMContentLoaded',()=>{
   $('#net').onchange=()=>{$('#custom').style.display=$('#net').value==='custom'?'':'none'};
   $('#go').onclick=go;$('#hash').onkeydown=e=>{if(e.key==='Enter')go()};
-  document.querySelectorAll('.ex').forEach(a=>a.onclick=ev=>{ev.preventDefault();$('#hash').value=a.dataset.h;$('#net').value='https://mainnet.ckb.dev/rpc';$('#net').onchange();go()});
+  document.querySelectorAll('.ex').forEach(a=>a.onclick=ev=>{ev.preventDefault();$('#hash').value=a.dataset.h;$('#net').value=a.dataset.net==='testnet'?'https://testnet.ckb.dev/rpc':'https://mainnet.ckb.dev/rpc';$('#net').onchange();go()});
   const p=new URLSearchParams(location.hash.slice(1));if(p.get('tx')){$('#hash').value=p.get('tx');const r=p.get('rpc');if(r){if([...$('#net').options].some(o=>o.value===r))$('#net').value=r;else{$('#net').value='custom';$('#custom').value=r}$('#net').onchange()}go()}
 });
 })();
