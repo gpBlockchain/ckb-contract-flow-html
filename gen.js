@@ -19,6 +19,7 @@ const UI = {
   colon: { zh: '：', en: ': ' },
   toggle: { zh: 'EN', en: '中文' },
   defTitle: { zh: 'CKB 合约约束', en: 'CKB Contract Constraints' },
+  txTitle: { zh: '链上交易解码器', en: 'On-chain Transaction Decoder' },
   indexTitle: { zh: 'CKB 合约 Cell 流转约束', en: 'CKB Contract Cell-Flow Constraints' },
 };
 
@@ -129,6 +130,31 @@ function build(inFile, outFile) {
   return spec;
 }
 
+// On-chain tx decoder page (same look & toggle)
+function buildTx(outFile) {
+  const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
+  const extra = fs.readFileSync(path.join(__dirname, 'tx-template.html'), 'utf8');
+  const css = extra.slice(extra.indexOf('<style>'), extra.indexOf('</style>') + 8);
+  const lib = fs.readFileSync(path.join(__dirname, 'lib/ckb.js'), 'utf8'), app = fs.readFileSync(path.join(__dirname, 'tx-app.js'), 'utf8');
+  const EX = [['0xbaa72648c975a63097ae1500336475d70aa7ba8f0daf71405f883bd2b6e55dbb', 'DAO phase 2'], ['0x44d70abd4ed8c73c9ec7a6039aa1e35a22ef1455758c45b70bfef5a5fce93838', 'DAO phase 1'],
+    ['0x80136926c075b54911f6cdf420ab6fb47e1b6f39367c2b0eb1583a23e5bcd71f', 'multisig legacy 7/12'], ['0x1a4d5e3838d72dda8b3aa1119116e7c82bedb22098b15500b57c72f4bf119470', 'multisig v2 2/3'],
+    ['0xf7e4ead2242e204ff2e4797e6f3170dc289445593127896099867bacc0c01ecb', 'sUDT'], ['0xdcc1d1f0289a0df2ce56094bc0fe873baa03bf5d361545aa908c49778fe11429', 'xUDT']];
+  const form = `<div class="card"><div class="form">
+<select id="net"><option value="https://mainnet.ckb.dev/rpc">mainnet · https://mainnet.ckb.dev/rpc</option><option value="https://testnet.ckb.dev/rpc">testnet · https://testnet.ckb.dev/rpc</option><option value="custom">${T({ zh: '自定义 RPC', en: 'custom RPC' }, esc)}</option></select>
+<input id="custom" style="display:none" placeholder="http://127.0.0.1:8114">
+<input id="hash" placeholder="0x… tx hash"><button class="go" id="go">${T({ zh: '解码', en: 'Decode' }, esc)}</button></div>
+<div class="small">${T({ zh: '主网示例：', en: 'Mainnet examples: ' }, esc)}${EX.map(([h, n]) => `<a href="#" class="ex" data-h="${h}">${n}</a>`).join(' · ')}</div>
+<div class="small">${T({ zh: '说明：按 lock / type script hash 分组；识别 secp256k1_blake160、multisig（旧版/V2）、NervosDAO、sUDT、xUDT；签名不校验（标记 ○）。数据仅从你选择的 RPC 读取。', en: 'Notes: grouped by lock / type script hash; recognizes secp256k1_blake160, multisig (legacy/V2), NervosDAO, sUDT, xUDT; signatures are NOT verified (marked ○). Data is read only from the RPC you choose.' })}</div></div>
+<div id="result"></div>`;
+  const html = tpl.replace('{{DOC_TITLE}}', esc(UI.txTitle.zh + ' / ' + UI.txTitle.en)).replace('{{TOGGLE}}', T(UI.toggle, esc))
+    .replace('{{TITLE}}', T(UI.txTitle, esc)).replace('{{SUBTITLE}}', T({ zh: '输入交易 hash，解码为 cell 流转卡片并做无签名约束检查', en: 'Enter a tx hash to decode it into cell-flow cards with signature-free constraint checks' }))
+    .replace('{{CARDS}}', form).replace('{{FOOTER}}', '')
+    .replace('</style>', () => css.replace('<style>', '').replace('</style>', '') + '</style>');
+    const scripts = `<script>\n${lib.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${app.replace(/<\/script/gi, '<\\/script')}\n</script>`;
+  const html2 = html.replace('</body>', () => scripts + '</body>');
+  fs.mkdirSync(path.dirname(outFile), { recursive: true }); fs.writeFileSync(outFile, html2); console.log(`(tx decoder) -> ${outFile}`);
+}
+
 function main() {
   const a = process.argv.slice(2);
   if (!a.length) { console.error('Usage / 用法: node gen.js <spec.json|yaml> [out.html]\n                 node gen.js --all [specsDir=specs] [outDir=out]'); process.exit(1); }
@@ -138,6 +164,8 @@ function main() {
       const name = f.replace(/\.(json|ya?ml)$/i, '');
       items.push([name, build(path.join(sd, f), path.join(od, name + '.html')).title || name]);
     }
+    buildTx(path.join(od, 'tx.html'));
+    items.push(['tx', UI.txTitle]);
     const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
     const list = `<div class="card"><ul class="idx">${items.map(([n, t]) => `<li><a href="${n}.html">${T(t, esc)}</a></li>`).join('')}</ul></div>`;
     fs.writeFileSync(path.join(od, 'index.html'), tpl.replace('{{DOC_TITLE}}', esc(UI.indexTitle.zh + ' / ' + UI.indexTitle.en))
@@ -148,4 +176,4 @@ function main() {
   }
 }
 if (require.main === module) main();
-module.exports = { render, parseYaml, T };
+module.exports = { render, parseYaml, T, buildTx };

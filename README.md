@@ -57,6 +57,18 @@ node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在�
 - `cond` 以 `≤ ≥ = < >` 开头时不加冒号。
 - 也支持 `.yaml`（简单子集），复杂内容建议 JSON。
 
+### 链上交易解码器 `out/tx.html`
+
+输入交易 hash 和 RPC（预设 mainnet `https://mainnet.ckb.dev/rpc`、testnet `https://testnet.ckb.dev/rpc`，或自定义），页面会：
+
+- 调用 `get_transaction` 取交易，并逐个取输入的前序交易、`get_header` 取 header_deps / DAO 相关区块头；
+- 用内置 blake2b（`ckb-default-hash`）计算 script hash，按 lock / type 分组成卡片（输入 → 输出），标出解锁本组的 witness 并解析 WitnessArgs（molecule）；
+- 识别已知脚本：secp256k1_blake160、multisig 旧版（RFC 0024）与 V2（`0x36c9…0d29`/data1，来自 ckb-sdk / ccc）、NervosDAO、sUDT（RFC 0025）、xUDT（RFC 0052）；其他显示为“未知脚本”；
+- 解析 multisig S/R/M/N/pubkey hash/签名、DAO 阶段（存款区块、D/W epoch、AR、最小 since、最大可提取）、sUDT/xUDT u128 数量，并做**无需签名**的约束检查（✓/✗），签名校验标记为 ○ 未检查；
+- RPC 不可达或未开启 CORS 时给出明确提示。支持 `tx.html#tx=0x…&rpc=…` 直链。
+
+代码：`lib/ckb.js`（blake2b、molecule、script hash、RPC、分析）+ `tx-app.js`（渲染），由 `gen.js --all` 内联打包成单文件。测试：`node scripts/test-tx.js [txhash…]`（需能访问 RPC，可用 `RPC=` 环境变量指定）。
+
 ### 用 AI 从合约源码写 spec
 
 把下面的提示词（见 English 部分的 *AI prompt*，中英通用）连同合约源码（及 `common.h` 等 include）交给 AI，保存输出为 `specs/<name>.json`，运行 `node gen.js --all && node scripts/check.js`，然后**逐条对照源码的 `return ERROR_*` 人工核对**。
@@ -82,6 +94,18 @@ Pushing to `main` runs `.github/workflows/pages.yml`, which builds every spec an
 ### Spec format
 
 Any text field is either a plain string (language-neutral, e.g. code-like `Cell{ … }`) or `{"zh": "...", "en": "..."}`. Text containing Chinese must be bilingual (enforced by `scripts/check.js`). See the jsonc example in the Chinese section and the files in `specs/`. `{{...}}` highlights a constrained field; `layout` boxes render byte layouts.
+
+### On-chain transaction decoder `out/tx.html`
+
+Enter a tx hash and an RPC URL (presets: mainnet `https://mainnet.ckb.dev/rpc`, testnet `https://testnet.ckb.dev/rpc`, or custom). The page:
+
+- fetches `get_transaction`, resolves every input's previous output, and calls `get_header` for header_deps / DAO blocks;
+- computes script hashes with a built-in blake2b (`ckb-default-hash`), groups cells by lock / type script into input → output cards, shows which witness unlocks each lock group and parses WitnessArgs (molecule);
+- recognizes secp256k1_blake160, multisig legacy (RFC 0024) and V2 (`0x36c9…0d29`/data1, from ckb-sdk / ccc), NervosDAO, sUDT (RFC 0025), xUDT (RFC 0052); anything else is shown as "unknown script";
+- parses multisig S/R/M/N/pubkey hashes/signatures, DAO phase (deposit block, D/W epochs, AR, minimum since, max withdraw), sUDT/xUDT u128 amounts, and runs **signature-free** constraint checks (✓/✗); signature verification is marked ○ not checked;
+- shows a clear message when the RPC is unreachable or blocks CORS. Deep links: `tx.html#tx=0x…&rpc=…`.
+
+Code: `lib/ckb.js` (blake2b, molecule, script hash, RPC, analysis) + `tx-app.js` (rendering), inlined into a single file by `gen.js --all`. Test: `node scripts/test-tx.js [txhash…]` (needs RPC access; override with `RPC=`).
 
 ### AI prompt
 
@@ -112,5 +136,8 @@ gen.js            generator
 template.html     page template ({{DOC_TITLE}} {{TOGGLE}} {{TITLE}} {{SUBTITLE}} {{CARDS}} {{FOOTER}})
 specs/            spec files
 scripts/check.js  tag-balance & bilingual coverage check
+scripts/test-tx.js decode real mainnet txs with the built page (network)
+lib/ckb.js        blake2b / molecule / script hash / RPC / analysis
+tx-app.js, tx-template.html  tx decoder UI
 out/              build output (git-ignored; built by CI)
 ```
