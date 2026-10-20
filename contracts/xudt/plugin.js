@@ -8,8 +8,14 @@
     const p = R.udt.amounts(g, ctx); const a = R.hexToBytes(g.script.args);
     if (a.length >= 36) { const v = Number(R.leToBig(a.subarray(32, 36))); p.flags = v; p.flagLow = v & ~0xe0000000; }
     p.fields.unshift(['owner lock hash', R.bytesToHex(a.subarray(0, 32))], ['flags', p.flags == null ? 'none (plain)' : '0x' + p.flags.toString(16).padStart(8, '0') + ' (' + (FLAG[p.flagLow] || 'invalid') + ')']);
-    // owner mode variants beyond input lock (input/output type) are not evaluated here
-    if (p.flags != null && (p.flags & 0x20000000)) p.owner = false;
+    // owner mode (xudt_rce.c parse_args/check_owner_mode): input lock hash (unless 0x20000000), input type hash (0x80000000), output type hash (0x40000000)
+    const f = p.flags || 0, oh = R.bytesToHex(a.subarray(0, 32));
+    const viaInLock = !(f & 0x20000000) && ctx.inputs.some(x => x.output && R.scriptHash(x.output.lock) === oh);
+    const viaInType = !!(f & 0x80000000) && ctx.inputs.some(x => x.output && x.output.type && R.scriptHash(x.output.type) === oh);
+    const viaOutType = !!(f & 0x40000000) && ctx.tx.outputs.some(o => o.type && R.scriptHash(o.type) === oh);
+    p.owner = viaInLock || viaInType || viaOutType;
+    p.ownerVia = viaInLock ? 'input lock' : viaInType ? 'input type' : viaOutType ? 'output type' : null;
+    p.fields = p.fields.map(r => r[0] === 'owner mode' ? ['owner mode', p.owner ? 'yes (' + p.ownerVia + ')' : 'no'] : r);
     return p;
   }
   function check(g, ctx, p) {
@@ -19,7 +25,6 @@
     if (p.flagLow === 2) c.push(R.check(a.length === 56, 'flags=2 时 args = 32 + 4 + 20 字节', 'flags=2 requires args = 32 + 4 + 20 bytes', 44));
     c.push(...R.udt.check(g, ctx, p, { data: -2, amount: -52 }));
     if (p.flagLow === 1 || p.flagLow === 2) c.push(R.NOT_CHECKED('扩展脚本（未检查）', 'extension scripts (not checked)', null));
-    if (p.flags != null && (p.flags & 0xc0000000)) c.push(R.NOT_CHECKED('type-hash owner 模式（未检查）', 'type-hash owner mode (not checked)', null));
     return c;
   }
   R.register({ id: 'xudt', kind: 'type', name: 'xUDT',
