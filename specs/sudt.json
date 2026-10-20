@@ -1,0 +1,27 @@
+{
+  "title": "sUDT（Simple UDT）合约约束",
+  "subtitle": "来源：RFC 0025 Simple UDT · 实现 ckb-production-scripts/c/simple_udt.c@e570c11 · Lina code_hash 0x5e7a…cfd5，hash_type type",
+  "transitions": [
+    {
+      "tag": "0 → N", "title": "发行 / 增发（owner 模式）",
+      "inputs": [{ "label": "某个 input：owner cell", "body": "Cell{\n  lock: {{hash(lock) == sUDT.args}},\n  type: 任意\n}" }],
+      "outputs": [{ "label": "output：sUDT cell", "body": "Cell{\n  lock: 任意,\n  type: { codeHash: sUDT, args: {{owner lock hash (32B)}} },\n  data: {{amount: u128 LE (前 16 字节)}}\n}" }],
+      "limits": [
+        { "field": "type.args", "cond": "长度恰为 32 字节（owner lock script hash）", "err": "-1" },
+        { "field": "owner 模式", "cond": "任一 input 的 lock hash == args 时脚本直接通过，不检查数量" }
+      ]
+    },
+    {
+      "tag": "N → M", "title": "转账 / 销毁",
+      "inputs": [{ "label": "inputs：sUDT cell（同一 type）", "body": "Cell{\n  lock: 用户 lock,\n  type: { codeHash: sUDT, args: owner hash },\n  data: {{amount_in (u128 LE)}}\n}" }],
+      "outputs": [{ "label": "outputs：sUDT cell（同一 type）", "body": "Cell{\n  lock: 任意,\n  type: { codeHash: sUDT, args: owner hash },\n  data: {{amount_out (u128 LE)}}\n}" }],
+      "limits": [
+        { "field": "data", "cond": "长度 ≥ 16 字节，前 16 字节为 u128 LE 数量", "err": "-2" },
+        { "field": "Σ amount", "cond": "累加不得溢出 u128", "err": "-51" },
+        { "field": "Σ amount_in", "cond": "≥ Σ amount_out（多出部分即销毁）", "err": "-52" },
+        { "field": "lock", "cond": "sUDT 不限制，用户自定" }
+      ]
+    }
+  ],
+  "notes": ["其他错误码：-3 ERROR_SYSCALL，-21 ERROR_SCRIPT_TOO_LONG（来自 simple_udt.c）"]
+}

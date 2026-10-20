@@ -1,0 +1,23 @@
+# YAML 示例（支持简单子集；复杂内容建议用 JSON）
+title: 示例合约约束
+subtitle: YAML 格式示例
+transitions:
+  - tag: 0 → 1
+    title: 创建
+    inputs:
+      - label: input
+        body: |
+          Cell{
+            capacity: …
+          }
+    outputs:
+      - label: output
+        body: |
+          Cell{
+            type: { codeHash: X, args: {{0x}} },
+            data: {{8 字节}}
+          }
+    limits:
+      - field: data
+        cond: 长度必须为 8
+        err: -1

@@ -1,0 +1,46 @@
+{
+  "title": "NervosDAO 合约约束",
+  "subtitle": "来源：ckb-system-scripts / c/dao.c　·　DAO = type script（code_hash 0x82d7…3f2e，hash_type type）",
+  "transitions": [
+    {
+      "tag": "0 → 1", "title": "存款",
+      "inputs": [{ "label": "input（任意普通 cell）", "body": "Cell{\n  capacity: …,\n  type: null\n}" }],
+      "outputs": [{ "label": "output[j]：deposit cell", "body": "Cell{\n  capacity: X,\n  lock: 任意,\n  type: { codeHash: DAO, args: {{0x}} },\n  data: {{0x0000000000000000}}\n}" }],
+      "limits": [
+        { "field": "type.args", "cond": "必须为空", "err": "-2" },
+        { "field": "data", "cond": "恰好 8 字节，全为 0", "err": "-19" },
+        { "field": "Σ输出 capacity", "cond": "≤ Σ输入 capacity", "err": "-15" }
+      ]
+    },
+    {
+      "tag": "1 → 1", "title": "提取第一阶段",
+      "inputs": [{ "label": "input[i]：deposit cell（位于区块 D）", "body": "Cell{\n  capacity: X,\n  type: { codeHash: DAO, args: 0x },\n  data: 0x0000000000000000\n}" }],
+      "outputs": [{ "label": "output[{{i}}]：withdrawing cell", "body": "Cell{\n  capacity: {{X}},\n  lock: 任意,\n  type: {{{ codeHash: DAO, args: 0x }}},\n  data: {{D.number (u64 LE)}}\n}" }],
+      "extras": ["header_deps: [ {{D}} ]"],
+      "limits": [
+        { "field": "index", "cond": "输出必须与 deposit 输入在同一 index i" },
+        { "field": "type", "cond": "与输入同一 DAO script", "err": "-20" },
+        { "field": "capacity", "cond": "与输入完全相等", "err": "-20" },
+        { "field": "data", "cond": "8 字节 u64 LE，等于 D 的区块号", "err": "-20" },
+        { "field": "header_deps", "cond": "必须包含区块 D 的 hash" },
+        { "field": "lock", "cond": "dao.c 不检查", "note": "CKB 节点可能要求 lock 大小相同，未核实" }
+      ]
+    },
+    {
+      "tag": "1 → 0", "title": "提取第二阶段",
+      "inputs": [
+        { "label": "input[i]：withdrawing cell（位于区块 W）", "body": "Cell{\n  capacity: X,\n  type: { codeHash: DAO, args: 0x },\n  data: D.number,\n  since: {{≥ 锁定期（绝对 epoch）}}\n}" },
+        { "label": "witness[i]", "body": "WitnessArgs{\n  lock: 签名,\n  input_type: {{k (u64 LE, 8 字节)}}\n}" }
+      ],
+      "outputs": [{ "label": "outputs：任意 cell", "body": "Cell{\n  capacity: {{Σ ≤ 上限}},\n  lock: 任意,\n  type: 任意\n}" }],
+      "extras": ["header_deps: [ {{W}}, …, {{D（位于第 k 个）}} ]"],
+      "limits": [
+        { "field": "witness.input_type", "cond": "8 字节，值为 D 在 header_deps 中的下标 k", "err": "-11" },
+        { "field": "header_deps", "cond": "包含 D 和 W；D 的区块号必须等于 data，且 W 的 epoch 必须晚于 D", "err": "-14" },
+        { "field": "since", "cond": "绝对 epoch，且 ≥ D.epoch + ⌈存款 epoch 数 / 180⌉ × 180", "err": "-17" },
+        { "field": "Σ输出 capacity", "cond": "≤ 普通输入 + Σ 最大可提取", "err": "-15" },
+        { "field": "最大可提取", "cond": "= occupied + (X − occupied) × AR_W / AR_D", "note": "AR 取自区块头 dao 字段" }
+      ]
+    }
+  ]
+}
