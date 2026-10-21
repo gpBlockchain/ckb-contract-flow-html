@@ -7,11 +7,11 @@ main{max-width:1100px;margin:auto;padding:48px 24px 80px}
 h1{font-size:30px;margin:0 0 8px}.sub{color:#777;margin-bottom:40px}
 .card{background:#fff;border-radius:16px;box-shadow:0 2px 12px #0001;padding:32px 36px;margin-bottom:40px}
 .card h2{margin:0 0 24px;font-size:24px}.card h2 span{font-family:Menlo,monospace;color:#2f6fed;margin-right:12px}
-.flow{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
-.col{display:flex;flex-direction:column;gap:14px}
+.flow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start;gap:16px}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0;border-radius:12px;padding:10px}.cin{background:#fff7ed;border:1px solid #fed7aa}.cout{background:#f0fdf4;border:1px solid #bbf7d0}.colh{font:600 14px/1.4 system-ui,sans-serif;letter-spacing:.02em}.cin .colh{color:#c2410c}.cout .colh{color:#15803d}.colh small{font-weight:400;opacity:.7}.cin .cell{border-color:#fdba74;background:#fff}.cout .cell{border-color:#86efac;background:#fff}
 .cell{font:16px/1.7 Menlo,Consolas,monospace;background:#fafbfc;border:2px solid #dde1e6;border-radius:12px;padding:14px 20px;white-space:pre}
 .cell .n{color:#999;font-size:13px;display:block}
-.arrow{font-size:40px;color:#bbb}
+.arrow{font-size:40px;color:#bbb;align-self:center}
 .hl{background:#fff1b8;color:#b45309;border-radius:4px;padding:0 4px;font-weight:700}
 .sec{margin-top:18px}.sec h3{font-size:15px;margin:0 0 8px;color:#555}.secgrid{display:flex;flex-wrap:wrap;gap:12px}.secgrid .cell{flex:1 1 320px}
 .extra{margin-top:18px;font:15px Menlo,monospace;color:#555}
@@ -44,7 +44,7 @@ button.tag{cursor:pointer;min-height:32px}button.tag[aria-pressed="true"]{backgr
 @media (max-width:760px){
  body{font-size:16px}main{padding:56px 12px 48px}h1{font-size:22px}
  .card{padding:18px 14px;border-radius:12px;margin-bottom:22px}.card h2{font-size:19px}
- .flow{flex-direction:column;align-items:stretch;gap:10px}.col{width:100%}
+ .flow{grid-template-columns:minmax(0,1fr);gap:8px}.col{width:auto}
  .arrow{transform:rotate(90deg);text-align:center;align-self:center;font-size:30px;line-height:1}
  .cell{font-size:13px;padding:10px 12px;white-space:pre;max-width:100%}
  .layout{padding:12px}.strip{flex-wrap:wrap}.seg{min-width:calc(25% - 3px);flex:1 1 auto!important}

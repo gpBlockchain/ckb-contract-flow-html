@@ -108,9 +108,9 @@ function render(spec, id) {
 <div class="card">
 <h2><span>${T(t.tag, esc)}</span>${T(t.title, esc)}</h2>
 <div class="flow">
-<div class="col">${(t.inputs || []).map(box).join('\n')}</div>
+<div class="col cin"><div class="colh">${T({ zh: 'Inputs 输入', en: 'Inputs' }, esc)}</div>${(t.inputs || []).map(box).join('\n')}</div>
 <div class="arrow">➜</div>
-<div class="col">${(t.outputs || []).map(box).join('\n')}</div>
+<div class="col cout"><div class="colh">${T({ zh: 'Outputs 输出', en: 'Outputs' }, esc)}</div>${(t.outputs || []).map(box).join('\n')}</div>
 </div>
 ${(t.sections || []).map(sc => `<div class="sec"><h3>${T(sc.title, esc)}</h3><div class="secgrid">${(sc.boxes || []).map(box).join('\n')}</div></div>`).join('\n')}
 ${(t.layouts || []).map(layoutBox).join('\n')}
