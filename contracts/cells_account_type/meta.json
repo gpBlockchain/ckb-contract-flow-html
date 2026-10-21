@@ -1,0 +1,86 @@
+{
+  "tags": [
+    "identity",
+    "community",
+    "open-source"
+  ],
+  "contributors": [],
+  "source": {
+    "repo": "https://github.com/LusoCryptoLabs/cells-contracts",
+    "commit": "34dad3c2102b23b974ef05cc9ecf3021ffd469b9",
+    "paths": [
+      "contracts/account-cell-type/src/main.rs",
+      "crates/cells-core/src/lib.rs"
+    ],
+    "commit_note": "exact commit read when writing spec/plugin (default-branch HEAD, 2026-09-28). Deployment constants from cellula-sdk@0.2.1 dist/deployments.js and docs/TRUST.md.",
+    "binary": {
+      "status": "unverified",
+      "per": [
+        {
+          "data_hash": "0x99ea60a4369ed3d596338b66d6818710a1d047758f478dd854dd814b786aa088",
+          "evidence": [],
+          "matches_commit": false
+        },
+        {
+          "data_hash": "0x11d8695e47f02b5cf96ae7cf5ab870bea08a04aa84231229b8989883220a352b",
+          "evidence": [],
+          "matches_commit": false
+        }
+      ],
+      "note": "Live mainnet code cell (upgraded 2026-09-28 21:00Z, block 20583638) has data hash 0x99ea…a088, which docs/TRUST.md at this commit lists; README and tests/fixtures still show the pre-upgrade 0xf86b…ae30 (the fixture blake2b = 0xf86b…). No artifact at this commit hashes to 0x99ea…; reproducible build (gcc 13.2 + rustc 1.96 + 3 env values) not attempted. Testnet 0x11d8…352b also unverified."
+    }
+  },
+  "deployments": [
+    {
+      "network": "mainnet",
+      "code_hash": "0xd96cee56727a2bb9a21408c154d278df5095fb4b4dcfd50516156424479bfe54",
+      "hash_type": "type",
+      "constant_source": "cellula-sdk@0.2.1 deployments.js CELLS_DEPLOYMENT_MAINNET.account; cells-contracts docs/TRUST.md",
+      "cell_dep": {
+        "out_point": {
+          "index": "0x0",
+          "tx_hash": "0x3072417e797a39a6ead341947dae3350b47a1b7d6571b326d3d7f8fe7677bf0b"
+        },
+        "dep_type": "code"
+      },
+      "code_cell": {
+        "index": "0x0",
+        "tx_hash": "0x3072417e797a39a6ead341947dae3350b47a1b7d6571b326d3d7f8fe7677bf0b"
+      },
+      "type_script": {
+        "args": "0x51709700704ca6cb5dd695e42b9637bccbbd28bb6c29dd6d31dab9aab3de9a5a",
+        "code_hash": "0x00000000000000000000000000000000000000000000000000545950455f4944",
+        "hash_type": "type"
+      },
+      "data_hash": "0x99ea60a4369ed3d596338b66d6818710a1d047758f478dd854dd814b786aa088",
+      "deploy_tx": "0x3072417e797a39a6ead341947dae3350b47a1b7d6571b326d3d7f8fe7677bf0b",
+      "deploy_block": 20583638
+    },
+    {
+      "network": "testnet",
+      "code_hash": "0xe0706b176678181d982290d93dfcd82098e60cceaa4a87f10f32dcbcc91df1d9",
+      "hash_type": "type",
+      "constant_source": "cellula-sdk@0.2.1 deployments.js CELLS_DEPLOYMENT_TESTNET.account",
+      "cell_dep": {
+        "out_point": {
+          "index": "0x0",
+          "tx_hash": "0xe3c204947c3f457410af242747146b3330a05d9f02d095b2636ac9368a3acce4"
+        },
+        "dep_type": "code"
+      },
+      "code_cell": {
+        "index": "0x0",
+        "tx_hash": "0xe3c204947c3f457410af242747146b3330a05d9f02d095b2636ac9368a3acce4"
+      },
+      "type_script": {
+        "args": "0x4b33dfe66b3f11ca7ac2626bd538d2933f3ebfda237c2c2a185a961b2d7a98f0",
+        "code_hash": "0x00000000000000000000000000000000000000000000000000545950455f4944",
+        "hash_type": "type"
+      },
+      "data_hash": "0x11d8695e47f02b5cf96ae7cf5ab870bea08a04aa84231229b8989883220a352b",
+      "deploy_tx": "0xe3c204947c3f457410af242747146b3330a05d9f02d095b2636ac9368a3acce4",
+      "deploy_block": 22559039
+    }
+  ],
+  "checked_at": "2026-10-21"
+}
