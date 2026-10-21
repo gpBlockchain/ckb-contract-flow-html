@@ -19,6 +19,7 @@
     "btc": { "group": "category", "zh": "BTC / RGB++", "en": "BTC / RGB++" },
     "proxy": { "group": "category", "zh": "代理 / 工具", "en": "Proxy / utility" },
     "quantum": { "group": "category", "zh": "抗量子", "en": "Quantum-safe" },
+    "layer2": { "group": "category", "zh": "二层 / Rollup", "en": "Layer 2 / Rollup" },
     "mainnet": { "group": "network", "zh": "主网", "en": "Mainnet" },
     "testnet": { "group": "network", "zh": "测试网", "en": "Testnet" },
     "open-source": { "group": "source", "zh": "开源", "en": "Open source" },

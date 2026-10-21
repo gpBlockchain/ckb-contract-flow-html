@@ -54,6 +54,15 @@ hash_type in parentheses. "same" = identical on both networks.
 | cells_account_lock | Cells name lock (always success) | `0x9f0f0ba142b58cba2fe047546cfd8481d5b1769437cd3533e6458b21b61871ab` (type) | `0xede6a3d80717c3d7927eea678d095abbe68dbb08ca6fdbbbdd9de906455a4afd` (type) | cellula-sdk@0.2.1 deployments.js; docs/TRUST.md | LusoCryptoLabs/cells-contracts | added |
 | cells_sale_lock | Cells name listing (sale-lock) | `0x086c8f4e9d4272e3dfbaca399792f730e6604591e87931ee6d67047a3c900879` (type) | `0x498ab6b49b6b25b3c47fcea74bd8a4447bc4efda6417809152a846e058ad0ae4` (type) | cellula-sdk@0.2.1 deployments.js; docs/TRUST.md | LusoCryptoLabs/cells-contracts | added |
 | cells_price_type | Cells registration price factor (price-cell-type) | `0x97bf5f760cf72f918f13704d7184933b79d4ddc1fd85075762373e531152d4f9` (type) | `0xe1057caf161b3c720fcdb80190e89c6efc36b6b4256b3c99635fda63a9dd4294` (type) | cellula-sdk@0.2.1 deployments.js; docs/TRUST.md | LusoCryptoLabs/cells-contracts | added |
+| godwoken_state_validator | Godwoken v1 state_validator | — | — | godwoken-info@8ce6390 scripts-deploy-result.json | godwokenrises/godwoken@c2b1f85 | added (Godwoken sunset) |
+| godwoken_deposit_lock | Godwoken v1 deposit_lock | — | — | godwoken-info@8ce6390 scripts-deploy-result.json | godwokenrises/godwoken@c2b1f85 | added (Godwoken sunset) |
+| godwoken_custodian_lock | Godwoken v1 custodian_lock | — | — | godwoken-info@8ce6390 scripts-deploy-result.json | godwokenrises/godwoken@c2b1f85 | added (Godwoken sunset) |
+| godwoken_withdrawal_lock | Godwoken v1 withdrawal_lock | — | — | godwoken-info@8ce6390 scripts-deploy-result.json | godwokenrises/godwoken@c2b1f85 | added (Godwoken sunset) |
+| godwoken_stake_lock | Godwoken v1 stake_lock | — | — | godwoken-info@8ce6390 scripts-deploy-result.json | godwokenrises/godwoken@c2b1f85 | added (Godwoken sunset) |
+| godwoken_challenge_lock | Godwoken v1 challenge_lock | — | — | godwoken-info@8ce6390 scripts-deploy-result.json | godwokenrises/godwoken@c2b1f85 | added (Godwoken sunset) |
+| godwoken_eth_account_lock | Godwoken v1 eth_account_lock | — | — | godwoken-info@8ce6390 scripts-deploy-result.json | godwokenrises/godwoken@c2b1f85 | added (Godwoken sunset) |
+| godwoken_delegate_cell_lock | Godwoken v1 delegate_cell_lock | — | — | godwoken-info@8ce6390 scripts-deploy-result.json | godwokenrises/godwoken@c2b1f85 | added (Godwoken sunset) — no official deployment |
+| (excluded) | Godwoken L2-only: meta_contract_validator, l2_sudt_validator, polyjuice_validator, eth_addr_reg_validator, Polyjuice/EVM contracts | — | — | — | godwokenrises/godwoken | excluded: L2 backends, not L1 scripts; rollup cell omni_lock covered by existing omnilock |
 | utxo_airdrop_badge / token_metadata | RGB++ airdrop badge / token metadata types | `0xf5da9003e31fa9301a3915fe304de9bdb80524b5f0d8fc325fb699317998ee7a` / `0x0c7dc8caec145b51b142e13f47fe4262c80628213d1b6c3d9c1aa6a62088804e` (type) | same | rgbpp-sdk | not located | no-source |
 
 ## 仍缺的值得关注的合约 / Notable contracts still missing (re-scan 2026-10-21)
