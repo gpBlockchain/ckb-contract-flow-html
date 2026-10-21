@@ -112,6 +112,7 @@ function render(spec, id) {
 <div class="arrow">➜</div>
 <div class="col">${(t.outputs || []).map(box).join('\n')}</div>
 </div>
+${(t.sections || []).map(sc => `<div class="sec"><h3>${T(sc.title, esc)}</h3><div class="secgrid">${(sc.boxes || []).map(box).join('\n')}</div></div>`).join('\n')}
 ${(t.layouts || []).map(layoutBox).join('\n')}
 ${(t.extras || []).map(x => `<div class="extra">${T(x)}</div>`).join('\n')}
 ${t.limits && t.limits.length ? `<div class="limits"><h3>${T(UI.limits, esc)}</h3><ul>
