@@ -186,6 +186,9 @@ function main() {
     const list = hero + `<div class="card"><div class="form"><input id="q" type="search" placeholder="search / 搜索 (id, name, tag)" aria-label="search"></div>
 <div class="filters">${groups}</div><div id="projsel">${Object.keys(mh.PROJ).filter(k => META.TAX.tags[k]).map(mh.projectPanel).join('')}</div><div class="small" id="cnt"></div><ul class="cards">${cards}</ul>
 </div>
+<div class="card"><h2>${T({ zh: '用 AI 本地生成', en: 'Generate locally with your AI agent' }, esc)}</h2><p class="small">${T({ zh: '仓库自带 agent skill：把 skills/ckb-contract-flow/ 复制到你的 agent 的 skills 目录（如 .claude/skills/），然后对 AI 说：', en: 'The repo ships an agent skill: copy skills/ckb-contract-flow/ into your agent\'s skills folder (e.g. .claude/skills/), then tell your AI:' }, esc)}</p>
+<pre class="mono">${T({ zh: '用 ckb-contract-flow skill 为 <合约仓库 URL> 生成 cell 流转 HTML', en: 'Use the ckb-contract-flow skill to generate a cell-flow HTML for <contract repo URL>' }, esc)}</pre>
+<div class="small"><a href="https://github.com/gpBlockchain/ckb-contract-flow-html/blob/main/skills/ckb-contract-flow/SKILL.md">SKILL.md →</a> · ${T({ zh: '手动：git clone 后运行 node gen.js --all out，打开 out/index.html', en: 'Manual: git clone, run node gen.js --all out, open out/index.html' }, esc)}</div></div>
 <div class="card"><h2>${T({ zh: '贡献者', en: 'Contributors' }, esc)}</h2>${people.length ? `<ul class="people">${people.map(([u, k]) => `<li>${mh.avatar(u)} <a href="https://github.com/${esc(u)}">@${esc(u)}</a> · ${k}</li>`).join('')}</ul>` : ''}
 <div class="small">${T({ zh: '欢迎贡献新合约：见 docs/ADD_CONTRACT.md，并在 meta.json 的 contributors 中加上你的 GitHub 用户名。', en: 'New contracts welcome: see docs/ADD_CONTRACT.md and add your GitHub username to contributors in meta.json.' }, esc)}</div></div>
 <script>(function(){var on={},q=document.getElementById('q'),li=[].slice.call(document.querySelectorAll('.ci')),cnt=document.getElementById('cnt');
