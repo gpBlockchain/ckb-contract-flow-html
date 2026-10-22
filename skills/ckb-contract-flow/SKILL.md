@@ -14,11 +14,22 @@ description: >-
 Generator: https://github.com/gpBlockchain/ckb-contract-flow-html.
 Source of truth for formats and the plugin API: `README.md` and `docs/ADD_CONTRACT.md` in that repo. Read them before writing a contract.
 
+## Quick path (do this first, no questions needed)
+Use the generator from a cache clone; never ask the user to clone anything.
+```bash
+D="${CKB_FLOW_HOME:-$HOME/.cache/ckb-contract-flow-html}"
+if [ -d "$D/.git" ]; then git -C "$D" pull -q --ff-only; else git clone -q --depth 1 https://github.com/gpBlockchain/ckb-contract-flow-html "$D"; fi
+cd "$D" && node gen.js --all out
+```
+- If the requested contract already exists in `contracts/<id>/`, open `out/<id>.html` (and `out/index.html`) for the user.
+- Otherwise add it (section 5) inside `$D`, rebuild, and open `out/<id>.html`.
+- Report the absolute path of the generated HTML.
+
 ## Prerequisites
-- Node.js ≥ 16 (zero npm dependencies, no `npm install`). `git`.
+- Node.js ≥ 16 (zero npm dependencies, no `npm install`) and `git`.
 - Network access to a CKB RPC (default `https://mainnet.ckb.dev/rpc`, `https://testnet.ckb.dev/rpc`) for the tx decoder, `test-tx.js` and `check-deployments.js`. Page generation itself is offline.
 
-## 1. Clone
+## 1. Manual clone (optional)
 ```bash
 git clone https://github.com/gpBlockchain/ckb-contract-flow-html
 cd ckb-contract-flow-html        # run every command below from the repo root
@@ -69,7 +80,10 @@ node gen.js contracts/sudt/spec.json                # same, written to out/spec.
 - Script shows as "unknown" in tx.html: no plugin `match` for that code_hash + hash_type (+ net); regenerate with `node gen.js --all out` after adding one.
 - `new-contract.js` says the directory exists: pick another id or edit the existing contract.
 
-## Install this skill for your agent
-The skill lives at `skills/ckb-contract-flow/SKILL.md`. Copy or symlink the folder to where your agent loads skills, e.g. `.claude/skills/ckb-contract-flow/` (project) or `~/.claude/skills/ckb-contract-flow/` (user), or `.cursor/skills/`; other agents can simply be pointed at the file.
+## Install this skill
+```bash
+npx skills add gpBlockchain/ckb-contract-flow-html -g -y
+```
+(or `curl -fsSL https://raw.githubusercontent.com/gpBlockchain/ckb-contract-flow-html/main/install.sh | sh`)
 
-Example prompt: `Use the ckb-contract-flow skill to generate a cell-flow HTML for <contract repo URL>`
+Then say: `用 ckb-contract-flow 给 <contract repo URL> 生成合约流转 HTML` / `Use ckb-contract-flow to generate a cell-flow HTML for <contract repo URL>`
