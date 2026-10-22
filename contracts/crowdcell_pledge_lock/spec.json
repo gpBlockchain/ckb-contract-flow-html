@@ -1,0 +1,315 @@
+{
+  "title": {
+    "zh": "CrowdCell Pledge Lock 约束",
+    "en": "CrowdCell Pledge Lock Constraints"
+  },
+  "subtitle": {
+    "zh": "来源：alesfer001/CrowdCell / contracts/pledge-lock/src/main.rs@2fd13f6　·　0xc28d…a525 (data2，仅测试网)　·　社区合约，未经独立审计",
+    "en": "Source: alesfer001/CrowdCell / contracts/pledge-lock/src/main.rs@2fd13f6　·　0xc28d…a525 (data2, testnet only)　·　community contract, not independently audited"
+  },
+  "transitions": [
+    {
+      "tag": "A",
+      "title": {
+        "zh": "截止前：合并（since = 0）",
+        "en": "Before deadline: merge (since = 0)"
+      },
+      "inputs": [
+        {
+          "label": {
+            "zh": "≥2 个 pledge",
+            "en": "≥2 pledges"
+          },
+          "body": "Cell{ lock: { codeHash: PLEDGE_LOCK, args: {{campaign_hash 32B}} ‖ {{deadline 8B}} ‖ {{backer_lock_hash 32B}} }, type: T, data[64..72] = aᵢ }, since = 0"
+        }
+      ],
+      "outputs": [
+        {
+          "label": {
+            "zh": "唯一合并 cell",
+            "en": "single merged cell"
+          },
+          "body": {
+            "zh": "Cell{ lock: {{同一 lock}}, {{capacity = Σ输入}}, type: {{T}}, data[64..72] = {{Σaᵢ}} }",
+            "en": "Cell{ lock: {{same lock}}, {{capacity = Σinputs}}, type: {{T}}, data[64..72] = {{Σaᵢ}} }"
+          }
+        }
+      ],
+      "layouts": [
+        {
+          "label": {
+            "zh": "lock args 字节布局（72B）",
+            "en": "lock args byte layout (72B)"
+          },
+          "layout": [
+            {
+              "name": "campaign_type_script_hash",
+              "size": "32B",
+              "role": {
+                "zh": "所属 campaign 的 type script hash",
+                "en": "type script hash of the campaign"
+              },
+              "cons": {
+                "zh": "在 cell_deps 中查找",
+                "en": "looked up in cell_deps"
+              },
+              "color": 1,
+              "flex": 4
+            },
+            {
+              "name": "deadline_block",
+              "size": "8B",
+              "role": {
+                "zh": "截止区块 u64 LE",
+                "en": "deadline block u64 LE"
+              },
+              "cons": {
+                "zh": "since ≥ 它",
+                "en": "since ≥ it"
+              },
+              "err": "13",
+              "color": 2,
+              "flex": 2
+            },
+            {
+              "name": "backer_lock_hash",
+              "size": "32B",
+              "role": {
+                "zh": "认捐人 lock hash",
+                "en": "backer lock hash"
+              },
+              "cons": {
+                "zh": "退款 / 找零去向",
+                "en": "refund / overhead destination"
+              },
+              "err": "32",
+              "color": 3,
+              "flex": 4
+            }
+          ]
+        }
+      ],
+      "limits": [
+        {
+          "field": "args",
+          "cond": {
+            "zh": "≥ 72 字节",
+            "en": "≥ 72 bytes"
+          },
+          "err": "10"
+        },
+        {
+          "field": "inputs",
+          "cond": {
+            "zh": "group 输入 ≥ 2",
+            "en": "≥ 2 group inputs"
+          },
+          "err": "40"
+        },
+        {
+          "field": "outputs",
+          "cond": {
+            "zh": "恰好 1 个同 lock 输出（0 个 → 41，多个 → 42）",
+            "en": "exactly one output with the same lock (none → 41, several → 42)"
+          },
+          "err": "41 / 42"
+        },
+        {
+          "field": "capacity",
+          "cond": {
+            "zh": "输出 capacity = Σ输入 capacity（合并不扣手续费）",
+            "en": "output capacity = Σ input capacity (no fee taken)"
+          },
+          "err": "43"
+        },
+        {
+          "field": "type",
+          "cond": {
+            "zh": "所有输入与输出 type 相同且非空",
+            "en": "all inputs and the output share one non-empty type"
+          },
+          "err": "45"
+        },
+        {
+          "field": "data",
+          "cond": {
+            "zh": "输入、输出 data ≥ 72 字节且 amount 之和相等",
+            "en": "input/output data ≥ 72 bytes and amounts sum equal"
+          },
+          "err": "46"
+        },
+        {
+          "field": "u64",
+          "cond": {
+            "zh": "累加溢出",
+            "en": "addition overflows"
+          },
+          "err": "33"
+        }
+      ]
+    },
+    {
+      "tag": "B",
+      "title": {
+        "zh": "截止后 + Success：释放给创建者",
+        "en": "After deadline + Success: release to creator"
+      },
+      "inputs": [
+        {
+          "label": "pledge(s)",
+          "body": {
+            "zh": "同一 lock 的 pledge，{{since = 绝对区块号 ≥ deadline}}",
+            "en": "pledges with this lock, {{since = absolute block ≥ deadline}}"
+          }
+        },
+        {
+          "label": "cell_dep",
+          "body": "campaign Cell{ type hash = campaign_hash, data[56] = {{1 Success}} }"
+        }
+      ],
+      "outputs": [
+        {
+          "label": {
+            "zh": "创建者",
+            "en": "creator"
+          },
+          "body": "Σ Cell{ lock hash = creator_lock_hash } {{≥ Σamount}}"
+        },
+        {
+          "label": {
+            "zh": "认捐人",
+            "en": "backer"
+          },
+          "body": "Σ Cell{ lock hash = backer_lock_hash } {{≥ Σcapacity − Σamount − 1 CKB}}"
+        }
+      ],
+      "limits": [
+        {
+          "field": "since",
+          "cond": {
+            "zh": "非 0 时必须绝对、标志合法、按区块号",
+            "en": "when non-zero must be absolute, valid flags, block number"
+          },
+          "err": "12"
+        },
+        {
+          "field": "since",
+          "cond": {
+            "zh": "区块号 ≥ deadline_block",
+            "en": "block number ≥ deadline_block"
+          },
+          "err": "13"
+        },
+        {
+          "field": "cell_dep",
+          "cond": {
+            "zh": "campaign 状态为 Active 则拒绝",
+            "en": "rejected while the campaign is Active"
+          },
+          "err": "20"
+        },
+        {
+          "field": "inputs",
+          "cond": {
+            "zh": "不得同时花费另一个 pledge-lock group（同 code_hash、不同 args）",
+            "en": "no other pledge-lock group (same code_hash, other args) may be spent"
+          },
+          "err": "34"
+        },
+        {
+          "field": "outputs",
+          "cond": {
+            "zh": "给创建者 ≥ Σamount，给认捐人 ≥ 剩余 − 1 CKB；创建者即认捐人时合计 ≥ Σcapacity − 1 CKB",
+            "en": "creator ≥ Σamount, backer ≥ overhead − 1 CKB; if creator = backer, total ≥ Σcapacity − 1 CKB"
+          },
+          "err": "32"
+        },
+        {
+          "field": "u64",
+          "cond": {
+            "zh": "累加溢出",
+            "en": "addition overflows"
+          },
+          "err": "33"
+        }
+      ]
+    },
+    {
+      "tag": "C",
+      "title": {
+        "zh": "截止后 + Failed（或宽限期后无 cell_dep）：退款",
+        "en": "After deadline + Failed (or no cell_dep after grace): refund"
+      },
+      "inputs": [
+        {
+          "label": "pledge(s)",
+          "body": {
+            "zh": "{{since ≥ deadline}}；cell_dep 中 campaign 为 Failed，或缺失且 {{since ≥ deadline + 1,944,000}}",
+            "en": "{{since ≥ deadline}}; campaign in cell_deps is Failed, or absent and {{since ≥ deadline + 1,944,000}}"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "label": {
+            "zh": "认捐人",
+            "en": "backer"
+          },
+          "body": "Σ Cell{ lock hash = backer_lock_hash } {{≥ Σcapacity − 1 CKB}}"
+        }
+      ],
+      "limits": [
+        {
+          "field": "cell_dep",
+          "cond": {
+            "zh": "找不到 campaign cell_dep 且未过宽限期",
+            "en": "campaign cell_dep missing and grace period not over"
+          },
+          "err": "21"
+        },
+        {
+          "field": "inputs",
+          "cond": {
+            "zh": "不得同时花费另一个 pledge-lock group",
+            "en": "no other pledge-lock group may be spent"
+          },
+          "err": "34"
+        },
+        {
+          "field": "outputs",
+          "cond": {
+            "zh": "给 backer_lock_hash ≥ Σcapacity − 1 CKB",
+            "en": "to backer_lock_hash ≥ Σcapacity − 1 CKB"
+          },
+          "err": "32"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "zh": "错误码（main.rs）：10 INVALID_ARGS · 11 LOAD_SINCE · 12 INVALID_SINCE · 13 SINCE_BELOW_DEADLINE · 20 CAMPAIGN_STILL_ACTIVE · 21 CAMPAIGN_CELL_DEP_MISSING · 30 LOAD_CAPACITY · 31 LOAD_LOCK_HASH · 32 INSUFFICIENT_OUTPUT · 33 OVERFLOW · 34 MIXED_PLEDGE_INPUTS · 40 NOT_A_MERGE · 41 NO_MERGE_OUTPUT · 42 MULTIPLE_MERGE_OUTPUTS · 43 MERGE_CAPACITY_MISMATCH · 44 MERGE_LOCK_MISMATCH · 45 MERGE_TYPE_MISMATCH · 46 MERGE_AMOUNT_MISMATCH",
+      "en": "Error codes (main.rs): 10 INVALID_ARGS · 11 LOAD_SINCE · 12 INVALID_SINCE · 13 SINCE_BELOW_DEADLINE · 20 CAMPAIGN_STILL_ACTIVE · 21 CAMPAIGN_CELL_DEP_MISSING · 30 LOAD_CAPACITY · 31 LOAD_LOCK_HASH · 32 INSUFFICIENT_OUTPUT · 33 OVERFLOW · 34 MIXED_PLEDGE_INPUTS · 40 NOT_A_MERGE · 41 NO_MERGE_OUTPUT · 42 MULTIPLE_MERGE_OUTPUTS · 43 MERGE_CAPACITY_MISMATCH · 44 MERGE_LOCK_MISMATCH · 45 MERGE_TYPE_MISMATCH · 46 MERGE_AMOUNT_MISMATCH"
+    },
+    {
+      "zh": "只读取第一个 group 输入的 since 决定路径；since = 0 走合并路径，但并不证明当前区块早于截止（源码注释：合并输出仍是同一 lock）",
+      "en": "Only the first group input's since picks the path; since = 0 takes the merge path but does not prove the chain is before the deadline (source comment: the merged output keeps the same lock)"
+    },
+    {
+      "zh": "释放 / 退款时每个 pledge 的 amount 取 data[64..72]（> capacity 或 data < 72B 时按整个 capacity 计）",
+      "en": "On release/refund each pledge's amount is data[64..72] (the whole capacity if it exceeds capacity or data < 72 B)"
+    },
+    {
+      "zh": "cell_dep 中的 campaign 若 data 无法解析，按“缺失”处理（走宽限期分支）",
+      "en": "A campaign cell_dep whose data cannot be parsed is treated as missing (grace-period branch)"
+    },
+    {
+      "zh": "不检查任何签名：任何人都可以构造释放 / 退款交易（README：结算机器人或任何人）",
+      "en": "No signature is checked: anyone may build release/refund (README: finalization bot or anyone)"
+    },
+    {
+      "zh": "解码器限制：交易页不解析 cell_deps 的数据，因此 campaign 状态与释放分支显示为未检查",
+      "en": "Decoder limitation: the tx page does not resolve cell_dep data, so campaign status and the release branch show as not checked"
+    }
+  ]
+}
