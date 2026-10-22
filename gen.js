@@ -184,14 +184,21 @@ function main() {
 <div class="small" style="margin-top:8px"><a href="tx.html">${T({ zh: '打开完整解码器 →', en: 'Open full decoder →' }, esc)}</a></div></div>
 <script>(function(){var i=document.getElementById('hx'),n=document.getElementById('hn');function g(){var h=i.value.trim();if(!h)return i.focus();location.href='tx.html#'+new URLSearchParams({tx:h,rpc:n.value})}document.getElementById('hg').onclick=g;i.onkeydown=function(e){if(e.key==='Enter')g()}})();</script>`;
     const list = hero + `<div class="card"><div class="form"><input id="q" type="search" placeholder="search / 搜索 (id, name, tag)" aria-label="search"></div>
-<div class="filters">${groups}</div><div id="projsel">${Object.keys(mh.PROJ).filter(k => META.TAX.tags[k]).map(mh.projectPanel).join('')}</div><div class="small" id="cnt"></div><ul class="cards">${cards}</ul>
+<div class="filters">${groups}</div><div id="projsel">${Object.keys(mh.PROJ).filter(k => META.TAX.tags[k]).map(mh.projectPanel).join('')}</div><div class="small cntrow"><span id="cnt"></span> <button id="copylink" class="copyl" type="button" title="copy a link to this filtered view">${T({ zh: '复制链接', en: 'Copy link' }, esc)}<span class="okm">${T({ zh: ' ✓ 已复制', en: ' ✓ copied' }, esc)}</span></button></div><ul class="cards">${cards}</ul>
 </div>
 <div class="card"><h2>${T({ zh: '贡献者', en: 'Contributors' }, esc)}</h2>${people.length ? `<ul class="people">${people.map(([u, k]) => `<li>${mh.avatar(u)} <a href="https://github.com/${esc(u)}">@${esc(u)}</a> · ${k}</li>`).join('')}</ul>` : ''}
 <div class="small">${T({ zh: '欢迎贡献新合约：见 docs/ADD_CONTRACT.md，并在 meta.json 的 contributors 中加上你的 GitHub 用户名。', en: 'New contracts welcome: see docs/ADD_CONTRACT.md and add your GitHub username to contributors in meta.json.' }, esc)}</div></div>
-<script>(function(){var on={},q=document.getElementById('q'),li=[].slice.call(document.querySelectorAll('.ci')),cnt=document.getElementById('cnt');
-function run(){var s=(q.value||'').toLowerCase().trim(),n=0;li.forEach(function(e){var t=' '+e.getAttribute('data-tags')+' ',ok=Object.keys(on).every(function(g){var a=on[g];return !a.length||a.some(function(k){return t.indexOf(' '+k+' ')>=0})})&&(!s||e.getAttribute('data-text').indexOf(s)>=0);e.style.display=ok?'':'none';if(ok)n++});cnt.textContent=n+' / '+li.length}
-[].forEach.call(document.querySelectorAll('.filters button'),function(b){b.onclick=function(){var g=b.getAttribute('data-g'),k=b.getAttribute('data-f'),a=on[g]=on[g]||[],i=a.indexOf(k);if(i>=0)a.splice(i,1);else a.push(k);b.setAttribute('aria-pressed',i<0);var ps=on.project||[];[].forEach.call(document.querySelectorAll('#projsel .projp'),function(p){p.hidden=ps.indexOf(p.getAttribute('data-projp'))<0});run()}});
-q.oninput=run;run()})();</script>`;
+<script>(function(){var on={},q=document.getElementById('q'),li=[].slice.call(document.querySelectorAll('.ci')),cnt=document.getElementById('cnt'),bs=[].slice.call(document.querySelectorAll('.filters button'));
+// URL sync: ?<group>=a,b (project values without the "p-" prefix) &q=text; location.hash is left untouched
+var pre=function(g){return g==='project'?'p-':''};
+function panels(){var ps=on.project||[];[].forEach.call(document.querySelectorAll('#projsel .projp'),function(p){p.hidden=ps.indexOf(p.getAttribute('data-projp'))<0})}
+function run(){var s=(q.value||'').toLowerCase().trim(),n=0;li.forEach(function(e){var t=' '+e.getAttribute('data-tags')+' ',ok=Object.keys(on).every(function(g){var a=on[g];return !a.length||a.some(function(k){return t.indexOf(' '+k+' ')>=0})})&&(!s||e.getAttribute('data-text').indexOf(s)>=0);e.style.display=ok?'':'none';if(ok)n++});cnt.textContent=n+' / '+li.length;panels()}
+function toURL(){var u=new URLSearchParams();Object.keys(on).sort().forEach(function(g){if(on[g].length)u.set(g,on[g].map(function(k){return k.slice(pre(g).length)}).join(','))});var s=(q.value||'').trim();if(s)u.set('q',s);var qs=u.toString();try{history.replaceState(history.state,'',location.pathname+(qs?'?'+qs:'')+location.hash)}catch(e){}}
+function fromURL(){var u=new URLSearchParams(location.search);on={};bs.forEach(function(b){var g=b.getAttribute('data-g'),k=b.getAttribute('data-f'),v=(u.get(g)||'').split(',').filter(Boolean).map(function(x){return pre(g)+x}),a=v.indexOf(k)>=0;if(a)(on[g]=on[g]||[]).push(k);b.setAttribute('aria-pressed',a)});q.value=u.get('q')||'';run()}
+bs.forEach(function(b){b.onclick=function(){var g=b.getAttribute('data-g'),k=b.getAttribute('data-f'),a=on[g]=on[g]||[],i=a.indexOf(k);if(i>=0)a.splice(i,1);else a.push(k);b.setAttribute('aria-pressed',i<0);run();toURL()}});
+q.oninput=function(){run();toURL()};window.addEventListener('popstate',fromURL);
+var cp=document.getElementById('copylink');if(cp)cp.onclick=function(){var url=location.href,done=function(){cp.setAttribute('data-ok','1');setTimeout(function(){cp.removeAttribute('data-ok')},1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done,function(){prompt('URL',url)});else prompt('URL',url)};
+fromURL()})();</script>`;
     fs.writeFileSync(path.join(od, 'index.html'), tpl.replace('{{DOC_TITLE}}', esc(UI.indexTitle.zh + ' / ' + UI.indexTitle.en))
       .replace('{{TOGGLE}}', T(UI.toggle, esc)).replace('{{TITLE}}', T(UI.indexTitle, esc)).replace('{{SUBTITLE}}', '')
       .replace('{{CARDS}}', () => list).replace('{{FOOTER}}', ''));
