@@ -1,0 +1,137 @@
+{
+  "title": {
+    "zh": "CrowdCell Campaign Lock 约束",
+    "en": "CrowdCell Campaign Lock Constraints"
+  },
+  "subtitle": {
+    "zh": "来源：alesfer001/CrowdCell / contracts/campaign-lock/src/main.rs@2fd13f6　·　0xb6e2…01bf (data2，仅测试网)　·　社区合约，未经独立审计",
+    "en": "Source: alesfer001/CrowdCell / contracts/campaign-lock/src/main.rs@2fd13f6　·　0xb6e2…01bf (data2, testnet only)　·　community contract, not independently audited"
+  },
+  "transitions": [
+    {
+      "tag": "A",
+      "title": {
+        "zh": "Active campaign 原样延续（认捐）",
+        "en": "Active campaign carried forward (pledge)"
+      },
+      "inputs": [
+        {
+          "label": "campaign",
+          "body": "Cell{ capacity: C, lock: { codeHash: CAMPAIGN_LOCK, args: {{deadline_block 8B}} } }"
+        }
+      ],
+      "outputs": [
+        {
+          "label": "campaign",
+          "body": {
+            "zh": "Cell{ lock: {{同一 lock}}, data(≥65B)[56] = {{0 Active}}, {{capacity ≥ C}} }",
+            "en": "Cell{ lock: {{same lock}}, data(≥65B)[56] = {{0 Active}}, {{capacity ≥ C}} }"
+          }
+        }
+      ],
+      "layouts": [
+        {
+          "label": {
+            "zh": "lock args 字节布局（≥8B）",
+            "en": "lock args byte layout (≥8B)"
+          },
+          "layout": [
+            {
+              "name": "deadline_block",
+              "size": "8B",
+              "role": {
+                "zh": "截止区块 u64 LE",
+                "en": "deadline block u64 LE"
+              },
+              "cons": {
+                "zh": "非延续路径要求 since ≥ 它",
+                "en": "non-carry path needs since ≥ it"
+              },
+              "err": "13",
+              "color": 1,
+              "flex": 2
+            }
+          ]
+        }
+      ],
+      "limits": [
+        {
+          "field": "args",
+          "cond": {
+            "zh": "≥ 8 字节",
+            "en": "≥ 8 bytes"
+          },
+          "err": "10"
+        },
+        {
+          "field": "capacity",
+          "cond": {
+            "zh": "找到的第一个同 lock、data ≥ 65B 且 status = 0 的输出 capacity ≥ 输入",
+            "en": "first output with same lock, data ≥ 65B and status 0 has capacity ≥ input"
+          },
+          "err": "15"
+        }
+      ]
+    },
+    {
+      "tag": "B",
+      "title": {
+        "zh": "截止后任意花费（结算 / 销毁）",
+        "en": "Any spend after the deadline (finalize / destroy)"
+      },
+      "inputs": [
+        {
+          "label": "campaign",
+          "body": {
+            "zh": "{{since = 绝对区块号 ≥ deadline_block}}",
+            "en": "{{since = absolute block ≥ deadline_block}}"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "label": {
+            "zh": "outputs：任意（规则由 campaign 类型脚本约束）",
+            "en": "outputs: any (rules from the campaign type script)"
+          },
+          "body": {
+            "zh": "任意",
+            "en": "any"
+          }
+        }
+      ],
+      "limits": [
+        {
+          "field": "since",
+          "cond": {
+            "zh": "第一个 group 输入的 since 必须绝对、标志合法、按区块号",
+            "en": "first group input since must be absolute, valid flags, block number"
+          },
+          "err": "12"
+        },
+        {
+          "field": "since",
+          "cond": {
+            "zh": "区块号 ≥ deadline_block（since = 0 视为区块 0）",
+            "en": "block number ≥ deadline_block (since = 0 counts as block 0)"
+          },
+          "err": "13"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "zh": "错误码（main.rs）：10 INVALID_ARGS · 11 LOAD_SINCE · 12 INVALID_SINCE · 13 SINCE_BELOW_DEADLINE · 14 LOAD_CELL · 15 CAPACITY_DECREASED",
+      "en": "Error codes (main.rs): 10 INVALID_ARGS · 11 LOAD_SINCE · 12 INVALID_SINCE · 13 SINCE_BELOW_DEADLINE · 14 LOAD_CELL · 15 CAPACITY_DECREASED"
+    },
+    {
+      "zh": "不检查任何签名：谁都可以推进 campaign；内容合法性由 campaign 类型脚本保证",
+      "en": "No signature is checked: anyone can move the campaign; validity comes from the campaign type script"
+    },
+    {
+      "zh": "部署清单 deployed-contracts-testnet.json 把 campaignLock 写成 hashType data，但链上实际交易与前端 constants.ts 都使用 data2",
+      "en": "deployment/deployed-contracts-testnet.json lists campaignLock as hashType data, but on-chain txs and frontend constants.ts use data2"
+    }
+  ]
+}

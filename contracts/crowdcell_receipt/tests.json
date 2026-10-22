@@ -1,0 +1,18 @@
+[
+ {
+  "tx": "0x2fa8c37d69cc790db87f4407b901e1c8d09ce03df9381ae93d7637c17898e027",
+  "net": "testnet",
+  "name": "Receipt created with pledge",
+  "expect": [
+   "crowdcell_receipt"
+  ]
+ },
+ {
+  "tx": "0x20affee19581b540dd3eedf32dd78bb0591a32afe24f97be4e88f0d1c129662a",
+  "net": "testnet",
+  "name": "Receipt destroyed (deposit reclaimed)",
+  "expect": [
+   "crowdcell_receipt"
+  ]
+ }
+]

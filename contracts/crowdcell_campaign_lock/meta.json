@@ -1,0 +1,56 @@
+{
+  "tags": [
+    "defi",
+    "open-source",
+    "community",
+    "p-crowdcell"
+  ],
+  "contributors": [],
+  "source": {
+    "repo": "https://github.com/alesfer001/CrowdCell",
+    "commit": "2fd13f6bae84b9beda0c5f67264c66cb7f89cd69",
+    "paths": [
+      "contracts/campaign-lock/src/main.rs"
+    ],
+    "commit_note": "main HEAD read 2026-10-22; author Ayoub_Lesfer (Nervos Talk) offered CrowdCell in https://talk.nervos.org/t/11014/2. Testnet only; deployment from README / deployment/deployed-contracts-testnet.json, hash_type data2 from off-chain/frontend/src/lib/constants.ts and on-chain usage",
+    "binary": {
+      "status": "unverified",
+      "per": [
+        {
+          "data_hash": "0xb6e2b333d0f38a89c70cde6558670b771244695d33daa1fa62385017476401bf",
+          "evidence": [
+            "listed in README.md",
+            "listed in deployment/deployed-contracts-devnet.json",
+            "listed in deployment/deployed-contracts-testnet.json"
+          ],
+          "matches_commit": false
+        }
+      ],
+      "note": "hash appears in the repo only as a deployment record or doc, which does not prove the recorded commit builds this binary (reproducible build not attempted)"
+    }
+  },
+  "deployments": [
+    {
+      "network": "testnet",
+      "code_hash": "0xb6e2b333d0f38a89c70cde6558670b771244695d33daa1fa62385017476401bf",
+      "hash_type": "data2",
+      "constant_source": "alesfer001/CrowdCell README + deployment/deployed-contracts-testnet.json (hash_type data2: off-chain/frontend/src/lib/constants.ts, on-chain usage)",
+      "cell_dep": {
+        "out_point": {
+          "index": "0x0",
+          "tx_hash": "0xc4e8aaaefd921550daa21222cebeccaad7fd5d178d4df567d94c9248a5c149b6"
+        },
+        "dep_type": "code"
+      },
+      "code_cell": {
+        "index": "0x0",
+        "tx_hash": "0xc4e8aaaefd921550daa21222cebeccaad7fd5d178d4df567d94c9248a5c149b6"
+      },
+      "type_script": null,
+      "data_hash": "0xb6e2b333d0f38a89c70cde6558670b771244695d33daa1fa62385017476401bf",
+      "deploy_tx": "0xc4e8aaaefd921550daa21222cebeccaad7fd5d178d4df567d94c9248a5c149b6",
+      "deploy_block": 22448245
+    }
+  ],
+  "checked_at": "2026-10-22"
+}
