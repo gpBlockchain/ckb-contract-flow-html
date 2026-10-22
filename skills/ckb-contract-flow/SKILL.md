@@ -15,7 +15,7 @@ Generator: https://github.com/gpBlockchain/ckb-contract-flow-html.
 Source of truth for formats and the plugin API: `README.md` and `docs/ADD_CONTRACT.md` in that repo. Read them before writing a contract.
 
 ## Quick path (do this first, no questions needed)
-Use the generator from a cache clone; never ask the user to clone anything.
+This file may have been handed to you as a URL with a contract repo URL. Do everything yourself from a cache clone; never ask the user to clone or install anything.
 ```bash
 D="${CKB_FLOW_HOME:-$HOME/.cache/ckb-contract-flow-html}"
 if [ -d "$D/.git" ]; then git -C "$D" pull -q --ff-only; else git clone -q --depth 1 https://github.com/gpBlockchain/ckb-contract-flow-html "$D"; fi
@@ -23,7 +23,8 @@ cd "$D" && node gen.js --all out
 ```
 - If the requested contract already exists in `contracts/<id>/`, open `out/<id>.html` (and `out/index.html`) for the user.
 - Otherwise add it (section 5) inside `$D`, rebuild, and open `out/<id>.html`.
-- Report the absolute path of the generated HTML.
+- Report the absolute path of the generated HTML (offer to open it, or `cd "$D/out" && python3 -m http.server 8000`).
+- Afterwards, optionally offer to install this skill for future use (see the last section); don't install without the user's OK.
 
 ## Prerequisites
 - Node.js ≥ 16 (zero npm dependencies, no `npm install`) and `git`.
@@ -80,10 +81,13 @@ node gen.js contracts/sudt/spec.json                # same, written to out/spec.
 - Script shows as "unknown" in tx.html: no plugin `match` for that code_hash + hash_type (+ net); regenerate with `node gen.js --all out` after adding one.
 - `new-contract.js` says the directory exists: pick another id or edit the existing contract.
 
-## Install this skill
-```bash
-npx skills add gpBlockchain/ckb-contract-flow-html -g -y
-```
-(or `curl -fsSL https://raw.githubusercontent.com/gpBlockchain/ckb-contract-flow-html/main/install.sh | sh`)
+## Install this skill (optional)
+One-sentence use needs no install: give your agent
+`Read https://raw.githubusercontent.com/gpBlockchain/ckb-contract-flow-html/main/skills/ckb-contract-flow/SKILL.md and follow it to generate a cell-flow HTML for <contract repo URL>`
 
-Then say: `用 ckb-contract-flow 给 <contract repo URL> 生成合约流转 HTML` / `Use ckb-contract-flow to generate a cell-flow HTML for <contract repo URL>`
+To keep it installed (then just say "use ckb-contract-flow for <repo URL>"), any one of:
+```bash
+npx skills add gpBlockchain/ckb-contract-flow-html -g -y -a claude-code cursor codex
+curl -fsSL https://raw.githubusercontent.com/gpBlockchain/ckb-contract-flow-html/main/install.sh | sh
+```
+Claude Code: `/plugin marketplace add gpBlockchain/ckb-contract-flow-html` then `/plugin install ckb-contract-flow@ckb-contract-flow-html`.

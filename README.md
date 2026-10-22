@@ -73,9 +73,15 @@ node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在�
 
 代码：`lib/ckb.js`（blake2b、molecule、script hash、RPC、分组、插件注册表）+ `contracts/*/plugin.js`（各合约解析与检查）+ `tx-app.js`（通用渲染），由 `gen.js --all` 内联打包成单文件。测试：`node scripts/test-tx.js`（运行各 `tests.json`，需能访问 RPC，`RPC=` / `TESTNET_RPC=` 可覆盖）。
 
-### Agent skill（本地生成）
+### 一句话让 AI 生成
 
-[`skills/ckb-contract-flow/SKILL.md`](skills/ckb-contract-flow/SKILL.md)：教 AI agent 本地生成/打开 HTML、解码交易、新增合约。复制到 `.claude/skills/` 等 skills 目录后，对 AI 说：“用 ckb-contract-flow skill 为 <合约仓库 URL> 生成 cell 流转 HTML”。
+复制这句话发给任意 coding agent，无需安装：
+
+```text
+阅读 https://raw.githubusercontent.com/gpBlockchain/ckb-contract-flow-html/main/skills/ckb-contract-flow/SKILL.md 并按其步骤为 <合约仓库 URL> 生成合约 cell 流转 HTML
+```
+
+可选安装见 [SKILL.md](skills/ckb-contract-flow/SKILL.md#install-this-skill-optional)。
 
 ### 用 AI 从合约源码写 spec
 
@@ -116,9 +122,15 @@ Enter a tx hash and an RPC URL (presets: mainnet `https://mainnet.ckb.dev/rpc`, 
 
 Code: `lib/ckb.js` (blake2b, molecule, script hash, RPC, grouping, plugin registry) + `contracts/*/plugin.js` (per-contract parse & check) + `tx-app.js` (generic rendering), inlined into a single file by `gen.js --all`. Test: `node scripts/test-tx.js` (runs every `tests.json`; needs RPC access; override with `RPC=` / `TESTNET_RPC=`). To add a contract see **[docs/ADD_CONTRACT.md](docs/ADD_CONTRACT.md)**.
 
-### Agent skill (local generation)
+### One sentence to your AI agent
 
-[`skills/ckb-contract-flow/SKILL.md`](skills/ckb-contract-flow/SKILL.md) teaches an AI agent to build/open the pages locally, decode txs and add contracts. Copy it into your agent's skills folder (e.g. `.claude/skills/`), then say: "Use the ckb-contract-flow skill to generate a cell-flow HTML for <contract repo URL>".
+Paste this to any coding agent, no install needed:
+
+```text
+Read https://raw.githubusercontent.com/gpBlockchain/ckb-contract-flow-html/main/skills/ckb-contract-flow/SKILL.md and follow it to generate a cell-flow HTML for <contract repo URL>
+```
+
+Optional install: see [SKILL.md](skills/ckb-contract-flow/SKILL.md#install-this-skill-optional).
 
 ### AI prompt
 
