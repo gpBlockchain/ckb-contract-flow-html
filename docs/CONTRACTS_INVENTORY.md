@@ -70,7 +70,7 @@ hash_type in parentheses. "same" = identical on both networks.
 | (excluded) | Godwoken L2-only: meta_contract_validator, l2_sudt_validator, polyjuice_validator, eth_addr_reg_validator, Polyjuice/EVM contracts | — | — | — | godwokenrises/godwoken | excluded: L2 backends, not L1 scripts; rollup cell omni_lock covered by existing omnilock |
 | utxo_airdrop_badge / token_metadata | RGB++ airdrop badge / token metadata types | `0xf5da9003e31fa9301a3915fe304de9bdb80524b5f0d8fc325fb699317998ee7a` / `0x0c7dc8caec145b51b142e13f47fe4262c80628213d1b6c3d9c1aa6a62088804e` (type) | same | rgbpp-sdk | not located | no-source |
 
-**Project tags** (`project` group in `contracts/tags.json`, optional, ≤ 1 per contract): p-crowdcell, p-cells, p-godwoken, p-fiber, p-spore, p-ickb, p-rgbpp, p-proxy-locks. Single-repo system/standalone scripts carry no project tag.
+**Project tags** (`project` group in `contracts/tags.json`, optional, ≤ 1 per contract): p-crowdcell, p-cells, p-godwoken, p-fiber, p-spore, p-ickb, p-rgbpp, p-proxy-locks. Single-repo system/standalone scripts carry no project tag. Project links (website, docs, GitHub, Nervos Talk, X/Discord only if officially listed) live in `contracts/projects.json`, keyed by project tag; clicking a project chip or selecting a Project filter on the index shows them.
 
 ## 仍缺的值得关注的合约 / Notable contracts still missing (re-scan 2026-10-21)
 
