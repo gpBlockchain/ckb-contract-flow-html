@@ -1,0 +1,18 @@
+[
+ {
+  "tx": "0x2fa8c37d69cc790db87f4407b901e1c8d09ce03df9381ae93d7637c17898e027",
+  "net": "testnet",
+  "name": "Campaign carried forward by a pledge",
+  "expect": [
+   "crowdcell_campaign_lock"
+  ]
+ },
+ {
+  "tx": "0x374185da3fe9a9eecaf1a1d14c302b3d7c77ab37b78e9c9194e58d4077e6629d",
+  "net": "testnet",
+  "name": "Campaign finalized after deadline",
+  "expect": [
+   "crowdcell_campaign_lock"
+  ]
+ }
+]

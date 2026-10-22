@@ -1,0 +1,318 @@
+{
+  "title": {
+    "zh": "CrowdCell Pledge 类型脚本 约束",
+    "en": "CrowdCell Pledge Type Script Constraints"
+  },
+  "subtitle": {
+    "zh": "来源：alesfer001/CrowdCell / contracts/pledge/src/main.rs@2fd13f6　·　0xe45d…b024 (data2，仅测试网)　·　社区合约，未经独立审计",
+    "en": "Source: alesfer001/CrowdCell / contracts/pledge/src/main.rs@2fd13f6　·　0xe45d…b024 (data2, testnet only)　·　community contract, not independently audited"
+  },
+  "transitions": [
+    {
+      "tag": "0 → 1",
+      "title": {
+        "zh": "创建认捐",
+        "en": "Create pledge"
+      },
+      "inputs": [
+        {
+          "label": "—",
+          "body": {
+            "zh": "无 group 输入",
+            "en": "no group input"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "label": "pledge",
+          "body": "Cell{ type: { codeHash: PLEDGE, args: receipt_code_hash 32B? }, data: {{campaign_id≠0}} ‖ {{backer_lock_hash≠0}} ‖ {{amount>0}} }"
+        }
+      ],
+      "layouts": [
+        {
+          "label": {
+            "zh": "pledge data 字节布局（72B）",
+            "en": "pledge data byte layout (72B)"
+          },
+          "layout": [
+            {
+              "name": "campaign_id",
+              "size": "32B",
+              "role": {
+                "zh": "campaign 标识（信息性）",
+                "en": "campaign id (informational)"
+              },
+              "cons": {
+                "zh": "非零；合并 / 部分退款时一致",
+                "en": "non-zero; equal on merge / partial refund"
+              },
+              "err": "3",
+              "color": 1,
+              "flex": 4
+            },
+            {
+              "name": "backer_lock_hash",
+              "size": "32B",
+              "role": {
+                "zh": "认捐人 lock hash",
+                "en": "backer lock hash"
+              },
+              "cons": {
+                "zh": "非零",
+                "en": "non-zero"
+              },
+              "err": "4",
+              "color": 2,
+              "flex": 4
+            },
+            {
+              "name": "amount",
+              "size": "8B",
+              "role": {
+                "zh": "认捐额 u64 LE",
+                "en": "amount u64 LE"
+              },
+              "cons": {
+                "zh": "> 0",
+                "en": "> 0"
+              },
+              "err": "5",
+              "color": 3,
+              "flex": 2
+            }
+          ]
+        }
+      ],
+      "limits": [
+        {
+          "field": "data",
+          "cond": {
+            "zh": "≥ 72 字节（只检查第一个 group 输出）",
+            "en": "≥ 72 bytes (only the first group output is checked)"
+          },
+          "err": "1"
+        },
+        {
+          "field": "campaign_id",
+          "cond": {
+            "zh": "≠ 0",
+            "en": "≠ 0"
+          },
+          "err": "3"
+        },
+        {
+          "field": "backer_lock_hash",
+          "cond": {
+            "zh": "≠ 0",
+            "en": "≠ 0"
+          },
+          "err": "4"
+        },
+        {
+          "field": "amount",
+          "cond": {
+            "zh": "> 0",
+            "en": "> 0"
+          },
+          "err": "5"
+        }
+      ]
+    },
+    {
+      "tag": "n → 1",
+      "title": {
+        "zh": "合并（≥2 输入 → 1 输出）",
+        "en": "Merge (≥2 inputs → 1 output)"
+      },
+      "inputs": [
+        {
+          "label": "pledges",
+          "body": "data: {{campaign_id}} ‖ … ‖ aᵢ"
+        }
+      ],
+      "outputs": [
+        {
+          "label": "pledge",
+          "body": "data: {{campaign_id}} ‖ … ‖ {{Σaᵢ}}"
+        }
+      ],
+      "limits": [
+        {
+          "field": "data",
+          "cond": {
+            "zh": "每个 data ≥ 72 字节",
+            "en": "every data ≥ 72 bytes"
+          },
+          "err": "1"
+        },
+        {
+          "field": "campaign_id",
+          "cond": {
+            "zh": "所有输入与输出相同",
+            "en": "same in every input and the output"
+          },
+          "err": "11"
+        },
+        {
+          "field": "amount",
+          "cond": {
+            "zh": "输出 amount = Σ输入",
+            "en": "output amount = Σ inputs"
+          },
+          "err": "12"
+        },
+        {
+          "field": "u64",
+          "cond": {
+            "zh": "累加溢出",
+            "en": "addition overflows"
+          },
+          "err": "13"
+        }
+      ]
+    },
+    {
+      "tag": "1 → 1",
+      "title": {
+        "zh": "部分退款（金额减少）",
+        "en": "Partial refund (amount decreases)"
+      },
+      "inputs": [
+        {
+          "label": "pledge",
+          "body": "data: campaign_id ‖ … ‖ a"
+        },
+        {
+          "label": "receipt",
+          "body": {
+            "zh": "type code_hash = args[0..32] 的 cell，data[0..8] = {{a − a′}}",
+            "en": "cell whose type code_hash = args[0..32], data[0..8] = {{a − a′}}"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "label": "pledge",
+          "body": "data: {{campaign_id}} ‖ … ‖ {{a′ < a}}"
+        }
+      ],
+      "limits": [
+        {
+          "field": "campaign_id",
+          "cond": {
+            "zh": "输入输出相同",
+            "en": "input and output equal"
+          },
+          "err": "14"
+        },
+        {
+          "field": "amount",
+          "cond": {
+            "zh": "输出 amount < 输入 amount",
+            "en": "output amount < input amount"
+          },
+          "err": "15"
+        },
+        {
+          "field": "receipt",
+          "cond": {
+            "zh": "args ≥ 32 字节时：输入中第一个（data ≥ 8B 的）receipt 金额 = 差值",
+            "en": "when args ≥ 32 bytes: first receipt input (data ≥ 8B) amount = difference"
+          },
+          "err": "16"
+        },
+        {
+          "field": "receipt",
+          "cond": {
+            "zh": "args ≥ 32 字节时输入中必须有 receipt",
+            "en": "when args ≥ 32 bytes a receipt must be in inputs"
+          },
+          "err": "17"
+        }
+      ]
+    },
+    {
+      "tag": "1 → 0",
+      "title": {
+        "zh": "销毁",
+        "en": "Destroy"
+      },
+      "inputs": [
+        {
+          "label": "pledge",
+          "body": {
+            "zh": "任意",
+            "en": "any"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "label": "—",
+          "body": {
+            "zh": "无 group 输出",
+            "en": "no group output"
+          }
+        }
+      ],
+      "limits": [
+        {
+          "field": "—",
+          "cond": {
+            "zh": "总是允许（资金去向由 pledge-lock 约束）",
+            "en": "always allowed (routing enforced by pledge-lock)"
+          },
+          "err": "—"
+        }
+      ]
+    },
+    {
+      "tag": "m → k",
+      "title": {
+        "zh": "其他形状",
+        "en": "Other shapes"
+      },
+      "inputs": [
+        {
+          "label": "pledges",
+          "body": "m"
+        }
+      ],
+      "outputs": [
+        {
+          "label": "pledges",
+          "body": "k"
+        }
+      ],
+      "limits": [
+        {
+          "field": "group",
+          "cond": {
+            "zh": "既非 n→1（n≥2）也非 1→1",
+            "en": "neither n→1 (n≥2) nor 1→1"
+          },
+          "err": "10"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "zh": "错误码（main.rs）：1 data 过短 · 3 campaign_id=0 · 4 backer=0 · 5 amount=0 · 7 NO_SCRIPT · 9 LOAD_DATA · 10 MODIFICATION_NOT_ALLOWED · 11 MERGE_DIFFERENT_CAMPAIGNS · 12 MERGE_AMOUNT_MISMATCH · 13 OVERFLOW · 14 CAMPAIGN_MISMATCH · 15 PARTIAL_REFUND_INVALID · 16 REFUND_AMOUNT_MISMATCH · 17 NO_RECEIPT_IN_INPUTS",
+      "en": "Error codes (main.rs): 1 data too short · 3 campaign_id=0 · 4 backer=0 · 5 amount=0 · 7 NO_SCRIPT · 9 LOAD_DATA · 10 MODIFICATION_NOT_ALLOWED · 11 MERGE_DIFFERENT_CAMPAIGNS · 12 MERGE_AMOUNT_MISMATCH · 13 OVERFLOW · 14 CAMPAIGN_MISMATCH · 15 PARTIAL_REFUND_INVALID · 16 REFUND_AMOUNT_MISMATCH · 17 NO_RECEIPT_IN_INPUTS"
+    },
+    {
+      "zh": "type args 可选：≥ 32 字节时前 32 字节为 receipt 合约 code_hash；不足 32 字节则部分退款不要求 receipt",
+      "en": "type args optional: when ≥ 32 bytes the first 32 are the receipt code_hash; shorter args mean partial refunds need no receipt"
+    },
+    {
+      "zh": "创建时只检查第一个 group 输出，合并时只读第一个 group 输出",
+      "en": "Creation checks only the first group output; merge reads only the first group output"
+    },
+    {
+      "zh": "pledge 是否计入 campaign 由 campaign 类型脚本按 pledge-lock 判断，与本脚本无关",
+      "en": "Whether a pledge counts toward a campaign is decided by the campaign type script via pledge-lock, not here"
+    }
+  ]
+}

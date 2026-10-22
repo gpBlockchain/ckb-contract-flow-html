@@ -1,0 +1,18 @@
+[
+ {
+  "tx": "0xe3203ab057737099411f1de38965ab5ccc9dc70d5fcf9cb0bf4095c19b81f71d",
+  "net": "testnet",
+  "name": "CrowdCell pledge settled after deadline (a)",
+  "expect": [
+   "crowdcell_pledge_lock"
+  ]
+ },
+ {
+  "tx": "0x4bdb0cdb625a1ebfcaf7e4442ec794388b8d914919040114d9410dcf43c9fb7d",
+  "net": "testnet",
+  "name": "CrowdCell pledge settled after deadline (b)",
+  "expect": [
+   "crowdcell_pledge_lock"
+  ]
+ }
+]

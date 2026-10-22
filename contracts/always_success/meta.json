@@ -2,7 +2,8 @@
   "tags": [
     "proxy",
     "nervos",
-    "open-source"
+    "open-source",
+    "p-proxy-locks"
   ],
   "contributors": [],
   "source": {

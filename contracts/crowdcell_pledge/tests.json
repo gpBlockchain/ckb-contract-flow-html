@@ -1,0 +1,18 @@
+[
+ {
+  "tx": "0x2fa8c37d69cc790db87f4407b901e1c8d09ce03df9381ae93d7637c17898e027",
+  "net": "testnet",
+  "name": "Pledge cell created",
+  "expect": [
+   "crowdcell_pledge"
+  ]
+ },
+ {
+  "tx": "0xe3203ab057737099411f1de38965ab5ccc9dc70d5fcf9cb0bf4095c19b81f71d",
+  "net": "testnet",
+  "name": "Pledge cell destroyed on settlement",
+  "expect": [
+   "crowdcell_pledge"
+  ]
+ }
+]
