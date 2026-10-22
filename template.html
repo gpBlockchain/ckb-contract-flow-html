@@ -9,7 +9,7 @@ h1{font-size:30px;margin:0 0 8px}.sub{color:#777;margin-bottom:40px}
 .card h2{margin:0 0 24px;font-size:24px}.card h2 span{font-family:Menlo,monospace;color:#2f6fed;margin-right:12px}
 .flow{display:flex;flex-wrap:wrap;align-items:flex-start;gap:16px}
 .col{display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-width:0;max-width:100%;border-radius:12px;padding:10px}.cin{background:#fff7ed;border:1px solid #fed7aa}.cout{background:#f0fdf4;border:1px solid #bbf7d0}.colh{font:600 14px/1.4 system-ui,sans-serif;letter-spacing:.02em}.cin .colh{color:#c2410c}.cout .colh{color:#15803d}.colh small{font-weight:400;opacity:.7}.cin .cell{border-color:#fdba74;background:#fff}.cout .cell{border-color:#86efac;background:#fff}
-.cell{font:16px/1.7 Menlo,Consolas,monospace;background:#fafbfc;border:2px solid #dde1e6;border-radius:12px;padding:14px 20px;white-space:pre}
+.cell{font:16px/1.7 Menlo,Consolas,monospace;background:#fafbfc;border:2px solid #dde1e6;border-radius:12px;padding:14px 20px;white-space:pre-wrap;overflow-wrap:anywhere}
 .cell .n{color:#999;font-size:13px;display:block}
 .arrow{display:none}
 .hl{background:#fff1b8;color:#b45309;border-radius:4px;padding:0 4px;font-weight:700}
@@ -24,7 +24,7 @@ h1{font-size:30px;margin:0 0 8px}.sub{color:#777;margin-bottom:40px}
 .c0{background:#e5e7eb}.c1{background:#dbeafe}.c2{background:#fde68a}.c3{background:#bbf7d0}.c4{background:#e9d5ff}.c5{background:#fecaca}
 .fields{list-style:none;padding:0;margin:0}.fields li{margin:6px 0;font-size:16px}.fields b{font-family:Menlo,monospace}.sz{font:13px Menlo,monospace;color:#888}
 .dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:middle}.cons{color:#b45309}
-.hex{margin-top:12px;font:14px/1.7 Menlo,monospace;word-break:break-all;background:#fff;border:1px dashed #ccc;border-radius:8px;padding:10px 14px}.hk{color:#888;display:inline-block;min-width:150px}
+.hex{margin-top:12px;font:14px/1.7 Menlo,monospace;word-break:break-all;background:#fff;border:1px dashed #ccc;border-radius:8px;padding:10px 14px}.hk{color:#888;display:inline-block;min-width:150px}.hex>div{display:grid;grid-template-columns:minmax(150px,max-content) minmax(0,1fr);column-gap:16px}.hex>div>.hk{min-width:0;max-width:260px;overflow-wrap:anywhere;word-break:normal}
 html[data-lang=zh] [data-l=en],html[data-lang=en] [data-l=zh]{display:none}
 #lang{position:fixed;top:18px;right:22px;font:15px -apple-system,sans-serif;padding:6px 16px;border:1px solid #ccc;border-radius:20px;background:#fff;cursor:pointer;box-shadow:0 1px 4px #0001}
 .idx{font-size:20px;line-height:2.2}.idx a{color:#2f6fed;text-decoration:none}
@@ -46,9 +46,9 @@ button.tag{cursor:pointer;min-height:32px}button.tag[aria-pressed="true"]{backgr
  .card{padding:18px 14px;border-radius:12px;margin-bottom:22px}.card h2{font-size:19px}
  .flow{gap:10px}.col{width:100%}
  .arrow{transform:rotate(90deg);text-align:center;align-self:center;font-size:30px;line-height:1}
- .cell{font-size:13px;padding:10px 12px;white-space:pre;max-width:100%}
+ .cell{font-size:13px;padding:10px 12px;white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}
  .layout{padding:12px}.strip{flex-wrap:wrap}.seg{min-width:calc(25% - 3px);flex:1 1 auto!important}
- .fields li{font-size:14px}.hex{font-size:12px}.hk{min-width:0;display:block}
+ .fields li{font-size:14px}.hex{font-size:12px}.hk{min-width:0;display:block}.hex>div{display:block}
  #lang{top:10px;right:10px;padding:10px 18px;font-size:16px;min-height:44px}
  .form{flex-direction:column;align-items:stretch}.form input,.form select,.go{width:100%;min-width:0!important;font-size:16px;min-height:44px}
  .limits li{font-size:15px}.extra{font-size:13px;overflow-x:auto}
