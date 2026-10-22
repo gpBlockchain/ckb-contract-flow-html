@@ -73,6 +73,16 @@ node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在�
 
 代码：`lib/ckb.js`（blake2b、molecule、script hash、RPC、分组、插件注册表）+ `contracts/*/plugin.js`（各合约解析与检查）+ `tx-app.js`（通用渲染），由 `gen.js --all` 内联打包成单文件。测试：`node scripts/test-tx.js`（运行各 `tests.json`，需能访问 RPC，`RPC=` / `TESTNET_RPC=` 可覆盖）。
 
+### 一句话让 AI 生成
+
+复制这句话发给任意 coding agent，无需安装：
+
+```text
+阅读 https://raw.githubusercontent.com/gpBlockchain/ckb-contract-flow-html/main/skills/ckb-contract-flow/SKILL.md 并按其步骤为 <合约仓库 URL 或本地路径> 生成合约 cell 流转 HTML
+```
+
+可选安装见 [SKILL.md](skills/ckb-contract-flow/SKILL.md#install-this-skill-optional)。
+
 ### 用 AI 从合约源码写 spec
 
 把下面的提示词（见 English 部分的 *AI prompt*，中英通用）连同合约源码（及 `common.h` 等 include）交给 AI，或直接按 [docs/ADD_CONTRACT.md](docs/ADD_CONTRACT.md) 的完整流程，保存到 `contracts/<id>/spec.json`，运行 `node gen.js --all out && node scripts/check.js`，然后**逐条对照源码的 `return ERROR_*` 人工核对**。
@@ -111,6 +121,16 @@ Enter a tx hash and an RPC URL (presets: mainnet `https://mainnet.ckb.dev/rpc`, 
 - shows a clear message when the RPC is unreachable or blocks CORS. Deep links: `tx.html#tx=0x…&rpc=…`.
 
 Code: `lib/ckb.js` (blake2b, molecule, script hash, RPC, grouping, plugin registry) + `contracts/*/plugin.js` (per-contract parse & check) + `tx-app.js` (generic rendering), inlined into a single file by `gen.js --all`. Test: `node scripts/test-tx.js` (runs every `tests.json`; needs RPC access; override with `RPC=` / `TESTNET_RPC=`). To add a contract see **[docs/ADD_CONTRACT.md](docs/ADD_CONTRACT.md)**.
+
+### One sentence to your AI agent
+
+Paste this to any coding agent, no install needed:
+
+```text
+Read https://raw.githubusercontent.com/gpBlockchain/ckb-contract-flow-html/main/skills/ckb-contract-flow/SKILL.md and follow it to generate a cell-flow HTML for <contract repo URL or local path>
+```
+
+Optional install: see [SKILL.md](skills/ckb-contract-flow/SKILL.md#install-this-skill-optional).
 
 ### AI prompt
 
