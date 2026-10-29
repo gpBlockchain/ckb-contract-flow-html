@@ -104,7 +104,28 @@ const sep = c => /^[≤≥=<>]/.test(plain(c, 'zh')) ? ' ' : T(UI.colon, esc);
 // spec.summary: i18n one sentence · spec.flow: [{label, change}] · spec.unchecked: [i18n]
 // transition.plain: i18n one line · transition.diff: [{field, from, to}] (to omitted or equal → unchanged)
 // limit.group: "core" | "structure" | "tech" · cell body [[text]] → dimmed (unchanged)
-const isGlance = s => !!(s && (s.summary || s.flow || s.unchecked));
+const isGlance = s => !!(s && (s.summary || s.flow || s.unchecked || s.diagram));
+// spec.diagram: [{title, inputs:[{label, fields:[{k, v} | {k, from, to}]}], outputs, conds:[{text, err, unchecked}], tags:[{kind:'witness'|'dep', text}]}]
+const DCSS = `<style>
+.gdg{display:flex;flex-direction:column;gap:14px;margin-bottom:28px}.gdr{background:#fff;border:1px solid #e3e7ef;border-radius:14px;padding:12px 16px}.gdr>h3{margin:0 0 10px;font-size:16px;color:#4a5f9c}
+.gdrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:center}
+.gdside{display:flex;flex-direction:column;gap:8px;border-radius:10px;padding:8px}.gdside.i{background:#fff7ed;border:1px solid #fed7aa}.gdside.o{background:#f0fdf4;border:1px solid #bbf7d0}.gdside .h{font:600 13px system-ui,sans-serif}.gdside.i .h{color:#c2410c}.gdside.o .h{color:#15803d}
+.gdc{background:#fff;border:1px solid #dde1e6;border-radius:10px;padding:8px 12px;font:14px/1.6 Menlo,monospace}.gdside.i .gdc{border-color:#fdba74}.gdside.o .gdc{border-color:#86efac}.gdc .n{display:block;color:#888;font:12px system-ui,sans-serif}
+.gdf{display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:8px}.gdf .v{overflow-wrap:anywhere}.gdf.same{color:#a0a6b1}.gdf.chg .v{color:#8a4b08}.gdf .old{background:#fdecec;border-radius:4px;padding:0 4px}.gdf .new{background:#e8f6ec;border-radius:4px;padding:0 4px}.gdf.hl .v{background:#fff1b8;border-radius:4px;padding:0 4px;color:#8a4b08}
+.gdmid{display:flex;flex-direction:column;align-items:stretch;gap:6px}.gdarr{display:flex;align-items:center;gap:6px;color:#9aa5bd}.gdarr:before,.gdarr:after{content:'';flex:1;border-top:2px solid #c9d1e3}.gdarr:after{flex:0 0 0;border:7px solid transparent;border-left:9px solid #c9d1e3;border-right:0}
+.gdcond{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}.gdcond li{font-size:14px;line-height:1.5;background:#f7f9fc;border:1px solid #e3e7ef;border-radius:8px;padding:4px 8px}.gdcond li.un{background:#fffaf0;border:1px dashed #d9a441;color:#7a5410}
+.gdb{display:inline-block;font:11px Menlo,monospace;padding:0 6px;border-radius:8px;background:#fdecec;color:#b4473f;margin-left:6px;vertical-align:middle}.un .gdb{background:#fbe8c4;color:#8a5a12}
+.gdtags{display:flex;flex-wrap:wrap;gap:6px}.gdt{font:12px/1.5 Menlo,monospace;padding:2px 8px;border-radius:6px;overflow-wrap:anywhere}.gdt.witness{background:#f3eefc;border:1px solid #d9ccf3;color:#5b3f99}.gdt.dep{background:#eef4fb;border:1px solid #c9daf0;color:#2f5a8a}.gdt:before{font-weight:700;margin-right:4px}.gdt.witness:before{content:'✎'}.gdt.dep:before{content:'⛓'}
+@media (max-width:760px){.gdrow{grid-template-columns:1fr}.gdarr{flex-direction:column;height:28px}.gdarr:before{border-top:0;border-left:2px solid #c9d1e3;flex:1}.gdarr:after{border:7px solid transparent;border-top:9px solid #c9d1e3;border-bottom:0}}
+</style>`;
+const dField = f => f.to != null ? (JSON.stringify(f.to) === JSON.stringify(f.from) ? `<div class="gdf same"><span>${T(f.k, esc)}</span><span class="v">${T(f.from)}</span></div>` : `<div class="gdf chg"><span>${T(f.k, esc)}</span><span class="v"><span class="old">${T(f.from)}</span> → <span class="new">${T(f.to)}</span></span></div>`)
+  : `<div class="gdf ${f.hl ? 'hl' : 'same'}"><span>${T(f.k, esc)}</span><span class="v">${T(f.v)}</span></div>`;
+const dCell = c => `<div class="gdc"><span class="n">${T(c.label)}</span>${(c.fields || []).map(dField).join('')}</div>`;
+const diagram = rows => DCSS + `<div class="gdg">${rows.map(r => `<div class="gdr"><h3>${T(r.title, esc)}</h3><div class="gdrow">
+<div class="gdside i"><div class="h">${T({ zh: '输入', en: 'Inputs' }, esc)}</div>${(r.inputs || []).map(dCell).join('')}</div>
+<div class="gdmid"><div class="gdarr"></div><ul class="gdcond">${(r.conds || []).map(c => `<li class="${c.unchecked ? 'un' : ''}">${c.unchecked ? '⚠ ' : '✓ '}${T(c.text)}${c.err ? `<span class="gdb">${esc(c.err)}</span>` : ''}</li>`).join('')}</ul>${(r.tags || []).length ? `<div class="gdtags">${r.tags.map(t => `<span class="gdt ${t.kind === 'dep' ? 'dep' : 'witness'}">${T(t.text)}</span>`).join('')}</div>` : ''}</div>
+<div class="gdside o"><div class="h">${T({ zh: '输出', en: 'Outputs' }, esc)}</div>${(r.outputs || []).map(dCell).join('')}</div>
+</div></div>`).join('')}</div>`;
 const hlG = s => hl(s).replace(/\[\[([\s\S]*?)\]\](?!\])/g, '<span class="dim">$1</span>');
 const GUI = {
   changes: { zh: '变化一览', en: 'What changes' }, same: { zh: '不变', en: 'unchanged' },
@@ -128,7 +149,8 @@ details.gdet{margin-top:18px;border:1px solid #e3e7ef;border-radius:12px;padding
 const limLi = l => `<li><b>${T(l.field, esc)}</b>${sep(l.cond)}${T(l.cond)}${l.err != null && l.err !== '' ? ` <span class="e">(${esc(l.err)})</span>` : ''}${l.note ? ` <span class="note">(${T(l.note)})</span>` : ''}</li>`;
 function glanceTop(spec) {
   return GCSS + (spec.summary ? `<div class="gsum">${T(spec.summary)}</div>` : '')
-    + (spec.flow ? `<div class="gflow">${spec.flow.map(st => `<div class="gstep"><b>${T(st.label, esc)}</b><span class="c">${T(st.change)}</span></div>`).join('<div class="garr">➜</div>')}</div>` : '')
+    + (spec.diagram ? diagram(spec.diagram) : '')
+    + (!spec.diagram && spec.flow ? `<div class="gflow">${spec.flow.map(st => `<div class="gstep"><b>${T(st.label, esc)}</b><span class="c">${T(st.change)}</span></div>`).join('<div class="garr">➜</div>')}</div>` : '')
     + (spec.unchecked ? `<div class="gwarn"><h3>${T(GUI.unchecked, esc)}</h3><ul>${spec.unchecked.map(u => `<li>${T(u)}</li>`).join('')}</ul></div>` : '');
 }
 function glanceCard(t) {

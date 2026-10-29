@@ -747,48 +747,6 @@
     "zh": "一个只属于 owner 的计数器 cell：创建时 count = 0；之后每次更新都要 owner 签名并附一个 Noir/Groth16 证明，count 加 1，lock 与 capacity 永远不变，且不能销毁。",
     "en": "A counter cell owned by one key: it is created with count = 0; every update needs the owner's signature plus a Noir/Groth16 proof, count goes up by 1, lock and capacity never change, and it cannot be destroyed."
   },
-  "flow": [
-    {
-      "label": {
-        "zh": "① 创建",
-        "en": "① Create"
-      },
-      "change": {
-        "zh": "count = 0（无需证明）",
-        "en": "count = 0 (no proof)"
-      }
-    },
-    {
-      "label": {
-        "zh": "② 证明 +1",
-        "en": "② Prove +1"
-      },
-      "change": {
-        "zh": "count 0 → 1",
-        "en": "count 0 → 1"
-      }
-    },
-    {
-      "label": {
-        "zh": "③ 证明 +1",
-        "en": "③ Prove +1"
-      },
-      "change": {
-        "zh": "count 1 → 2",
-        "en": "count 1 → 2"
-      }
-    },
-    {
-      "label": {
-        "zh": "… 依此类推",
-        "en": "… and so on"
-      },
-      "change": {
-        "zh": "count n → n+1；永不销毁",
-        "en": "count n → n+1; never burned"
-      }
-    }
-  ],
   "unchecked": [
     {
       "zh": "new = old + 1 不在合约代码里比较：只由 Noir 电路断言、经 Groth16 证明强制。",
@@ -805,6 +763,262 @@
     {
       "zh": "创建时不需要证明、不检查 witness，capacity 不受限制。",
       "en": "On create there is no proof, no witness check, and capacity is unrestricted."
+    }
+  ],
+  "diagram": [
+    {
+      "title": {
+        "zh": "① 创建（0 → 1 个 counter）",
+        "en": "① Create (0 → 1 counter)"
+      },
+      "inputs": [
+        {
+          "label": {
+            "zh": "inputs[0]：任意 owner 出资的 cell",
+            "en": "inputs[0]: any owner-funded cell"
+          },
+          "fields": [
+            {
+              "k": "lock",
+              "v": "L (owner)"
+            },
+            {
+              "k": "type",
+              "v": {
+                "zh": "无 counter type",
+                "en": "no counter type"
+              }
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "label": {
+            "zh": "counter cell（新建）",
+            "en": "counter cell (new)"
+          },
+          "fields": [
+            {
+              "k": "lock",
+              "v": {
+                "zh": "= L（secp256k1 owner）",
+                "en": "= L (secp256k1 owner)"
+              }
+            },
+            {
+              "k": "type",
+              "from": "—",
+              "to": "OWNED_COUNTER(0x01 ‖ type_id)"
+            },
+            {
+              "k": "count",
+              "from": "—",
+              "to": "0"
+            }
+          ]
+        }
+      ],
+      "conds": [
+        {
+          "text": {
+            "zh": "无需证明，不检查 witness",
+            "en": "no proof, no witness check"
+          }
+        },
+        {
+          "text": {
+            "zh": "输出 lock = inputs[0] 的 lock",
+            "en": "output lock = inputs[0] lock"
+          },
+          "err": "46"
+        },
+        {
+          "text": {
+            "zh": "lock 为 secp256k1_blake160 且有对应 cell_dep",
+            "en": "lock is secp256k1_blake160 with its cell_dep"
+          },
+          "err": "45"
+        },
+        {
+          "text": {
+            "zh": "count = 0",
+            "en": "count = 0"
+          },
+          "err": "53"
+        },
+        {
+          "text": {
+            "zh": "type_id 合法；恰好 1 个 counter 输出",
+            "en": "valid type_id; exactly 1 counter output"
+          },
+          "err": "44 / 42"
+        }
+      ],
+      "tags": [
+        {
+          "kind": "dep",
+          "text": {
+            "zh": "secp256k1 dep_group",
+            "en": "secp256k1 dep_group"
+          }
+        },
+        {
+          "kind": "dep",
+          "text": "OWNED_COUNTER code"
+        }
+      ]
+    },
+    {
+      "title": {
+        "zh": "② 证明 +1（每次更新）",
+        "en": "② Prove +1 (each update)"
+      },
+      "inputs": [
+        {
+          "label": {
+            "zh": "旧 counter cell",
+            "en": "old counter cell"
+          },
+          "fields": [
+            {
+              "k": "capacity",
+              "v": "C"
+            },
+            {
+              "k": "lock",
+              "v": "L"
+            },
+            {
+              "k": "type",
+              "v": "OWNED_COUNTER(args)"
+            },
+            {
+              "k": "count",
+              "v": "n",
+              "hl": true
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "label": {
+            "zh": "新 counter cell",
+            "en": "new counter cell"
+          },
+          "fields": [
+            {
+              "k": "capacity",
+              "from": "C",
+              "to": "C"
+            },
+            {
+              "k": "lock",
+              "from": "L",
+              "to": "L"
+            },
+            {
+              "k": "type",
+              "from": "OWNED_COUNTER(args)",
+              "to": "OWNED_COUNTER(args)"
+            },
+            {
+              "k": "count",
+              "from": "n",
+              "to": "n + 1"
+            }
+          ]
+        }
+      ],
+      "conds": [
+        {
+          "text": {
+            "zh": "owner 签名（由 secp256k1 lock 检查）",
+            "en": "owner signature (checked by the secp256k1 lock)"
+          }
+        },
+        {
+          "text": {
+            "zh": "witness 为 Groth16Witness，≤ 512B",
+            "en": "witness is a Groth16Witness, ≤ 512B"
+          },
+          "err": "48"
+        },
+        {
+          "text": {
+            "zh": "public inputs = 合约重建的 expected",
+            "en": "public inputs = contract-rebuilt expected"
+          },
+          "err": "49"
+        },
+        {
+          "text": {
+            "zh": "恰好 1 个 VK cell_dep（VK_DATA_HASH）",
+            "en": "exactly one VK cell_dep (VK_DATA_HASH)"
+          },
+          "err": "50"
+        },
+        {
+          "text": {
+            "zh": "Groth16 证明有效",
+            "en": "Groth16 proof valid"
+          },
+          "err": "51"
+        },
+        {
+          "text": {
+            "zh": "lock 不变 · capacity 不变",
+            "en": "lock unchanged · capacity unchanged"
+          },
+          "err": "46 / 47"
+        },
+        {
+          "text": {
+            "zh": "new = old + 1：只由 Noir 电路保证，脚本不比较",
+            "en": "new = old + 1: only the Noir circuit enforces it; the script does not compare"
+          },
+          "unchecked": true
+        },
+        {
+          "text": {
+            "zh": "本站解码器不验证证明本身（NOT_CHECKED）",
+            "en": "this site's decoder does not verify the proof itself (NOT_CHECKED)"
+          },
+          "unchecked": true
+        }
+      ],
+      "tags": [
+        {
+          "kind": "witness",
+          "text": {
+            "zh": "witness.input_type：proof 128B + public 132B",
+            "en": "witness.input_type: proof 128B + public 132B"
+          }
+        },
+        {
+          "kind": "witness",
+          "text": {
+            "zh": "witness.lock：owner 签名",
+            "en": "witness.lock: owner signature"
+          }
+        },
+        {
+          "kind": "dep",
+          "text": "VK cell (0x685b…58fe)"
+        },
+        {
+          "kind": "dep",
+          "text": {
+            "zh": "secp256k1 dep_group",
+            "en": "secp256k1 dep_group"
+          }
+        },
+        {
+          "kind": "dep",
+          "text": "OWNED_COUNTER code"
+        }
+      ]
     }
   ]
 }
