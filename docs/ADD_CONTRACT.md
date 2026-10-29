@@ -16,7 +16,7 @@
 4. **写 `plugin.js`**（链上解码插件）：填 `match`（已核实常量）、`parse`、`check`，API 见下文。无法离线校验的（签名、VM 执行、扩展脚本）用 `R.NOT_CHECKED`。
 5. **写 `tests.json`**：至少 1 笔真实链上交易（`get_transactions` 按 script 前缀搜索可找到），`expect` 列出必须被识别的插件 id。
 5b. **写 `meta.json`**：
-   - `tags`：取自 `contracts/tags.json`，≥1 个分类（system / token / nft / defi / identity / channel / btc / proxy / quantum）、1 个源码状态（open-source / no-source）、1 个维护方（nervos / cryptape / community）；kind 与 network 自动推导。
+   - `tags`：取自 `contracts/tags.json`，≥1 个分类（system / token / nft / defi / identity / channel / btc / proxy / quantum / layer2 / zk）、1 个源码状态（open-source / no-source）、1 个维护方（nervos / cryptape / community）；kind 与 network 自动推导。
    - `contributors`（可选，欢迎）：你的 GitHub 用户名，页面会显示“Contributed by @你”。
    - `source`：`repo`（https://github.com/owner/repo）、`commit`（你阅读的完整 40 位 sha）、`paths`、`commit_note`。
    - 部署与二进制核验：运行 `node scripts/check-deployments.js --write --only <id>`，自动从链上解析 cell_dep、type_id、数据哈希、部署交易，并比对该 commit 的二进制 / checksum 文件（verified / unverified / mismatch / no-source / builtin）。
@@ -95,7 +95,7 @@ Repo: <合约仓库 URL>  Contract: <文件路径>  Deployment: <code_hash/hash_
 4. **Write `plugin.js`** (on-chain decoder plugin): fill `match` (verified constants), `parse`, `check` — API below. Use `R.NOT_CHECKED` for anything that cannot be checked offline (signatures, VM execution, extension scripts).
 5. **Write `tests.json`**: at least one real on-chain tx (find via `get_transactions` with a script prefix search); `expect` lists plugin ids that must be recognized.
 5b. **Write `meta.json`**:
-   - `tags`: ids from `contracts/tags.json`: ≥1 category (system / token / nft / defi / identity / channel / btc / proxy / quantum), 1 source status (open-source / no-source), 1 maintainer (nervos / cryptape / community). Kind and network are derived.
+   - `tags`: ids from `contracts/tags.json`: ≥1 category (system / token / nft / defi / identity / channel / btc / proxy / quantum / layer2 / zk), 1 source status (open-source / no-source), 1 maintainer (nervos / cryptape / community). Kind and network are derived.
    - `contributors` (optional, encouraged): your GitHub username; pages show "Contributed by @you".
    - `source`: `repo` (https://github.com/owner/repo), `commit` (the full 40-hex sha you read), `paths`, `commit_note`.
    - Deployments + binary check: run `node scripts/check-deployments.js --write --only <id>`. It resolves the cell_dep, type_id, data hash and deploy tx from chain, then compares them against binaries / checksum files at that commit (verified / unverified / mismatch / no-source / builtin).
