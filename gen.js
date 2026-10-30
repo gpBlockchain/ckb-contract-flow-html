@@ -100,11 +100,120 @@ ${b.note ? `<div class="note">${T(b.note)}</div>` : ''}</div>`;
 const box = b => b.layout ? layoutBox(b) : `<div class="cell"><span class="n">${T(b.label)}</span>${T(b.body)}</div>`;
 const sep = c => /^[≤≥=<>]/.test(plain(c, 'zh')) ? ' ' : T(UI.colon, esc);
 
+// ---- Optional "at a glance" mode (opt-in; pages without these fields render exactly as before) ----
+// spec.summary: i18n one sentence · spec.flow: [{label, change}] · spec.unchecked: [i18n]
+// transition.plain: i18n one line · transition.diff: [{field, from, to}] (to omitted or equal → unchanged)
+// limit.group: "core" | "structure" | "tech" · cell body [[text]] → dimmed (unchanged)
+const isGlance = s => !!(s && (s.summary || s.flow || s.unchecked || s.api));
+// spec.api: API-doc view. {endpoints:[{id, name, desc, params:[{name,type,desc}], inputs:[{name, conds:[i18n]}], returns:[{name, fields:[{k,v}|{k,from,to}]}], errors:[[code, i18n]]}], unsupported:[{name, desc, err}], codes:{code: NAME}}
+const ACSS = `<style>
+.aidx{background:#fff;border:1px solid #e3e7ef;border-radius:14px;padding:10px 16px;margin-bottom:22px}.aidx h3{margin:4px 0 8px;font-size:15px;color:#4a5f9c}
+.aidx a{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr);column-gap:12px;align-items:baseline;padding:6px 0;border-top:1px dashed #eef0f4;color:inherit;text-decoration:none}.aidx a:first-of-type{border-top:0}.aidx a:hover code{background:#dfe8ff}
+.aidx code,.aep h2 code{font:600 14px Menlo,monospace;background:#eef3ff;color:#3b55a8;border-radius:6px;padding:2px 8px;overflow-wrap:anywhere}.aidx .d{font-size:15px;color:#445;overflow-wrap:anywhere}.aidx .no code{background:#f3f4f6;color:#8a8f98;text-decoration:line-through}.aidx .no .d{color:#8a8f98}
+.aep{scroll-margin-top:12px}.aep h2{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.aep .ad{font-size:16px;color:#445;margin:-4px 0 12px}
+.asec{margin-top:12px}.asec>h4{margin:0 0 6px;font:600 13px system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.asec.p>h4{color:#6b4fb0}.asec.i>h4{color:#c2410c}.asec.r>h4{color:#15803d}.asec.e>h4{color:#b4473f}
+.atab{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}.atab td,.atab th{border-top:1px solid #eef0f4;padding:6px 8px;vertical-align:top;text-align:left;overflow-wrap:anywhere;word-break:break-word}.atab th{font-weight:600;color:#666;font-size:12px;background:#fafbfc}
+.asec.p .atab{background:#faf8fe}.asec.p .acell{background:#faf8fe;border:1px solid #e4dcf5}.atab .k{font-family:Menlo,monospace;color:#5b3f99;width:28%}.atab .t{font-family:Menlo,monospace;color:#777;width:22%}
+.acell{border-radius:10px;padding:8px 12px;margin-bottom:8px;font:14px/1.6 Menlo,monospace}.asec.i .acell{background:#fff7ed;border:1px solid #fed7aa}.asec.r .acell{background:#f0fdf4;border:1px solid #bbf7d0}
+.acell .n{display:block;font:600 13px system-ui,sans-serif;color:#555;margin-bottom:2px}.acell ul{margin:0;padding-left:18px;font:14px/1.6 system-ui,sans-serif}
+.af{display:grid;grid-template-columns:minmax(70px,max-content) minmax(0,1fr);column-gap:10px}.af .v{overflow-wrap:anywhere}.af.same{color:#a0a6b1}.af.chg{font-weight:600}.af .old{background:#fdecec;color:#a04040;border-radius:4px;padding:0 4px}.af .new{background:#d9f2e1;color:#146c35;border-radius:4px;padding:0 4px}
+.asec.e .atab .c{width:16%;font-family:Menlo,monospace}.asec.e .atab .c b{color:#b4473f}.asec.e .atab .c span{display:block;font-size:11px;color:#999}
+details.ax{margin:2px 0}details.ax>summary{list-style:none;cursor:pointer;border-radius:6px}details.ax>summary::-webkit-details-marker{display:none}
+details.ax>summary .kk{color:#3b55a8;border-bottom:1px dashed #8aa2e0;white-space:nowrap}details.ax>summary .kk:after{content:' ▸';font-size:11px}details.ax[open]>summary .kk:after{content:' ▾'}details.ax>summary:hover{background:#eef3ff}
+.sp{margin:6px 0 10px;background:#fff;border:1px solid #dbe3f5;border-left:3px solid #8aa2e0;border-radius:10px;padding:8px 10px;font:13px/1.55 system-ui,sans-serif;color:#334}.sp .st{font-weight:600;color:#4a5f9c;margin-bottom:4px;overflow-wrap:anywhere}
+.sp table{width:100%;border-collapse:collapse;table-layout:fixed}.sp td,.sp th{border-top:1px solid #eef0f4;padding:4px 6px;text-align:left;vertical-align:top;overflow-wrap:anywhere;word-break:break-word}.sp th{font-size:11px;color:#777;background:#fafbfc}.sp .o{width:12%;font-family:Menlo,monospace}.sp .l{width:10%;font-family:Menlo,monospace}.sp .y{width:18%;font-family:Menlo,monospace;color:#666}
+.sp .nm{font-family:Menlo,monospace;font-weight:600;border-radius:4px;padding:0 4px}.sp .hx{margin-top:6px;font:12px/1.8 Menlo,monospace;overflow-wrap:anywhere;word-break:break-all}.sp .hx span{border-radius:3px;padding:1px 2px}.sp .hxl{font-size:11px;color:#888}
+.c0{background:#e6efff}.c1{background:#e3f5e8}.c2{background:#fdf0dc}.c3{background:#f3e8fb}.c4{background:#fde7ea}.c5{background:#e2f4f6}.c6{background:#f1f1e0}
+@media (max-width:760px){.sp{padding:6px 6px;margin-left:0;margin-right:0}.sp table,.sp tbody{display:block}.sp tr{display:grid;grid-template-columns:max-content max-content minmax(0,1fr);column-gap:8px;border-top:1px solid #eef0f4;padding:3px 0}.sp tr:first-child{display:none}.sp td{border:0;padding:0 2px;width:auto!important}.sp td.y{display:block;color:#888}.sp td:last-child{grid-column:1/-1}.sp td.o:before{content:'@'}.sp td.l:after{content:'B'}}
+details.aall{margin-top:8px}details.aall>summary{cursor:pointer;color:#555;font-size:15px;padding:6px 0}
+@media (max-width:760px){.atab .k{width:34%}.atab .t{display:none}.asec.e .atab .c{width:24%}.aidx a{grid-template-columns:1fr;row-gap:2px}}
+</style>`;
+let STR = {};
+const pv = p => { const t = p.type ? p.type + ' · ' : '', d = p.desc || ''; return typeof d === 'object' ? { zh: t + d.zh, en: t + d.en } : t + d; };
+const AXT = { off: { zh: '偏移', en: 'Offset' }, len: { zh: '长度', en: 'Len' }, ty: { zh: '类型', en: 'Type' }, mean: { zh: '字段 / 含义', en: 'Field / meaning' }, hex: { zh: '示例 hex（颜色对应上表）', en: 'Example hex (colors match the table)' } };
+function sPanel(id, d = 0) {
+  const s = STR[id]; if (!s || d > 5) return '';
+  return `<div class="sp"><div class="st">${T(s.name, esc)}${s.size ? ` · ${T(s.size, esc)}` : ''}</div>${s.desc ? `<div>${T(s.desc)}</div>` : ''}
+<table><tr><th class="o">${T(AXT.off, esc)}</th><th class="l">${T(AXT.len, esc)}</th><th class="y">${T(AXT.ty, esc)}</th><th>${T(AXT.mean, esc)}</th></tr>${s.rows.map((r, i) => `<tr><td class="o">${esc(r.off)}</td><td class="l">${esc(r.len)}</td><td class="y">${T(r.type, esc)}</td><td><span class="nm c${i % 7}">${esc(r.name)}</span> ${T(r.desc)}${r.ref && STR[r.ref] ? `<details class="ax"><summary><span class="kk">${esc(r.name)}</span> = ${T(STR[r.ref].name, esc)}</summary>${sPanel(r.ref, d + 1)}</details>` : ''}</td></tr>`).join('')}</table>
+${s.rows.some(r => r.hex) ? `<div class="hx"><div class="hxl">${T(AXT.hex, esc)}${s.ex ? ' · ' + T(s.ex, esc) : ''}</div>${s.rows.map((r, i) => r.hex ? `<span class="c${i % 7}" title="${esc(r.name)}">${esc(r.hex)}</span>` : '').join('')}</div>` : ''}</div>`;
+}
+const axWrap = (f, inner, cls) => f.s && STR[f.s] ? `<details class="ax"><summary class="${cls}">${inner}</summary>${sPanel(f.s)}</details>` : `<div class="${cls}">${inner}</div>`;
+const kk = f => f.s && STR[f.s] ? `<span class="kk">${T(f.k, esc)}</span>` : `<span>${T(f.k, esc)}</span>`;
+const aField = f => f.to != null ? (JSON.stringify(f.to) === JSON.stringify(f.from) ? axWrap(f, `${kk(f)}<span class="v">${T(f.from)} · ${T(GUI.same, esc)}</span>`, 'af same') : axWrap(f, `${kk(f)}<span class="v"><span class="old">${T(f.from)}</span> → <span class="new">${T(f.to)}</span></span>`, 'af chg'))
+  : axWrap(f, `${kk(f)}<span class="v">${T(f.v)}</span>`, 'af same');
+const AUI = { idx: { zh: '接口一览', en: 'Endpoints' }, p: { zh: '参数 Params（witness）', en: 'Params (witness)' }, i: { zh: '输入 Inputs', en: 'Inputs' }, r: { zh: '返回 Returns（输出 cell）', en: 'Returns (output cells)' }, e: { zh: '错误 Errors', en: 'Errors' },
+  name: { zh: '字段', en: 'Field' }, type: { zh: '类型', en: 'Type' }, desc: { zh: '说明', en: 'Description' }, code: { zh: '错误码', en: 'Code' }, why: { zh: '触发原因', en: 'Trigger' }, no: { zh: '不支持', en: 'Not supported' }, none: { zh: '无', en: 'none' },
+  all: { zh: '完整约束、字节布局与编码细节（点击展开）', en: 'Full constraints, byte layouts & encoding (click to expand)' } };
+function apiDoc(a) {
+  STR = a.structs || {};
+  const C = a.codes || {}, eps = a.endpoints || [];
+  const idx = `<div class="aidx"><h3>${T(AUI.idx, esc)}</h3>${eps.map(e => `<a href="#api-${esc(e.id)}"><code>${esc(e.name)}</code><span class="d">${T(e.desc)}</span></a>`).join('')}${(a.unsupported || []).map(u => `<a class="no"><code>${esc(u.name)}</code><span class="d">${T(AUI.no, esc)} · ${T(u.desc)}${u.err ? ` (${esc(u.err)})` : ''}</span></a>`).join('')}</div>`;
+  const ep = e => `<div class="card aep" id="api-${esc(e.id)}"><h2><code>${esc(e.name)}</code>${e.title ? T(e.title, esc) : ''}</h2><div class="ad">${T(e.desc)}</div>
+<div class="asec p"><h4>${T(AUI.p, esc)}</h4>${(e.params || []).length ? `<div class="acell pp">${e.params.map(p => aField({ k: p.name, v: pv(p), s: p.s })).join('')}</div>` : `<div class="af same">${T(AUI.none, esc)}${e.noParams ? ' · ' + T(e.noParams) : ''}</div>`}</div>
+<div class="asec i"><h4>${T(AUI.i, esc)}</h4>${(e.inputs || []).map(c => `<div class="acell"><span class="n">${T(c.name)}</span>${(c.fields || []).map(aField).join('')}<ul>${(c.conds || []).map(x => `<li>${T(x)}</li>`).join('')}</ul></div>`).join('')}</div>
+<div class="asec r"><h4>${T(AUI.r, esc)}</h4>${(e.returns || []).map(c => `<div class="acell"><span class="n">${T(c.name)}</span>${(c.fields || []).map(aField).join('')}</div>`).join('')}</div>
+<div class="asec e"><h4>${T(AUI.e, esc)}</h4><table class="atab"><tr><th class="c">${T(AUI.code, esc)}</th><th>${T(AUI.why, esc)}</th></tr>${(e.errors || []).map(([c, w]) => `<tr><td class="c"><b>${esc(c)}</b>${C[c] ? `<span>${esc(C[c])}</span>` : ''}</td><td>${T(w)}</td></tr>`).join('')}</table></div></div>`;
+  return ACSS + idx + eps.map(ep).join('\n');
+}
+const hlG = s => hl(s).replace(/\[\[([\s\S]*?)\]\](?!\])/g, '<span class="dim">$1</span>');
+const GUI = {
+  changes: { zh: '变化一览', en: 'What changes' }, same: { zh: '不变', en: 'unchanged' },
+  details: { zh: '字节布局与编码细节（点击展开）', en: 'Byte layouts & encoding details (click to expand)' },
+  unchecked: { zh: '⚠ 脚本本身不检查 / 解码器未校验', en: '⚠ Not checked by the script / not verified by the decoder' },
+  groups: { core: { zh: '核心规则', en: 'Core rules' }, structure: { zh: '结构规则', en: 'Structure rules' }, tech: { zh: '技术细节', en: 'Technical details' } },
+};
+const GCSS = `<style>
+.gsum{background:#f5f8ff;border:1px solid #dbe3f5;border-left:4px solid #8aa2e0;border-radius:12px;padding:14px 18px;margin:-16px 0 20px;font-size:19px;color:#334}
+.gflow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin-bottom:28px}.gstep{flex:1 1 180px;background:#fff;border:1px solid #e3e7ef;border-radius:12px;padding:10px 14px;min-width:0}.gstep b{display:block;color:#4a5f9c;font-size:15px}.gstep span.c{font:14px/1.6 Menlo,monospace;color:#555;overflow-wrap:anywhere}.garr{align-self:center;color:#9aa5bd;font-size:22px}
+.gwarn{background:#fffaf0;border:1px solid #f3dcb0;border-left:4px solid #d9a441;border-radius:12px;padding:12px 18px;margin-bottom:32px}.gwarn h3{margin:0 0 6px;font-size:17px;color:#8a5a12}.gwarn ul{margin:0;padding-left:20px}.gwarn li{margin:4px 0;font-size:16px}
+.gplain{background:#f7f9fc;border:1px solid #e3e7ef;border-radius:10px;padding:10px 16px;margin:-8px 0 18px;font-size:17px;color:#334}
+.gdiff{margin-top:16px;border:1px solid #e3e7ef;border-radius:12px;padding:10px 14px;background:#fcfcfd}.gdiff h3{margin:0 0 6px;font-size:15px;color:#555}.gdiff .r{display:grid;grid-template-columns:minmax(90px,max-content) minmax(0,1fr);column-gap:14px;padding:3px 0;font:14px/1.6 Menlo,monospace;border-top:1px dashed #eef0f4}.gdiff .r:first-of-type{border-top:0}.gdiff .r.same{color:#a0a6b1}.gdiff .r.chg .v{color:#8a4b08}.gdiff .v{overflow-wrap:anywhere}.gdiff .old{background:#fdecec;border-radius:4px;padding:0 4px}.gdiff .new{background:#e8f6ec;border-radius:4px;padding:0 4px}
+.dim{color:#a0a6b1}
+details.gdet{margin-top:18px;border:1px solid #e3e7ef;border-radius:12px;padding:8px 14px;background:#fcfcfd}details.gdet>summary{cursor:pointer;color:#555;font-size:15px}
+.glim h4{margin:12px 0 4px;font-size:15px;color:#4a5f9c}.glim details>summary{cursor:pointer;font-size:15px;color:#4a5f9c;font-weight:600;margin-top:12px}.glim .e{font-size:13px;opacity:.75}
+@media (max-width:760px){.gsum{font-size:16px;margin-top:-24px}.gflow{flex-direction:column}.gstep{flex:none}.garr{transform:rotate(90deg)}.gplain{font-size:15px}
+ .glance .strip{flex-direction:column}.glance .seg{min-width:0;flex:none!important;text-align:left;display:flex;gap:10px;align-items:baseline}.glance .seg b{display:inline}
+ .gdiff .r{grid-template-columns:1fr}}
+</style>`;
+const limLi = l => `<li><b>${T(l.field, esc)}</b>${sep(l.cond)}${T(l.cond)}${l.err != null && l.err !== '' ? ` <span class="e">(${esc(l.err)})</span>` : ''}${l.note ? ` <span class="note">(${T(l.note)})</span>` : ''}</li>`;
+function glanceTop(spec) {
+  return GCSS + (spec.summary ? `<div class="gsum">${T(spec.summary)}</div>` : '')
+    + (spec.api ? apiDoc(spec.api) : '')
+    + (!spec.api && spec.flow ? `<div class="gflow">${spec.flow.map(st => `<div class="gstep"><b>${T(st.label, esc)}</b><span class="c">${T(st.change)}</span></div>`).join('<div class="garr">➜</div>')}</div>` : '')
+    + (spec.unchecked ? `<div class="gwarn"><h3>${T(GUI.unchecked, esc)}</h3><ul>${spec.unchecked.map(u => `<li>${T(u)}</li>`).join('')}</ul></div>` : '');
+}
+function glanceCard(t) {
+  const gbox = b => b.layout ? layoutBox(b) : `<div class="cell"><span class="n">${T(b.label)}</span>${T(b.body, hlG)}</div>`;
+  const diff = t.diff && t.diff.length ? `<div class="gdiff"><h3>${T(GUI.changes, esc)}</h3>${t.diff.map(d => {
+    const same = d.to == null || JSON.stringify(d.to) === JSON.stringify(d.from);
+    return `<div class="r ${same ? 'same' : 'chg'}"><span>${T(d.field, esc)}</span><span class="v">${same ? `${T(d.from)} · ${T(GUI.same, esc)}` : `<span class="old">${T(d.from)}</span> → <span class="new">${T(d.to)}</span>`}</span></div>`; }).join('')}</div>` : '';
+  const L = t.limits || [], by = g => L.filter(l => (l.group || 'tech') === g);
+  const lim = L.length ? `<div class="limits glim"><h3>${T(UI.limits, esc)}</h3>
+${by('core').length ? `<h4>${T(GUI.groups.core, esc)}</h4><ul>${by('core').map(limLi).join('\n')}</ul>` : ''}
+${['structure', 'tech'].filter(g => by(g).length).map(g => `<details><summary>${T(GUI.groups[g], esc)}（${by(g).length}）</summary><ul>${by(g).map(limLi).join('\n')}</ul></details>`).join('\n')}</div>` : '';
+  const det = (t.layouts || []).length || (t.extras || []).length || t.note ? `<details class="gdet"><summary>${T(GUI.details, esc)}</summary>
+${(t.layouts || []).map(layoutBox).join('\n')}${(t.extras || []).map(x => `<div class="extra">${T(x)}</div>`).join('\n')}${t.note ? `<div class="note" style="margin-top:12px">${T(t.note)}</div>` : ''}</details>` : '';
+  return `
+<div class="card">
+<h2><span>${T(t.tag, esc)}</span>${T(t.title, esc)}</h2>
+${t.plain ? `<div class="gplain">${T(t.plain)}</div>` : ''}
+<div class="flow">
+<div class="col cin"><div class="colh">${T({ zh: 'Inputs 输入', en: 'Inputs' }, esc)}</div>${(t.inputs || []).map(gbox).join('\n')}</div>
+<div class="arrow">➜</div>
+<div class="col cout"><div class="colh">${T({ zh: 'Outputs 输出', en: 'Outputs' }, esc)}</div>${(t.outputs || []).map(gbox).join('\n')}</div>
+</div>
+${diff}
+${lim}
+${det}
+</div>`;
+}
+
 function render(spec, id) {
   const meta = id ? META.load(id) : null, plugin = id ? pluginOf(id) : null;
   const head = meta ? MH().chips(META.tagsOf(meta, plugin)) + MH().credit(meta) : '';
   const prov = meta ? `<div class="card">${MH().provenance(meta)}</div>` : '';
-  const cards = (spec.transitions || []).map(t => `
+  const cards = isGlance(spec) ? '<div class="glance">' + glanceTop(spec) + (spec.api ? `<details class="aall"><summary>${T(AUI.all, esc)}</summary>` : '') + (spec.transitions || []).map(glanceCard).join('\n') + (spec.api ? '</details>' : '') + '</div>' : (spec.transitions || []).map(t => `
 <div class="card">
 <h2><span>${T(t.tag, esc)}</span>${T(t.title, esc)}</h2>
 <div class="flow">
