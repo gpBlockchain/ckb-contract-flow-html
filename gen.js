@@ -114,25 +114,44 @@ const ACSS = `<style>
 .asec{margin-top:12px}.asec>h4{margin:0 0 6px;font:600 13px system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase}
 .asec.p>h4{color:#6b4fb0}.asec.i>h4{color:#c2410c}.asec.r>h4{color:#15803d}.asec.e>h4{color:#b4473f}
 .atab{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}.atab td,.atab th{border-top:1px solid #eef0f4;padding:6px 8px;vertical-align:top;text-align:left;overflow-wrap:anywhere;word-break:break-word}.atab th{font-weight:600;color:#666;font-size:12px;background:#fafbfc}
-.asec.p .atab{background:#faf8fe}.atab .k{font-family:Menlo,monospace;color:#5b3f99;width:28%}.atab .t{font-family:Menlo,monospace;color:#777;width:22%}
+.asec.p .atab{background:#faf8fe}.asec.p .acell{background:#faf8fe;border:1px solid #e4dcf5}.atab .k{font-family:Menlo,monospace;color:#5b3f99;width:28%}.atab .t{font-family:Menlo,monospace;color:#777;width:22%}
 .acell{border-radius:10px;padding:8px 12px;margin-bottom:8px;font:14px/1.6 Menlo,monospace}.asec.i .acell{background:#fff7ed;border:1px solid #fed7aa}.asec.r .acell{background:#f0fdf4;border:1px solid #bbf7d0}
 .acell .n{display:block;font:600 13px system-ui,sans-serif;color:#555;margin-bottom:2px}.acell ul{margin:0;padding-left:18px;font:14px/1.6 system-ui,sans-serif}
 .af{display:grid;grid-template-columns:minmax(70px,max-content) minmax(0,1fr);column-gap:10px}.af .v{overflow-wrap:anywhere}.af.same{color:#a0a6b1}.af.chg{font-weight:600}.af .old{background:#fdecec;color:#a04040;border-radius:4px;padding:0 4px}.af .new{background:#d9f2e1;color:#146c35;border-radius:4px;padding:0 4px}
 .asec.e .atab .c{width:16%;font-family:Menlo,monospace}.asec.e .atab .c b{color:#b4473f}.asec.e .atab .c span{display:block;font-size:11px;color:#999}
+details.ax{margin:2px 0}details.ax>summary{list-style:none;cursor:pointer;border-radius:6px}details.ax>summary::-webkit-details-marker{display:none}
+details.ax>summary .kk{color:#3b55a8;border-bottom:1px dashed #8aa2e0;white-space:nowrap}details.ax>summary .kk:after{content:' ▸';font-size:11px}details.ax[open]>summary .kk:after{content:' ▾'}details.ax>summary:hover{background:#eef3ff}
+.sp{margin:6px 0 10px;background:#fff;border:1px solid #dbe3f5;border-left:3px solid #8aa2e0;border-radius:10px;padding:8px 10px;font:13px/1.55 system-ui,sans-serif;color:#334}.sp .st{font-weight:600;color:#4a5f9c;margin-bottom:4px;overflow-wrap:anywhere}
+.sp table{width:100%;border-collapse:collapse;table-layout:fixed}.sp td,.sp th{border-top:1px solid #eef0f4;padding:4px 6px;text-align:left;vertical-align:top;overflow-wrap:anywhere;word-break:break-word}.sp th{font-size:11px;color:#777;background:#fafbfc}.sp .o{width:12%;font-family:Menlo,monospace}.sp .l{width:10%;font-family:Menlo,monospace}.sp .y{width:18%;font-family:Menlo,monospace;color:#666}
+.sp .nm{font-family:Menlo,monospace;font-weight:600;border-radius:4px;padding:0 4px}.sp .hx{margin-top:6px;font:12px/1.8 Menlo,monospace;overflow-wrap:anywhere;word-break:break-all}.sp .hx span{border-radius:3px;padding:1px 2px}.sp .hxl{font-size:11px;color:#888}
+.c0{background:#e6efff}.c1{background:#e3f5e8}.c2{background:#fdf0dc}.c3{background:#f3e8fb}.c4{background:#fde7ea}.c5{background:#e2f4f6}.c6{background:#f1f1e0}
+@media (max-width:760px){.sp{padding:6px 6px;margin-left:0;margin-right:0}.sp table,.sp tbody{display:block}.sp tr{display:grid;grid-template-columns:max-content max-content minmax(0,1fr);column-gap:8px;border-top:1px solid #eef0f4;padding:3px 0}.sp tr:first-child{display:none}.sp td{border:0;padding:0 2px;width:auto!important}.sp td.y{display:block;color:#888}.sp td:last-child{grid-column:1/-1}.sp td.o:before{content:'@'}.sp td.l:after{content:'B'}}
 details.aall{margin-top:8px}details.aall>summary{cursor:pointer;color:#555;font-size:15px;padding:6px 0}
 @media (max-width:760px){.atab .k{width:34%}.atab .t{display:none}.asec.e .atab .c{width:24%}.aidx a{grid-template-columns:1fr;row-gap:2px}}
 </style>`;
-const aField = f => f.to != null ? (JSON.stringify(f.to) === JSON.stringify(f.from) ? `<div class="af same"><span>${T(f.k, esc)}</span><span class="v">${T(f.from)} · ${T(GUI.same, esc)}</span></div>` : `<div class="af chg"><span>${T(f.k, esc)}</span><span class="v"><span class="old">${T(f.from)}</span> → <span class="new">${T(f.to)}</span></span></div>`)
-  : `<div class="af same"><span>${T(f.k, esc)}</span><span class="v">${T(f.v)}</span></div>`;
+let STR = {};
+const pv = p => { const t = p.type ? p.type + ' · ' : '', d = p.desc || ''; return typeof d === 'object' ? { zh: t + d.zh, en: t + d.en } : t + d; };
+const AXT = { off: { zh: '偏移', en: 'Offset' }, len: { zh: '长度', en: 'Len' }, ty: { zh: '类型', en: 'Type' }, mean: { zh: '字段 / 含义', en: 'Field / meaning' }, hex: { zh: '示例 hex（颜色对应上表）', en: 'Example hex (colors match the table)' } };
+function sPanel(id, d = 0) {
+  const s = STR[id]; if (!s || d > 5) return '';
+  return `<div class="sp"><div class="st">${T(s.name, esc)}${s.size ? ` · ${T(s.size, esc)}` : ''}</div>${s.desc ? `<div>${T(s.desc)}</div>` : ''}
+<table><tr><th class="o">${T(AXT.off, esc)}</th><th class="l">${T(AXT.len, esc)}</th><th class="y">${T(AXT.ty, esc)}</th><th>${T(AXT.mean, esc)}</th></tr>${s.rows.map((r, i) => `<tr><td class="o">${esc(r.off)}</td><td class="l">${esc(r.len)}</td><td class="y">${T(r.type, esc)}</td><td><span class="nm c${i % 7}">${esc(r.name)}</span> ${T(r.desc)}${r.ref && STR[r.ref] ? `<details class="ax"><summary><span class="kk">${esc(r.name)}</span> = ${T(STR[r.ref].name, esc)}</summary>${sPanel(r.ref, d + 1)}</details>` : ''}</td></tr>`).join('')}</table>
+${s.rows.some(r => r.hex) ? `<div class="hx"><div class="hxl">${T(AXT.hex, esc)}${s.ex ? ' · ' + T(s.ex, esc) : ''}</div>${s.rows.map((r, i) => r.hex ? `<span class="c${i % 7}" title="${esc(r.name)}">${esc(r.hex)}</span>` : '').join('')}</div>` : ''}</div>`;
+}
+const axWrap = (f, inner, cls) => f.s && STR[f.s] ? `<details class="ax"><summary class="${cls}">${inner}</summary>${sPanel(f.s)}</details>` : `<div class="${cls}">${inner}</div>`;
+const kk = f => f.s && STR[f.s] ? `<span class="kk">${T(f.k, esc)}</span>` : `<span>${T(f.k, esc)}</span>`;
+const aField = f => f.to != null ? (JSON.stringify(f.to) === JSON.stringify(f.from) ? axWrap(f, `${kk(f)}<span class="v">${T(f.from)} · ${T(GUI.same, esc)}</span>`, 'af same') : axWrap(f, `${kk(f)}<span class="v"><span class="old">${T(f.from)}</span> → <span class="new">${T(f.to)}</span></span>`, 'af chg'))
+  : axWrap(f, `${kk(f)}<span class="v">${T(f.v)}</span>`, 'af same');
 const AUI = { idx: { zh: '接口一览', en: 'Endpoints' }, p: { zh: '参数 Params（witness）', en: 'Params (witness)' }, i: { zh: '输入 Inputs', en: 'Inputs' }, r: { zh: '返回 Returns（输出 cell）', en: 'Returns (output cells)' }, e: { zh: '错误 Errors', en: 'Errors' },
   name: { zh: '字段', en: 'Field' }, type: { zh: '类型', en: 'Type' }, desc: { zh: '说明', en: 'Description' }, code: { zh: '错误码', en: 'Code' }, why: { zh: '触发原因', en: 'Trigger' }, no: { zh: '不支持', en: 'Not supported' }, none: { zh: '无', en: 'none' },
   all: { zh: '完整约束、字节布局与编码细节（点击展开）', en: 'Full constraints, byte layouts & encoding (click to expand)' } };
 function apiDoc(a) {
+  STR = a.structs || {};
   const C = a.codes || {}, eps = a.endpoints || [];
   const idx = `<div class="aidx"><h3>${T(AUI.idx, esc)}</h3>${eps.map(e => `<a href="#api-${esc(e.id)}"><code>${esc(e.name)}</code><span class="d">${T(e.desc)}</span></a>`).join('')}${(a.unsupported || []).map(u => `<a class="no"><code>${esc(u.name)}</code><span class="d">${T(AUI.no, esc)} · ${T(u.desc)}${u.err ? ` (${esc(u.err)})` : ''}</span></a>`).join('')}</div>`;
   const ep = e => `<div class="card aep" id="api-${esc(e.id)}"><h2><code>${esc(e.name)}</code>${e.title ? T(e.title, esc) : ''}</h2><div class="ad">${T(e.desc)}</div>
-<div class="asec p"><h4>${T(AUI.p, esc)}</h4>${(e.params || []).length ? `<table class="atab"><tr><th class="k">${T(AUI.name, esc)}</th><th class="t">${T(AUI.type, esc)}</th><th>${T(AUI.desc, esc)}</th></tr>${e.params.map(p => `<tr><td class="k">${T(p.name, esc)}</td><td class="t">${T(p.type, esc)}</td><td>${T(p.desc)}</td></tr>`).join('')}</table>` : `<div class="af same">${T(AUI.none, esc)}${e.noParams ? ' · ' + T(e.noParams) : ''}</div>`}</div>
-<div class="asec i"><h4>${T(AUI.i, esc)}</h4>${(e.inputs || []).map(c => `<div class="acell"><span class="n">${T(c.name)}</span><ul>${(c.conds || []).map(x => `<li>${T(x)}</li>`).join('')}</ul></div>`).join('')}</div>
+<div class="asec p"><h4>${T(AUI.p, esc)}</h4>${(e.params || []).length ? `<div class="acell pp">${e.params.map(p => aField({ k: p.name, v: pv(p), s: p.s })).join('')}</div>` : `<div class="af same">${T(AUI.none, esc)}${e.noParams ? ' · ' + T(e.noParams) : ''}</div>`}</div>
+<div class="asec i"><h4>${T(AUI.i, esc)}</h4>${(e.inputs || []).map(c => `<div class="acell"><span class="n">${T(c.name)}</span>${(c.fields || []).map(aField).join('')}<ul>${(c.conds || []).map(x => `<li>${T(x)}</li>`).join('')}</ul></div>`).join('')}</div>
 <div class="asec r"><h4>${T(AUI.r, esc)}</h4>${(e.returns || []).map(c => `<div class="acell"><span class="n">${T(c.name)}</span>${(c.fields || []).map(aField).join('')}</div>`).join('')}</div>
 <div class="asec e"><h4>${T(AUI.e, esc)}</h4><table class="atab"><tr><th class="c">${T(AUI.code, esc)}</th><th>${T(AUI.why, esc)}</th></tr>${(e.errors || []).map(([c, w]) => `<tr><td class="c"><b>${esc(c)}</b>${C[c] ? `<span>${esc(C[c])}</span>` : ''}</td><td>${T(w)}</td></tr>`).join('')}</table></div></div>`;
   return ACSS + idx + eps.map(ep).join('\n');

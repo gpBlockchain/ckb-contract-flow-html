@@ -792,6 +792,13 @@
                 "zh": "它的 lock 决定 counter 的 owner",
                 "en": "its lock becomes the counter's owner"
               }
+            ],
+            "fields": [
+              {
+                "k": "lock",
+                "v": "L",
+                "s": "lock"
+              }
             ]
           },
           {
@@ -819,22 +826,40 @@
             },
             "fields": [
               {
+                "k": "capacity",
+                "from": "—",
+                "to": "C",
+                "s": "capacity"
+              },
+              {
                 "k": "lock",
                 "from": "—",
                 "to": {
                   "zh": "= inputs[0].lock（secp256k1）",
                   "en": "= inputs[0].lock (secp256k1)"
-                }
+                },
+                "s": "lock"
               },
               {
                 "k": "type",
                 "from": "—",
-                "to": "OWNED_COUNTER(0x01 ‖ type_id)"
+                "to": "OWNED_COUNTER(0x01 ‖ type_id)",
+                "s": "type"
               },
               {
-                "k": "count",
+                "k": "type.args",
                 "from": "—",
-                "to": "0"
+                "to": "0x01 ‖ type_id",
+                "s": "args"
+              },
+              {
+                "k": "data",
+                "from": "—",
+                "to": {
+                  "zh": "0x01 ‖ count=0",
+                  "en": "0x01 ‖ count=0"
+                },
+                "s": "data"
               }
             ]
           }
@@ -907,36 +932,49 @@
         },
         "params": [
           {
+            "name": "witnesses[i]",
+            "type": "WitnessArgs",
+            "desc": {
+              "zh": "整个 witness，点开看结构",
+              "en": "whole witness, tap to see the structure"
+            },
+            "s": "witness"
+          },
+          {
             "name": "witness.lock",
             "type": "65B",
             "desc": {
-              "zh": "owner 的 secp256k1 签名（由 lock 脚本验证）",
-              "en": "owner's secp256k1 signature (verified by the lock script)"
-            }
+              "zh": "owner secp256k1 签名",
+              "en": "owner secp256k1 signature"
+            },
+            "s": "sig"
           },
           {
-            "name": "witness.input_type.proof",
+            "name": "witness.input_type",
+            "type": "290B",
+            "desc": {
+              "zh": "Groth16Witness",
+              "en": "Groth16Witness"
+            },
+            "s": "g16"
+          },
+          {
+            "name": "· proof",
             "type": "128B",
             "desc": {
-              "zh": "Groth16 BN254 证明 A ‖ B ‖ C",
-              "en": "Groth16 BN254 proof A ‖ B ‖ C"
-            }
+              "zh": "Groth16 BN254 证明",
+              "en": "Groth16 BN254 proof"
+            },
+            "s": "proof"
           },
           {
-            "name": "witness.input_type.public",
+            "name": "· public",
             "type": "132B",
             "desc": {
-              "zh": "public inputs：old、new、交易上下文 digest；必须等于合约重建的值",
-              "en": "public inputs: old, new, tx-context digest; must equal what the contract rebuilds"
-            }
-          },
-          {
-            "name": "WitnessArgs",
-            "type": "≤ 512B",
-            "desc": {
-              "zh": "整个 witness 大小上限",
-              "en": "size limit of the whole witness"
-            }
+              "zh": "old / new / 上下文 digest",
+              "en": "old / new / context digest"
+            },
+            "s": "public"
           }
         ],
         "inputs": [
@@ -945,14 +983,30 @@
               "zh": "inputs · 旧 counter cell（恰好 1 个）",
               "en": "inputs · old counter cell (exactly one)"
             },
-            "conds": [
+            "conds": [],
+            "fields": [
               {
-                "zh": "count = n",
-                "en": "count = n"
+                "k": "capacity",
+                "v": "C",
+                "s": "capacity"
               },
               {
-                "zh": "data 9 字节，data[0] = 0x01",
-                "en": "data 9 bytes, data[0] = 0x01"
+                "k": "lock",
+                "v": "L",
+                "s": "lock"
+              },
+              {
+                "k": "type",
+                "v": "OWNED_COUNTER(args)",
+                "s": "type"
+              },
+              {
+                "k": "data",
+                "v": {
+                  "zh": "0x01 ‖ count=n",
+                  "en": "0x01 ‖ count=n"
+                },
+                "s": "data"
               }
             ]
           },
@@ -963,12 +1017,15 @@
             },
             "conds": [
               {
-                "zh": "VK cell：data hash = VK_DATA_HASH（恰好 1 个）",
-                "en": "VK cell: data hash = VK_DATA_HASH (exactly one)"
-              },
-              {
                 "zh": "OWNED_COUNTER 代码 · secp256k1 dep_group",
                 "en": "OWNED_COUNTER code · secp256k1 dep_group"
+              }
+            ],
+            "fields": [
+              {
+                "k": "VK dep",
+                "v": "0x685b…58fe",
+                "s": "vkdep"
               }
             ]
           }
@@ -983,22 +1040,26 @@
               {
                 "k": "count",
                 "from": "n",
-                "to": "n + 1"
+                "to": "n + 1",
+                "s": "data"
               },
               {
                 "k": "capacity",
                 "from": "C",
-                "to": "C"
+                "to": "C",
+                "s": "capacity"
               },
               {
                 "k": "lock",
                 "from": "L",
-                "to": "L"
+                "to": "L",
+                "s": "lock"
               },
               {
                 "k": "type",
                 "from": "OWNED_COUNTER(args)",
-                "to": "OWNED_COUNTER(args)"
+                "to": "OWNED_COUNTER(args)",
+                "s": "type"
               },
               {
                 "k": "⚠ ",
@@ -1094,6 +1155,550 @@
         },
         "err": "46"
       }
-    ]
+    ],
+    "structs": {
+      "capacity": {
+        "name": "Capacity (Uint64)",
+        "size": "8B",
+        "rows": [
+          {
+            "off": "0",
+            "len": "8",
+            "type": "u64 LE",
+            "name": "capacity",
+            "desc": {
+              "zh": "单位 shannon（1 CKB = 10⁸）",
+              "en": "in shannons (1 CKB = 10⁸)"
+            },
+            "hex": "00e40b5402000000"
+          }
+        ],
+        "ex": {
+          "zh": "= 100 CKB",
+          "en": "= 100 CKB"
+        }
+      },
+      "lock": {
+        "name": "Script (lock, molecule table)",
+        "size": "77B",
+        "desc": {
+          "zh": "必须是 secp256k1_blake160（否则 45），且与 inputs[0] lock 一致（否则 46）",
+          "en": "must be secp256k1_blake160 (else 45) and equal inputs[0] lock (else 46)"
+        },
+        "rows": [
+          {
+            "off": "0",
+            "len": "4",
+            "type": "u32 LE",
+            "name": "total_size",
+            "desc": {
+              "zh": "整个 table 字节数 = 77",
+              "en": "table byte size = 77"
+            },
+            "hex": "4d000000"
+          },
+          {
+            "off": "4",
+            "len": "12",
+            "type": "u32×3",
+            "name": "offsets",
+            "desc": {
+              "zh": "3 个字段的起始偏移",
+              "en": "start offsets of the 3 fields"
+            },
+            "hex": "10000000 30000000 31000000 "
+          },
+          {
+            "off": "16",
+            "len": "32",
+            "type": "Byte32",
+            "name": "code_hash",
+            "desc": {
+              "zh": "secp256k1_blake160 = 0x9bd7…cce8",
+              "en": "secp256k1_blake160 = 0x9bd7…cce8"
+            },
+            "hex": "9bd7e06f…cce8 "
+          },
+          {
+            "off": "48",
+            "len": "1",
+            "type": "u8",
+            "name": "hash_type",
+            "desc": {
+              "zh": "0x01 = type",
+              "en": "0x01 = type"
+            },
+            "hex": "01 "
+          },
+          {
+            "off": "49",
+            "len": "4",
+            "type": "u32 LE",
+            "name": "args.len",
+            "desc": {
+              "zh": "= 20",
+              "en": "= 20"
+            },
+            "hex": "14000000 "
+          },
+          {
+            "off": "53",
+            "len": "20",
+            "type": "Bytes",
+            "name": "args",
+            "desc": {
+              "zh": "owner 公钥的 blake160",
+              "en": "blake160 of the owner pubkey"
+            },
+            "hex": "c8328aab…9ba3"
+          }
+        ]
+      },
+      "type": {
+        "name": "Script (type, molecule table)",
+        "size": "86B",
+        "rows": [
+          {
+            "off": "0",
+            "len": "16",
+            "type": "header",
+            "name": "total_size+offsets",
+            "desc": {
+              "zh": "molecule table 头",
+              "en": "molecule table header"
+            },
+            "hex": "56000000 10000000 30000000 31000000 "
+          },
+          {
+            "off": "16",
+            "len": "32",
+            "type": "Byte32",
+            "name": "code_hash",
+            "desc": {
+              "zh": "OWNED_COUNTER = 0x79d7…0a88",
+              "en": "OWNED_COUNTER = 0x79d7…0a88"
+            },
+            "hex": "79d7e761…0a88 "
+          },
+          {
+            "off": "48",
+            "len": "1",
+            "type": "u8",
+            "name": "hash_type",
+            "desc": {
+              "zh": "必须 0x02 = data1（否则 41）",
+              "en": "must be 0x02 = data1 (else 41)"
+            },
+            "hex": "02 "
+          },
+          {
+            "off": "49",
+            "len": "4",
+            "type": "u32 LE",
+            "name": "args.len",
+            "desc": {
+              "zh": "= 33",
+              "en": "= 33"
+            },
+            "hex": "21000000 "
+          },
+          {
+            "off": "53",
+            "len": "33",
+            "type": "Bytes",
+            "name": "args",
+            "desc": {
+              "zh": "见下：0x01 ‖ type_id",
+              "en": "see below: 0x01 ‖ type_id"
+            },
+            "hex": "0160378915…",
+            "ref": "args"
+          }
+        ]
+      },
+      "args": {
+        "name": "type.args",
+        "size": "33B",
+        "rows": [
+          {
+            "off": "0",
+            "len": "1",
+            "type": "u8",
+            "name": "ver",
+            "desc": {
+              "zh": "版本，必须 0x01（41）",
+              "en": "version, must be 0x01 (41)"
+            },
+            "hex": "01"
+          },
+          {
+            "off": "1",
+            "len": "32",
+            "type": "Byte32",
+            "name": "type_id",
+            "desc": {
+              "zh": "create 时 = blake2b(inputs[0] ‖ 输出序号)，之后不变（44）",
+              "en": "on create = blake2b(inputs[0] ‖ output index), then fixed (44)"
+            },
+            "hex": "6037891531ed72328710ac5a8e6c8341c05039af411f473eaecd83144b4f4740"
+          }
+        ],
+        "ex": {
+          "zh": "测试网实例",
+          "en": "testnet instance"
+        }
+      },
+      "data": {
+        "name": "cell data",
+        "size": "9B",
+        "rows": [
+          {
+            "off": "0",
+            "len": "1",
+            "type": "u8",
+            "name": "ver",
+            "desc": {
+              "zh": "版本，必须 0x01（43）",
+              "en": "version, must be 0x01 (43)"
+            },
+            "hex": "01"
+          },
+          {
+            "off": "1",
+            "len": "8",
+            "type": "u64 LE",
+            "name": "count",
+            "desc": {
+              "zh": "计数；create 时必须 0（53）",
+              "en": "counter; must be 0 on create (53)"
+            },
+            "hex": "0100000000000000"
+          }
+        ],
+        "ex": {
+          "zh": "count = 1",
+          "en": "count = 1"
+        }
+      },
+      "witness": {
+        "name": "WitnessArgs (molecule table)",
+        "size": {
+          "zh": "≤ 512B（否则 48）",
+          "en": "≤ 512B (else 48)"
+        },
+        "rows": [
+          {
+            "off": "0",
+            "len": "16",
+            "type": "header",
+            "name": "total_size+offsets",
+            "desc": {
+              "zh": "molecule table 头：总长 + 3 个偏移",
+              "en": "table header: size + 3 offsets"
+            },
+            "hex": "4f010000 10000000 59000000 4f010000 "
+          },
+          {
+            "off": "16",
+            "len": "4+65",
+            "type": "BytesOpt",
+            "name": "lock",
+            "desc": {
+              "zh": "owner 签名（给 secp256k1 lock 看）",
+              "en": "owner signature (for the secp256k1 lock)"
+            },
+            "hex": "41000000 3f2a…1b00 ",
+            "ref": "sig"
+          },
+          {
+            "off": "85",
+            "len": "4+290",
+            "type": "BytesOpt",
+            "name": "input_type",
+            "desc": {
+              "zh": "Groth16Witness（本合约读取）",
+              "en": "Groth16Witness (read by this contract)"
+            },
+            "hex": "22010000 2201…0000",
+            "ref": "g16"
+          },
+          {
+            "off": "379",
+            "len": "0",
+            "type": "BytesOpt",
+            "name": "output_type",
+            "desc": {
+              "zh": "空",
+              "en": "empty"
+            },
+            "hex": ""
+          }
+        ]
+      },
+      "sig": {
+        "name": "secp256k1 recoverable signature",
+        "size": "65B",
+        "rows": [
+          {
+            "off": "0",
+            "len": "32",
+            "type": "Byte32",
+            "name": "r",
+            "desc": {
+              "zh": "签名 r",
+              "en": "signature r"
+            },
+            "hex": "3f2a91c4…"
+          },
+          {
+            "off": "32",
+            "len": "32",
+            "type": "Byte32",
+            "name": "s",
+            "desc": {
+              "zh": "签名 s",
+              "en": "signature s"
+            },
+            "hex": "5d0e7b18…"
+          },
+          {
+            "off": "64",
+            "len": "1",
+            "type": "u8",
+            "name": "v",
+            "desc": {
+              "zh": "recovery id (0/1)",
+              "en": "recovery id (0/1)"
+            },
+            "hex": "00"
+          }
+        ],
+        "ex": {
+          "zh": "示意值",
+          "en": "illustrative"
+        }
+      },
+      "g16": {
+        "name": "Groth16Witness",
+        "size": "290B",
+        "rows": [
+          {
+            "off": "0",
+            "len": "12",
+            "type": "header",
+            "name": "table hdr",
+            "desc": {
+              "zh": "molecule 头：total_size + 2 偏移",
+              "en": "molecule header: total_size + 2 offsets"
+            },
+            "hex": "220100000c0000000e000000"
+          },
+          {
+            "off": "12",
+            "len": "2",
+            "type": "u16 LE",
+            "name": "version",
+            "desc": {
+              "zh": "wire 版本",
+              "en": "wire version"
+            },
+            "hex": "0100"
+          },
+          {
+            "off": "14",
+            "len": "4",
+            "type": "u32 LE",
+            "name": "union id",
+            "desc": {
+              "zh": "0 = Bn254Witness",
+              "en": "0 = Bn254Witness"
+            },
+            "hex": "00000000"
+          },
+          {
+            "off": "18",
+            "len": "12",
+            "type": "header",
+            "name": "bn hdr",
+            "desc": {
+              "zh": "Bn254Witness table 头",
+              "en": "Bn254Witness table header"
+            },
+            "hex": "100100000c0000008c000000"
+          },
+          {
+            "off": "30",
+            "len": "128",
+            "type": "bytes",
+            "name": "proof",
+            "desc": {
+              "zh": "A ‖ B ‖ C；验证失败 51",
+              "en": "A ‖ B ‖ C; fails → 51"
+            },
+            "hex": "a1b2…(128B)",
+            "ref": "proof"
+          },
+          {
+            "off": "158",
+            "len": "132",
+            "type": "FrVec",
+            "name": "public",
+            "desc": {
+              "zh": "必须等于合约重建值（49）",
+              "en": "must equal the rebuilt value (49)"
+            },
+            "hex": "04000000 01…(132B)",
+            "ref": "public"
+          }
+        ]
+      },
+      "proof": {
+        "name": "Groth16 proof (BN254, arkworks compressed)",
+        "size": "128B",
+        "rows": [
+          {
+            "off": "0",
+            "len": "32",
+            "type": "G1",
+            "name": "A",
+            "desc": {
+              "zh": "G1 点",
+              "en": "G1 point"
+            },
+            "hex": "a1b2c3d4…"
+          },
+          {
+            "off": "32",
+            "len": "64",
+            "type": "G2",
+            "name": "B",
+            "desc": {
+              "zh": "G2 点",
+              "en": "G2 point"
+            },
+            "hex": "e5f60718…"
+          },
+          {
+            "off": "96",
+            "len": "32",
+            "type": "G1",
+            "name": "C",
+            "desc": {
+              "zh": "G1 点",
+              "en": "G1 point"
+            },
+            "hex": "293a4b5c…"
+          }
+        ],
+        "ex": {
+          "zh": "示意值",
+          "en": "illustrative"
+        }
+      },
+      "public": {
+        "name": "public inputs (FrVec)",
+        "size": "132B",
+        "rows": [
+          {
+            "off": "0",
+            "len": "4",
+            "type": "u32 LE",
+            "name": "n",
+            "desc": {
+              "zh": "= 4",
+              "en": "= 4"
+            },
+            "hex": "04000000"
+          },
+          {
+            "off": "4",
+            "len": "32",
+            "type": "Fr LE",
+            "name": "old",
+            "desc": {
+              "zh": "旧 count（= 输入 data[1..9]）",
+              "en": "old count (= input data[1..9])"
+            },
+            "hex": "01000000…00 "
+          },
+          {
+            "off": "36",
+            "len": "32",
+            "type": "Fr LE",
+            "name": "new",
+            "desc": {
+              "zh": "新 count（= 输出 data[1..9]）",
+              "en": "new count (= output data[1..9])"
+            },
+            "hex": "02000000…00 "
+          },
+          {
+            "off": "68",
+            "len": "32",
+            "type": "Fr LE",
+            "name": "ctx_lo",
+            "desc": {
+              "zh": "上下文 digest[0..16]",
+              "en": "context digest[0..16]"
+            },
+            "hex": "9c41…00 "
+          },
+          {
+            "off": "100",
+            "len": "32",
+            "type": "Fr LE",
+            "name": "ctx_hi",
+            "desc": {
+              "zh": "上下文 digest[16..32]；digest 绑定 OutPoint、lock、capacity、网络",
+              "en": "context digest[16..32]; digest binds OutPoint, lock, capacity, network"
+            },
+            "hex": "e07a…00"
+          }
+        ],
+        "ex": {
+          "zh": "old = 1 → new = 2",
+          "en": "old = 1 → new = 2"
+        }
+      },
+      "vkdep": {
+        "name": "CellDep (VK)",
+        "size": "37B",
+        "rows": [
+          {
+            "off": "0",
+            "len": "32",
+            "type": "Byte32",
+            "name": "tx_hash",
+            "desc": {
+              "zh": "VK cell 所在交易",
+              "en": "tx holding the VK cell"
+            },
+            "hex": "685b…58fe "
+          },
+          {
+            "off": "32",
+            "len": "4",
+            "type": "u32 LE",
+            "name": "index",
+            "desc": {
+              "zh": "输出序号",
+              "en": "output index"
+            },
+            "hex": "00000000 "
+          },
+          {
+            "off": "36",
+            "len": "1",
+            "type": "u8",
+            "name": "dep_type",
+            "desc": {
+              "zh": "0 = code；该 cell data hash 必须 = VK_DATA_HASH（50）",
+              "en": "0 = code; that cell's data hash must = VK_DATA_HASH (50)"
+            },
+            "hex": "00"
+          }
+        ]
+      }
+    }
   }
 }
