@@ -135,7 +135,7 @@
             ],
             [
               "count",
-              "0x0100000000000000 (=1)"
+              "0x0000000000000000 (=0)"
             ]
           ]
         }
@@ -147,7 +147,8 @@
             "zh": "args 长度 = 33、args[0] = 0x01、hash_type = data1",
             "en": "args length 33, args[0] = 0x01, hash_type = data1"
           },
-          "err": "41"
+          "err": "41",
+          "group": "structure"
         },
         {
           "field": "tx",
@@ -155,7 +156,8 @@
             "zh": "inputs / outputs / cell_deps 任一数量 ≥ 64",
             "en": "any of inputs / outputs / cell_deps count ≥ 64"
           },
-          "err": "52"
+          "err": "52",
+          "group": "structure"
         },
         {
           "field": "tx",
@@ -163,7 +165,8 @@
             "zh": "全交易中同 code_hash+hash_type 的输入 ≤ 1、输出 = 1，且 group 输出 = 1、group 输入 = 该输入数（不可销毁、不可分裂、不可合并）",
             "en": "across the whole tx: inputs with the same code_hash+hash_type ≤ 1, outputs = 1; group outputs = 1, group inputs = that input count (no burn, split or merge)"
           },
-          "err": "42"
+          "err": "42",
+          "group": "structure"
         },
         {
           "field": "args",
@@ -171,7 +174,8 @@
             "zh": "ckb-std validate_type_id(args[1..])",
             "en": "ckb-std validate_type_id(args[1..])"
           },
-          "err": "44"
+          "err": "44",
+          "group": "structure"
         },
         {
           "field": "output.data",
@@ -179,7 +183,8 @@
             "zh": "恰好 9 字节且 data[0] = 0x01",
             "en": "exactly 9 bytes and data[0] = 0x01"
           },
-          "err": "43"
+          "err": "43",
+          "group": "structure"
         },
         {
           "field": "output.lock",
@@ -187,7 +192,8 @@
             "zh": "code_hash = secp256k1_blake160 (0x9bd7…cce8)、hash_type = type、args 20B；cell_deps（展开后）中恰好 1 个 type hash = 0x9bd7…cce8 的 cell，且其 data hash = 0x709f…8649",
             "en": "code_hash = secp256k1_blake160 (0x9bd7…cce8), hash_type = type, args 20B; exactly one cell_dep (after expansion) with type hash 0x9bd7…cce8 and its data hash = 0x709f…8649"
           },
-          "err": "45"
+          "err": "45",
+          "group": "core"
         },
         {
           "field": "syscall",
@@ -195,7 +201,8 @@
             "zh": "任何 syscall 加载失败",
             "en": "any syscall load failure"
           },
-          "err": "40"
+          "err": "40",
+          "group": "tech"
         },
         {
           "field": "output.data",
@@ -203,7 +210,8 @@
             "zh": "data[1..9] 必须全 0",
             "en": "data[1..9] must be all zero"
           },
-          "err": "53"
+          "err": "53",
+          "group": "core"
         },
         {
           "field": "inputs[0].lock",
@@ -211,13 +219,47 @@
             "zh": "交易第一个输入（不是 group 输入）的 lock hash = 输出 counter 的 lock hash",
             "en": "lock hash of the tx's first input (not a group input) = output counter lock hash"
           },
-          "err": "46"
+          "err": "46",
+          "group": "core"
         }
       ],
       "note": {
         "zh": "创建时不需要证明，也不检查 witness；capacity 不受限制",
         "en": "No proof and no witness on create; capacity unrestricted"
-      }
+      },
+      "plain": {
+        "zh": "谁：任何人（通常是 owner）。做什么：新建 1 个 counter cell，count = 0、lock 必须是 secp256k1 owner lock，且与交易第一个输入的 lock 相同；无需证明。",
+        "en": "Who: anyone (usually the owner). What: create one counter cell with count = 0; its lock must be a secp256k1 owner lock equal to the tx's first input lock. No proof needed."
+      },
+      "diff": [
+        {
+          "field": "counter",
+          "from": {
+            "zh": "（不存在）",
+            "en": "(none)"
+          },
+          "to": {
+            "zh": "新建 1 个",
+            "en": "1 created"
+          }
+        },
+        {
+          "field": "count",
+          "from": "—",
+          "to": "0"
+        },
+        {
+          "field": "lock",
+          "from": {
+            "zh": "inputs[0].lock",
+            "en": "inputs[0].lock"
+          },
+          "to": {
+            "zh": "= inputs[0].lock",
+            "en": "= inputs[0].lock"
+          }
+        }
+      ]
     },
     {
       "tag": "1 → 1",
@@ -232,8 +274,8 @@
             "en": "old counter cell (group input)"
           },
           "body": {
-            "zh": "Cell{\n  capacity: C,\n  lock: L,\n  type: OWNED_COUNTER(args),\n  data: {{0x01 ‖ old u64}}\n}",
-            "en": "Cell{\n  capacity: C,\n  lock: L,\n  type: OWNED_COUNTER(args),\n  data: {{0x01 ‖ old u64}}\n}"
+            "zh": "Cell{\n  [[capacity: C,]]\n  [[lock: L,]]\n  [[type: OWNED_COUNTER(args),]]\n  data: {{0x01 ‖ old u64}}\n}",
+            "en": "Cell{\n  [[capacity: C,]]\n  [[lock: L,]]\n  [[type: OWNED_COUNTER(args),]]\n  data: {{0x01 ‖ old u64}}\n}"
           }
         },
         {
@@ -254,8 +296,8 @@
             "en": "new counter cell (exactly one)"
           },
           "body": {
-            "zh": "Cell{\n  capacity: {{= C}},\n  lock: {{= L（lock hash 相同）}},\n  type: OWNED_COUNTER(args 不变),\n  data: {{0x01 ‖ new u64}}\n}",
-            "en": "Cell{\n  capacity: {{= C}},\n  lock: {{= L (same lock hash)}},\n  type: OWNED_COUNTER(args unchanged),\n  data: {{0x01 ‖ new u64}}\n}"
+            "zh": "Cell{\n  [[capacity: = C,]]\n  [[lock: = L（lock hash 相同）,]]\n  [[type: OWNED_COUNTER(args 不变),]]\n  data: {{0x01 ‖ new u64}}\n}",
+            "en": "Cell{\n  [[capacity: = C,]]\n  [[lock: = L (same lock hash),]]\n  [[type: OWNED_COUNTER(args unchanged),]]\n  data: {{0x01 ‖ new u64}}\n}"
           }
         }
       ],
@@ -530,7 +572,8 @@
             "zh": "args 长度 = 33、args[0] = 0x01、hash_type = data1",
             "en": "args length 33, args[0] = 0x01, hash_type = data1"
           },
-          "err": "41"
+          "err": "41",
+          "group": "structure"
         },
         {
           "field": "tx",
@@ -538,7 +581,8 @@
             "zh": "inputs / outputs / cell_deps 任一数量 ≥ 64",
             "en": "any of inputs / outputs / cell_deps count ≥ 64"
           },
-          "err": "52"
+          "err": "52",
+          "group": "structure"
         },
         {
           "field": "tx",
@@ -546,7 +590,8 @@
             "zh": "全交易中同 code_hash+hash_type 的输入 ≤ 1、输出 = 1，且 group 输出 = 1、group 输入 = 该输入数（不可销毁、不可分裂、不可合并）",
             "en": "across the whole tx: inputs with the same code_hash+hash_type ≤ 1, outputs = 1; group outputs = 1, group inputs = that input count (no burn, split or merge)"
           },
-          "err": "42"
+          "err": "42",
+          "group": "structure"
         },
         {
           "field": "args",
@@ -554,7 +599,8 @@
             "zh": "ckb-std validate_type_id(args[1..])",
             "en": "ckb-std validate_type_id(args[1..])"
           },
-          "err": "44"
+          "err": "44",
+          "group": "structure"
         },
         {
           "field": "output.data",
@@ -562,7 +608,8 @@
             "zh": "恰好 9 字节且 data[0] = 0x01",
             "en": "exactly 9 bytes and data[0] = 0x01"
           },
-          "err": "43"
+          "err": "43",
+          "group": "structure"
         },
         {
           "field": "output.lock",
@@ -570,7 +617,8 @@
             "zh": "code_hash = secp256k1_blake160 (0x9bd7…cce8)、hash_type = type、args 20B；cell_deps（展开后）中恰好 1 个 type hash = 0x9bd7…cce8 的 cell，且其 data hash = 0x709f…8649",
             "en": "code_hash = secp256k1_blake160 (0x9bd7…cce8), hash_type = type, args 20B; exactly one cell_dep (after expansion) with type hash 0x9bd7…cce8 and its data hash = 0x709f…8649"
           },
-          "err": "45"
+          "err": "45",
+          "group": "core"
         },
         {
           "field": "syscall",
@@ -578,7 +626,8 @@
             "zh": "任何 syscall 加载失败",
             "en": "any syscall load failure"
           },
-          "err": "40"
+          "err": "40",
+          "group": "tech"
         },
         {
           "field": "input.data",
@@ -586,7 +635,8 @@
             "zh": "旧 cell data 恰好 9 字节且 data[0] = 0x01",
             "en": "old cell data exactly 9 bytes and data[0] = 0x01"
           },
-          "err": "43"
+          "err": "43",
+          "group": "structure"
         },
         {
           "field": "lock",
@@ -594,7 +644,8 @@
             "zh": "输入与输出的 lock hash 相同（不可转让）",
             "en": "input and output lock hash equal (non-transferable)"
           },
-          "err": "46"
+          "err": "46",
+          "group": "core"
         },
         {
           "field": "capacity",
@@ -602,7 +653,8 @@
             "zh": "输出 capacity = 输入 capacity",
             "en": "output capacity = input capacity"
           },
-          "err": "47"
+          "err": "47",
+          "group": "core"
         },
         {
           "field": "witness",
@@ -610,7 +662,8 @@
             "zh": "witness 缺失 / 超 512B / 非 WitnessArgs / 无 input_type / wire 解码失败",
             "en": "witness missing / > 512B / not WitnessArgs / no input_type / wire decode fails"
           },
-          "err": "48"
+          "err": "48",
+          "group": "tech"
         },
         {
           "field": "public",
@@ -618,7 +671,8 @@
             "zh": "证明中的 public inputs ≠ 重建的 expected（132B）",
             "en": "proof public inputs ≠ rebuilt expected (132B)"
           },
-          "err": "49"
+          "err": "49",
+          "group": "core"
         },
         {
           "field": "cell_deps",
@@ -626,7 +680,8 @@
             "zh": "data hash = VK_DATA_HASH 的 cell_dep 必须恰好 1 个，读入 ≤ 512B 且可解码",
             "en": "exactly one cell_dep with data hash = VK_DATA_HASH, ≤ 512B and decodable"
           },
-          "err": "50"
+          "err": "50",
+          "group": "tech"
         },
         {
           "field": "proof",
@@ -634,13 +689,40 @@
             "zh": "Groth16(BN254) 验证失败",
             "en": "Groth16 (BN254) verification fails"
           },
-          "err": "51"
+          "err": "51",
+          "group": "core"
         }
       ],
       "note": {
         "zh": "new = old + 1 不在合约代码里比较，而是由 Noir 电路（circuits/owned-counter-v1）断言，经证明强制（非本合约直接检查）",
         "en": "new = old + 1 is not compared in the script code; the Noir circuit (circuits/owned-counter-v1) asserts it and the proof enforces it (not a direct script check)"
-      }
+      },
+      "plain": {
+        "zh": "谁：owner（签名 + 证明）。做什么：消耗旧 counter，产出新 counter，count n → n+1（由证明保证）；lock、capacity、type args 不变。",
+        "en": "Who: the owner (signature + proof). What: spend the old counter and create the new one, count n → n+1 (enforced by the proof); lock, capacity and type args stay the same."
+      },
+      "diff": [
+        {
+          "field": "count",
+          "from": "n",
+          "to": {
+            "zh": "n + 1（证明）",
+            "en": "n + 1 (proof)"
+          }
+        },
+        {
+          "field": "capacity",
+          "from": "C"
+        },
+        {
+          "field": "lock",
+          "from": "L"
+        },
+        {
+          "field": "type.args",
+          "from": "0x01 ‖ type_id"
+        }
+      ]
     }
   ],
   "notes": [
@@ -659,6 +741,70 @@
     {
       "zh": "同仓库的 capsule-binding（早期示例）与 private-tally（v2，设计已定未部署）未收录：无官方部署",
       "en": "capsule-binding (earlier example) and private-tally (v2, designed, not deployed) in the same repo are not included: no official deployment"
+    }
+  ],
+  "summary": {
+    "zh": "一个只属于 owner 的计数器 cell：创建时 count = 0；之后每次更新都要 owner 签名并附一个 Noir/Groth16 证明，count 加 1，lock 与 capacity 永远不变，且不能销毁。",
+    "en": "A counter cell owned by one key: it is created with count = 0; every update needs the owner's signature plus a Noir/Groth16 proof, count goes up by 1, lock and capacity never change, and it cannot be destroyed."
+  },
+  "flow": [
+    {
+      "label": {
+        "zh": "① 创建",
+        "en": "① Create"
+      },
+      "change": {
+        "zh": "count = 0（无需证明）",
+        "en": "count = 0 (no proof)"
+      }
+    },
+    {
+      "label": {
+        "zh": "② 证明 +1",
+        "en": "② Prove +1"
+      },
+      "change": {
+        "zh": "count 0 → 1",
+        "en": "count 0 → 1"
+      }
+    },
+    {
+      "label": {
+        "zh": "③ 证明 +1",
+        "en": "③ Prove +1"
+      },
+      "change": {
+        "zh": "count 1 → 2",
+        "en": "count 1 → 2"
+      }
+    },
+    {
+      "label": {
+        "zh": "… 依此类推",
+        "en": "… and so on"
+      },
+      "change": {
+        "zh": "count n → n+1；永不销毁",
+        "en": "count n → n+1; never burned"
+      }
+    }
+  ],
+  "unchecked": [
+    {
+      "zh": "new = old + 1 不在合约代码里比较：只由 Noir 电路断言、经 Groth16 证明强制。",
+      "en": "new = old + 1 is not compared in the script code: only the Noir circuit asserts it, enforced via the Groth16 proof."
+    },
+    {
+      "zh": "本站解码器不验证 Groth16 证明本身（NOT_CHECKED），也不检查 VK cell_dep 的 data hash 和 dep_group 展开后的 owner lock dep。",
+      "en": "This site's decoder does NOT verify the Groth16 proof itself (NOT_CHECKED), nor the VK cell_dep data hash or the owner-lock dep inside the expanded dep_group."
+    },
+    {
+      "zh": "owner 签名由 secp256k1_blake160 lock 检查，不是本 type 脚本。",
+      "en": "The owner signature is checked by the secp256k1_blake160 lock, not by this type script."
+    },
+    {
+      "zh": "创建时不需要证明、不检查 witness，capacity 不受限制。",
+      "en": "On create there is no proof, no witness check, and capacity is unrestricted."
     }
   ]
 }

@@ -100,11 +100,68 @@ ${b.note ? `<div class="note">${T(b.note)}</div>` : ''}</div>`;
 const box = b => b.layout ? layoutBox(b) : `<div class="cell"><span class="n">${T(b.label)}</span>${T(b.body)}</div>`;
 const sep = c => /^[≤≥=<>]/.test(plain(c, 'zh')) ? ' ' : T(UI.colon, esc);
 
+// ---- Optional "at a glance" mode (opt-in; pages without these fields render exactly as before) ----
+// spec.summary: i18n one sentence · spec.flow: [{label, change}] · spec.unchecked: [i18n]
+// transition.plain: i18n one line · transition.diff: [{field, from, to}] (to omitted or equal → unchanged)
+// limit.group: "core" | "structure" | "tech" · cell body [[text]] → dimmed (unchanged)
+const isGlance = s => !!(s && (s.summary || s.flow || s.unchecked));
+const hlG = s => hl(s).replace(/\[\[([\s\S]*?)\]\](?!\])/g, '<span class="dim">$1</span>');
+const GUI = {
+  changes: { zh: '变化一览', en: 'What changes' }, same: { zh: '不变', en: 'unchanged' },
+  details: { zh: '字节布局与编码细节（点击展开）', en: 'Byte layouts & encoding details (click to expand)' },
+  unchecked: { zh: '⚠ 脚本本身不检查 / 解码器未校验', en: '⚠ Not checked by the script / not verified by the decoder' },
+  groups: { core: { zh: '核心规则', en: 'Core rules' }, structure: { zh: '结构规则', en: 'Structure rules' }, tech: { zh: '技术细节', en: 'Technical details' } },
+};
+const GCSS = `<style>
+.gsum{background:#f5f8ff;border:1px solid #dbe3f5;border-left:4px solid #8aa2e0;border-radius:12px;padding:14px 18px;margin:-16px 0 20px;font-size:19px;color:#334}
+.gflow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin-bottom:28px}.gstep{flex:1 1 180px;background:#fff;border:1px solid #e3e7ef;border-radius:12px;padding:10px 14px;min-width:0}.gstep b{display:block;color:#4a5f9c;font-size:15px}.gstep span.c{font:14px/1.6 Menlo,monospace;color:#555;overflow-wrap:anywhere}.garr{align-self:center;color:#9aa5bd;font-size:22px}
+.gwarn{background:#fffaf0;border:1px solid #f3dcb0;border-left:4px solid #d9a441;border-radius:12px;padding:12px 18px;margin-bottom:32px}.gwarn h3{margin:0 0 6px;font-size:17px;color:#8a5a12}.gwarn ul{margin:0;padding-left:20px}.gwarn li{margin:4px 0;font-size:16px}
+.gplain{background:#f7f9fc;border:1px solid #e3e7ef;border-radius:10px;padding:10px 16px;margin:-8px 0 18px;font-size:17px;color:#334}
+.gdiff{margin-top:16px;border:1px solid #e3e7ef;border-radius:12px;padding:10px 14px;background:#fcfcfd}.gdiff h3{margin:0 0 6px;font-size:15px;color:#555}.gdiff .r{display:grid;grid-template-columns:minmax(90px,max-content) minmax(0,1fr);column-gap:14px;padding:3px 0;font:14px/1.6 Menlo,monospace;border-top:1px dashed #eef0f4}.gdiff .r:first-of-type{border-top:0}.gdiff .r.same{color:#a0a6b1}.gdiff .r.chg .v{color:#8a4b08}.gdiff .v{overflow-wrap:anywhere}.gdiff .old{background:#fdecec;border-radius:4px;padding:0 4px}.gdiff .new{background:#e8f6ec;border-radius:4px;padding:0 4px}
+.dim{color:#a0a6b1}
+details.gdet{margin-top:18px;border:1px solid #e3e7ef;border-radius:12px;padding:8px 14px;background:#fcfcfd}details.gdet>summary{cursor:pointer;color:#555;font-size:15px}
+.glim h4{margin:12px 0 4px;font-size:15px;color:#4a5f9c}.glim details>summary{cursor:pointer;font-size:15px;color:#4a5f9c;font-weight:600;margin-top:12px}.glim .e{font-size:13px;opacity:.75}
+@media (max-width:760px){.gsum{font-size:16px;margin-top:-24px}.gflow{flex-direction:column}.gstep{flex:none}.garr{transform:rotate(90deg)}.gplain{font-size:15px}
+ .glance .strip{flex-direction:column}.glance .seg{min-width:0;flex:none!important;text-align:left;display:flex;gap:10px;align-items:baseline}.glance .seg b{display:inline}
+ .gdiff .r{grid-template-columns:1fr}}
+</style>`;
+const limLi = l => `<li><b>${T(l.field, esc)}</b>${sep(l.cond)}${T(l.cond)}${l.err != null && l.err !== '' ? ` <span class="e">(${esc(l.err)})</span>` : ''}${l.note ? ` <span class="note">(${T(l.note)})</span>` : ''}</li>`;
+function glanceTop(spec) {
+  return GCSS + (spec.summary ? `<div class="gsum">${T(spec.summary)}</div>` : '')
+    + (spec.flow ? `<div class="gflow">${spec.flow.map(st => `<div class="gstep"><b>${T(st.label, esc)}</b><span class="c">${T(st.change)}</span></div>`).join('<div class="garr">➜</div>')}</div>` : '')
+    + (spec.unchecked ? `<div class="gwarn"><h3>${T(GUI.unchecked, esc)}</h3><ul>${spec.unchecked.map(u => `<li>${T(u)}</li>`).join('')}</ul></div>` : '');
+}
+function glanceCard(t) {
+  const gbox = b => b.layout ? layoutBox(b) : `<div class="cell"><span class="n">${T(b.label)}</span>${T(b.body, hlG)}</div>`;
+  const diff = t.diff && t.diff.length ? `<div class="gdiff"><h3>${T(GUI.changes, esc)}</h3>${t.diff.map(d => {
+    const same = d.to == null || JSON.stringify(d.to) === JSON.stringify(d.from);
+    return `<div class="r ${same ? 'same' : 'chg'}"><span>${T(d.field, esc)}</span><span class="v">${same ? `${T(d.from)} · ${T(GUI.same, esc)}` : `<span class="old">${T(d.from)}</span> → <span class="new">${T(d.to)}</span>`}</span></div>`; }).join('')}</div>` : '';
+  const L = t.limits || [], by = g => L.filter(l => (l.group || 'tech') === g);
+  const lim = L.length ? `<div class="limits glim"><h3>${T(UI.limits, esc)}</h3>
+${by('core').length ? `<h4>${T(GUI.groups.core, esc)}</h4><ul>${by('core').map(limLi).join('\n')}</ul>` : ''}
+${['structure', 'tech'].filter(g => by(g).length).map(g => `<details><summary>${T(GUI.groups[g], esc)}（${by(g).length}）</summary><ul>${by(g).map(limLi).join('\n')}</ul></details>`).join('\n')}</div>` : '';
+  const det = (t.layouts || []).length || (t.extras || []).length || t.note ? `<details class="gdet"><summary>${T(GUI.details, esc)}</summary>
+${(t.layouts || []).map(layoutBox).join('\n')}${(t.extras || []).map(x => `<div class="extra">${T(x)}</div>`).join('\n')}${t.note ? `<div class="note" style="margin-top:12px">${T(t.note)}</div>` : ''}</details>` : '';
+  return `
+<div class="card">
+<h2><span>${T(t.tag, esc)}</span>${T(t.title, esc)}</h2>
+${t.plain ? `<div class="gplain">${T(t.plain)}</div>` : ''}
+<div class="flow">
+<div class="col cin"><div class="colh">${T({ zh: 'Inputs 输入', en: 'Inputs' }, esc)}</div>${(t.inputs || []).map(gbox).join('\n')}</div>
+<div class="arrow">➜</div>
+<div class="col cout"><div class="colh">${T({ zh: 'Outputs 输出', en: 'Outputs' }, esc)}</div>${(t.outputs || []).map(gbox).join('\n')}</div>
+</div>
+${diff}
+${lim}
+${det}
+</div>`;
+}
+
 function render(spec, id) {
   const meta = id ? META.load(id) : null, plugin = id ? pluginOf(id) : null;
   const head = meta ? MH().chips(META.tagsOf(meta, plugin)) + MH().credit(meta) : '';
   const prov = meta ? `<div class="card">${MH().provenance(meta)}</div>` : '';
-  const cards = (spec.transitions || []).map(t => `
+  const cards = isGlance(spec) ? '<div class="glance">' + glanceTop(spec) + (spec.transitions || []).map(glanceCard).join('\n') + '</div>' : (spec.transitions || []).map(t => `
 <div class="card">
 <h2><span>${T(t.tag, esc)}</span>${T(t.title, esc)}</h2>
 <div class="flow">
