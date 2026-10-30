@@ -6,7 +6,7 @@
 
 ## 中文
 
-一键把 CKB 合约的 **Cell 流转约束** 生成极简、**中英双语** 的 HTML：每个状态转换一张卡片，`输入 Cell → 输出 Cell`，被约束的字段高亮，下方列出 `字段：条件 (错误码)`。页面右上角有 中文/EN 切换按钮，选择保存在 localStorage，默认跟随浏览器语言。
+一键把 CKB 合约的 **Cell 流转约束** 生成极简、**中英双语** 的 HTML：每个状态转换一张卡片，`交易前（输入 Cell）→ 交易后（输出 Cell）`，被约束的字段高亮，下方是 `检查对象 | 要求 | 错误码` 规则表；页面顶部有一眼可读的概要（类型、操作数、规则数、网络、维护方、源码）、操作目录、读图图例和术语表，面向不熟悉 CKB 的读者。页面右上角有 中文/EN 切换按钮，选择保存在 localStorage，默认跟随浏览器语言。
 
 零依赖，只需 Node.js ≥ 16。
 
@@ -49,16 +49,20 @@ node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在�
       "layouts": [ { "label": "...", "layout": [ { "name": "S", "size": "1B", "role": {...}, "cons": {...}, "err": "-41", "flex": 1, "color": 0 } ],
                      "hex": [["name", "0x.."]], "note": {...} } ],
       "extras":  [ "header_deps: [ {{D}} ]" ],
+      "note":    { "zh": "本步骤的补充说明", "en": "note for this step" },
       "limits":  [ { "field": "data", "cond": { "zh": "恰好 8 字节", "en": "exactly 8 bytes" }, "err": "-19", "note": {...} } ]
     }
   ],
-  "notes": [ { "zh": "页脚", "en": "footer" } ]
+  "notes": [ { "zh": "页面底部的补充说明", "en": "notes at the bottom" } ]
 }
 ```
 
-- `body` 按等宽字体原样显示；`{{...}}` 标记高亮的被约束字段。
+- `body` 写成 `Cell{ capacity: …, lock: …, type: { codeHash: …, args: … }, data: … }`（或 `WitnessArgs{ lock, input_type, output_type }`）时，会画成字段行（按 since · capacity · lock · type · data 的顺序），嵌套的 `{ … }` 画成子表，`// 注释` 显示在字段下方；其他写法按等宽字体原样显示。`{{...}}` 标记高亮的被约束字段（所在行也会高亮）。
+- 页面只画本合约对交易的限制：没有高亮、且值为 `any` / `任意` / `…` / `—`（或注明 not checked / 不检查）的字段不显示；整个 box 都是这样（或 body 就是 `any` / `任意`）时整张卡片不显示，输入或输出列为空时显示「本合约对这里没有限制」。label 或文字里有 must / no / none / 必须 / 不能 / 没有 等限制词的仍然保留。
+- 每张卡按交易结构分区：label 以 `cell_dep` / `header_dep` 开头的 box、标题为 `cell_deps` / `header_deps` 的 section、以及 `header_deps: [ … ]` 这类 extras 放进「引用」区；label 含 `witness` 或 body 以 `WitnessArgs{` 开头的 box、标题含 `witnesses` 的 section、label 以 `witness` 开头的 layout 放进「见证」区（来自 inputs 的放在输入列下方，来自 outputs 的放在输出列下方）。
 - `layouts` / 带 `layout` 的 box：彩色字节条 + 字段说明（见 `contracts/multisig_legacy/spec.json`）。
-- `cond` 以 `≤ ≥ = < >` 开头时不加冒号。
+- `limits` 渲染为规则表（`field` | `cond` + `note` | `err`）。
+- `extras`：形如 `header_deps: [ … ]` 的代码行按代码显示，其他文字显示为提示框；步骤的 `note` 同样显示为提示框。
 - 也支持 `.yaml`（简单子集），复杂内容建议 JSON。
 
 ### 链上交易解码器 `out/tx.html`
@@ -91,7 +95,7 @@ node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在�
 
 ## English
 
-Generate a minimal, **bilingual (Chinese/English)** HTML page describing a CKB contract's **cell-flow constraints**: one card per state transition, `input cells → output cells`, constrained fields highlighted, followed by `field: condition (error code)`. A 中文/EN toggle sits at the top right; the choice is stored in localStorage and defaults to the browser language.
+Generate a minimal, **bilingual (Chinese/English)** HTML page describing a CKB contract's **cell-flow constraints**: one card per state transition, `before (input cells) → after (output cells)`, constrained fields highlighted, followed by a `checks | requirement | error code` rules table; each page opens with an at-a-glance summary (kind, actions, rules, network, maintainer, source), an action index, a how-to-read legend and a glossary, for readers new to CKB. A 中文/EN toggle sits at the top right; the choice is stored in localStorage and defaults to the browser language.
 
 Zero dependencies; Node.js ≥ 16.
 
@@ -108,7 +112,7 @@ Pushing to `main` runs `.github/workflows/pages.yml`, which builds every spec an
 
 ### Spec format
 
-Any text field is either a plain string (language-neutral, e.g. code-like `Cell{ … }`) or `{"zh": "...", "en": "..."}`. Text containing Chinese must be bilingual (enforced by `scripts/check.js`). See the jsonc example in the Chinese section and the files in `contracts/*/spec.json`. `{{...}}` highlights a constrained field; `layout` boxes render byte layouts.
+Any text field is either a plain string (language-neutral, e.g. code-like `Cell{ … }`) or `{"zh": "...", "en": "..."}`. Text containing Chinese must be bilingual (enforced by `scripts/check.js`). See the jsonc example in the Chinese section and the files in `contracts/*/spec.json`. `{{...}}` highlights a constrained field; `layout` boxes render byte layouts. Bodies written as `Cell{ capacity: …, lock: …, type: { codeHash: …, args: … }, data: … }` or `WitnessArgs{ … }` are drawn as field rows (in since · capacity · lock · type · data order), with nested `{ … }` as sub-tables and `// comments` under the field; anything else is shown as code. Pages show only what the contract restricts: an unhighlighted field whose value is `any` / `任意` / `…` / `—` (or marked not checked) is left out, a box made only of such fields (or whose body is just `any` / `任意`) is left out, and an emptied input or output column says so; anything whose label or text still states a restriction (must / no / none / 必须 / 不能 …) is kept. Each card follows the transaction layout: boxes labelled `cell_dep…` / `header_dep…`, sections titled `cell_deps` / `header_deps` and `header_deps: [ … ]` extras go to the references lane; boxes labelled `witness…` (or whose body starts with `WitnessArgs{`), sections titled `witnesses` and layouts labelled `witness…` go to the witness lane, under the inputs or outputs column they came from.
 
 ### On-chain transaction decoder `out/tx.html`
 
@@ -162,6 +166,7 @@ template.html          page template
 tx-template.html, tx-app.js   tx decoder UI (generic rendering)
 lib/ckb.js             core: blake2b, molecule, script hash, RPC, fetching, grouping, plugin registry
 lib/contracts.js       discovers contracts/*/ (Node), plugin order via // @requires
+lib/struct.js          parses spec cell / witness bodies (Cell{ … }) into field rows
 contracts/<id>/        spec.json · plugin.js · tests.json
 scripts/check.js       tag balance & bilingual coverage
 scripts/test-tx.js     real-tx tests

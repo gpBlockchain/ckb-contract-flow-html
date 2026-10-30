@@ -29,7 +29,8 @@ else cases = contracts.filter(c => c.tests && (!args.length || args.includes(c.i
       const ids = a.groups.map(g => g.plugin ? g.plugin.id : 'unknown');
       const all = [...a.checks, ...a.groups.flatMap(g => g.checks)], bad = all.filter(c => c.ok === false), unk = all.filter(c => c.ok === null).length;
       const missing = t.expect.filter(e => !ids.includes(e));
-      const noZh = html.replace(/<span data-l="zh">[\s\S]*?<\/span><span data-l="en">/g, '').replace(/<span data-l="en">/g, '');
+      // data-zh-* attributes (e.g. data-zh-title) are Chinese-mode values the page script swaps in, like the zh spans
+      const noZh = html.replace(/<span data-l="zh">[\s\S]*?<\/span><span data-l="en">/g, '').replace(/<span data-l="en">/g, '').replace(/ data-zh-[\w-]+="[^"]*"/g, '');
       const bilingual = !/[\u4e00-\u9fff]/.test(noZh);
       const ok = !missing.length && (!bad.length || t.allowFail) && bilingual;
       console.log(`${ok ? 'PASS' : 'FAIL'} [${t.contract}] ${t.name} ${t.tx} (${t.net}) groups=[${[...new Set(ids)].join(',')}] checks=${all.length} failed=${bad.length} unchecked=${unk}${missing.length ? ' missing=' + missing : ''}${bilingual ? '' : ' NOT-BILINGUAL'}`);
