@@ -37,7 +37,7 @@ const UI = {
   rules: { zh: '规则', en: 'Rules' }, rulesHint: { zh: '必须全部满足，任何一条不满足，合约就拒绝这笔交易', en: 'all must hold — if any fails, the contract rejects the transaction' },
   rField: { zh: '检查对象', en: 'Checks' }, rCond: { zh: '要求', en: 'Requirement' }, rErr: { zh: '不满足时', en: 'If violated' },
   err: { zh: '错误码 ', en: 'error ' },
-  none: { zh: '（无）', en: '(none)' },
+  none: { zh: '（本合约对这里没有限制）', en: '(no restrictions from this contract)' },
   notes: { zh: '补充说明', en: 'Notes' },
 };
 // glossary on every contract page: [term, zh, en]
@@ -139,17 +139,29 @@ const SLOT = {
 const rv = v => { const s = esc(v); return s.split(ST.H1).length === s.split(ST.H2).length ? s.replace(/\u0001/g, '<span class="hl">').replace(/\u0002/g, '</span>') : s.replace(/[\u0001\u0002]/g, ''); };
 // lang: 'zh' / 'en' inside one language copy of a bilingual body, null for a language-neutral body
 const hint = (h, lang) => h ? `<small>${lang ? esc(lang === 'zh' ? h[1] : h[2]) : T({ zh: h[1], en: h[2] }, esc)}</small>` : '';
-function srows(r, slots, lang, fill) {
-  const row = (f, h) => `<div class="sr${f.v.includes(ST.H1) ? ' hit' : ''}"><div class="sk"><code>${esc(f.k)}</code>${hint(h, lang)}</div><div class="sv">${f.sub ? `<div class="sub${f.hl ? ' shl' : ''}">${f.sub.name ? `<div class="stn">${esc(f.sub.name)}</div>` : ''}${srows(f.sub, SLOT.script, lang, false)}</div>` : rv(f.v)}${f.notes.map(n => `<div class="fn">${rv(n)}</div>`).join('')}</div></div>`;
-  return (slots || []).map(h => { const fs = r.fields.filter(f => f.base === h[0]);
-    return fs.length ? fs.map(f => row(f, h)).join('') : fill && h[0] !== 'since' ? `<div class="sr miss"><div class="sk"><code>${h[0]}</code>${hint(h, lang)}</div><div class="sv">—</div></div>` : ''; }).join('')
-    + r.fields.filter(f => !(slots || []).some(h => h[0] === f.base)).map(f => row(f, null)).join('');
+// Only what the contract restricts is drawn. A field, or a whole box, is left out when it is not highlighted and the spec itself
+// calls it unrestricted ("any" / "…" / a bare name / "not checked"), unless its text still states a restriction ("must", "no", …).
+// A whole box written as "…" is a cell whose contents are not spelled out, not an unrestricted one, so only "any" hides a box.
+const FREE = /^(任意|any|…|\.\.\.|—|-)(?=$|[\s,;:（(])/i, FREE_BOX = /^(任意|any)(?=$|[\s,;:（(])/i;
+const UNCHECKED = /not checked|not read by the script|not constrained|不检查|未检查|不读取|不受限制/i;
+const MUST = /\b(no|none|must|cannot|forbidden)\b|can't|not carry|必须|不能|不可|不得|禁止|只能|不允许|没有|无该|不含|不带/i;
+const freeField = f => { const v = f.v.replace(/[\u0001\u0002]/g, '').trim(), t = v + ' ' + f.notes.join(' ');
+  return !f.v.includes(ST.H1) && (!v || FREE.test(v) || UNCHECKED.test(t)) && !MUST.test(t); };
+const freeBody = s => { const r = ST.parseStruct(s);
+  return r ? r.fields.every(freeField) && !MUST.test([...r.notes, ...r.post].join(' ')) : !s.includes('{{') && (FREE_BOX.test(s.trim()) || UNCHECKED.test(s)) && !MUST.test(s); };
+const kept = b => b.layout || MUST.test(plain(b.label, 'zh') + ' ' + plain(b.label, 'en')) || !freeBody(plain(b.body, 'zh')) || !freeBody(plain(b.body, 'en'));
+// restricted fields in slot order (fields outside the slots keep their source order after them)
+function srows(r, slots, lang) {
+  const at = f => { const k = (slots || []).findIndex(h => h[0] === f.base); return k < 0 ? slots ? slots.length : 0 : k; };
+  const row = f => `<div class="sr${f.v.includes(ST.H1) ? ' hit' : ''}"><div class="sk"><code>${esc(f.k)}</code>${hint((slots || []).find(h => h[0] === f.base), lang)}</div><div class="sv">${f.sub ? `<div class="sub${f.hl ? ' shl' : ''}">${f.sub.name ? `<div class="stn">${esc(f.sub.name)}</div>` : ''}${srows(f.sub, SLOT.script, lang)}</div>` : rv(f.v)}${f.notes.map(n => `<div class="fn">${rv(n)}</div>`).join('')}</div></div>`;
+  return r.fields.filter(f => !freeField(f)).map((f, i) => [at(f), i, f]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(x => row(x[2])).join('');
 }
 const slotsOf = (r, lane) => r.name === 'Cell' ? SLOT.cell
   : r.name === 'WitnessArgs' || (lane === 'wit' && !r.name && r.fields.every(f => SLOT.wit.some(h => h[0] === f.base))) ? SLOT.wit : null;
 // one language copy of a box body: rows when it parses as a struct, else the code block
 const sbody = lane => (s, lang) => { const r = ST.parseStruct(s); if (!r) return `<div class="code">${code(s)}</div>`;
-  return `${r.name && r.name !== 'Cell' ? `<div class="stn">${esc(r.name)}</div>` : ''}<div class="srs">${srows(r, slotsOf(r, lane), lang, true)}</div>${[...r.notes, ...r.post].map(n => `<div class="fn">${rv(n)}</div>`).join('')}`; };
+  const rows = srows(r, slotsOf(r, lane), lang);
+  return `${rows && r.name && r.name !== 'Cell' ? `<div class="stn">${esc(r.name)}</div>` : ''}${rows ? `<div class="srs">${rows}</div>` : ''}${[...r.notes, ...r.post].map(n => `<div class="fn">${rv(n)}</div>`).join('')}`; };
 // bilingual block: like T() but with <div>s, and f also gets the language
 const TB = (x, f) => isI18n(x) ? `<div data-l="zh">${f(x.zh != null ? x.zh : x.en, 'zh')}</div><div data-l="en">${f(x.en != null ? x.en : x.zh, 'en')}</div>` : f(x, null);
 const box = (b, lane) => b.layout ? layoutBox(b) : `<div class="cell"><div class="cl">${T(b.label)}</div>${TB(b.body, sbody(lane))}</div>`;
@@ -170,11 +182,12 @@ const rules = ls => !ls || !ls.length ? '' : `<div class="rules"><h3>${T(UI.rule
 const none = `<div class="small">${T(UI.none, esc)}</div>`;
 // one step drawn in transaction order: references → inputs → outputs → witnesses, then byte layouts and rules
 const step = (t, i) => {
-  const secs = t.sections || [], ins = t.inputs || [], outs = t.outputs || [], flow = b => !isWit(b) && !isDep(b), lays = (t.layouts || []).filter(l => !isWitL(l));
-  const deps = [...secs.filter(s => secLane(s) === 'dep').flatMap(s => s.boxes || []), ...ins.filter(isDep), ...outs.filter(isDep)].map(b => box(b, 'dep'))
+  const secs = (t.sections || []).map(s => ({ ...s, boxes: (s.boxes || []).filter(kept) })).filter(s => s.boxes.length), ins = (t.inputs || []).filter(kept), outs = (t.outputs || []).filter(kept);
+  const flow = b => !isWit(b) && !isDep(b), lays = (t.layouts || []).filter(l => !isWitL(l));
+  const deps = [...secs.filter(s => secLane(s) === 'dep').flatMap(s => s.boxes), ...ins.filter(isDep), ...outs.filter(isDep)].map(b => box(b, 'dep'))
     .concat((t.extras || []).filter(isDepX).map(x => `<div class="extra"><code>${T(x, code)}</code></div>`));
   // witnesses sit under the column they pair with: input-indexed ones under inputs, output-indexed ones under outputs
-  const wIn = [...ins.filter(isWit), ...secs.filter(s => secLane(s) === 'wit').flatMap(s => s.boxes || [])], wOut = outs.filter(isWit), wL = (t.layouts || []).filter(isWitL);
+  const wIn = [...ins.filter(isWit), ...secs.filter(s => secLane(s) === 'wit').flatMap(s => s.boxes)], wOut = outs.filter(isWit), wL = (t.layouts || []).filter(isWitL);
   const wits = wIn.length + wOut.length + wL.length ? `<div class="wl">${wIn.map(b => box(b, 'wit')).join('\n')}</div><div></div><div class="wl">${wOut.map(b => box(b, 'wit')).join('\n')}</div>${wL.map(layoutBox).join('\n')}` : '';
   return `<section class="card step" id="s${i + 1}">
 <div class="sh"><span class="sn">${i + 1}</span><h2>${T(t.title, esc)}</h2>${t.tag != null ? `<span class="tagp">${T(t.tag, esc)}</span>` : ''}</div>
@@ -185,7 +198,7 @@ ${deps.length ? lane('l-dep', `<b>${T(UI.deps, esc)}</b><small>${T(UI.depsHint, 
 <div class="col cout"><div class="colh"><b>${T(UI.after, esc)}</b><small>${T(UI.afterHint, esc)}</small></div>${outs.filter(flow).map(b => box(b, 'out')).join('\n') || none}</div>
 </div>
 ${wits ? lane('l-wit', `<b>${T(UI.wit, esc)}</b><small>${T(UI.witHint, esc)}</small>`, wits, 'lb split') : ''}
-${secs.filter(s => !secLane(s)).map(sc => `<div class="sec"><h3>${T(sc.title, esc)}</h3><div class="secgrid">${(sc.boxes || []).map(b => box(b, isWit(b) ? 'wit' : 'sec')).join('\n')}</div></div>`).join('\n')}
+${secs.filter(s => !secLane(s)).map(sc => `<div class="sec"><h3>${T(sc.title, esc)}</h3><div class="secgrid">${sc.boxes.map(b => box(b, isWit(b) ? 'wit' : 'sec')).join('\n')}</div></div>`).join('\n')}
 ${lays.length ? `<div class="lays"><h3>${T(UI.lays, esc)} <small>${T(UI.laysHint, esc)}</small></h3>${lays.map(layoutBox).join('\n')}</div>` : ''}
 ${(t.extras || []).filter(x => !isDepX(x)).map(extra).join('\n')}
 ${t.note ? `<div class="tnote">${T(t.note)}</div>` : ''}
@@ -200,7 +213,7 @@ const legend = () => `<div class="legend"><b>${T({ zh: '怎么看', en: 'How to 
 <span class="lg"><i class="sw sw-dep"></i>${T({ zh: '只读引用（cell_deps / header_deps）', en: 'read-only references (cell_deps / header_deps)' }, esc)}</span>
 <span class="lg"><i class="sw sw-wit"></i>${T({ zh: '见证（签名等证明）', en: 'witnesses (signatures and other proofs)' }, esc)}</span>
 <span class="lg">${T({ zh: '{{黄色}} 合约会检查的字段', en: '{{Yellow}} fields the contract checks' })}</span>
-<span class="lg">${T({ zh: '每个 Cell 都按同样顺序列出 capacity · lock · type · data；— 表示这一步不涉及', en: 'every cell lists capacity · lock · type · data in the same order; — means not involved in this step' }, esc)}</span>
+<span class="lg">${T({ zh: '只列出本合约有要求的字段（按 capacity · lock · type · data 的顺序）；没列出的，本合约不限制', en: 'only fields this contract has requirements on are listed (in capacity · lock · type · data order); anything not listed is not restricted by it' }, esc)}</span>
 <span class="lg"><span class="e">${T(UI.err, esc)}</span>${T({ zh: '规则不满足时合约返回的编号', en: 'what the contract returns when a rule fails' }, esc)}</span>
 <details class="gloss"><summary>${T({ zh: '术语小词典', en: 'Glossary' }, esc)}</summary><dl>${GLOSS.map(([k, zh, en]) => `<dt>${esc(k)}</dt><dd>${T({ zh, en }, esc)}</dd>`).join('')}</dl></details></div>`;
 // top bar: brand, plus site links when the page is part of a --all build (cur = 'index' | 'tx' | 'contract')
