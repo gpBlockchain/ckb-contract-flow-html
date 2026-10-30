@@ -6,7 +6,7 @@
 
 ## 中文
 
-一键把 CKB 合约的 **Cell 流转约束** 生成极简、**中英双语** 的 HTML：每个状态转换一张卡片，`输入 Cell → 输出 Cell`，被约束的字段高亮，下方列出 `字段：条件 (错误码)`。页面右上角有 中文/EN 切换按钮，选择保存在 localStorage，默认跟随浏览器语言。
+一键把 CKB 合约的 **Cell 流转约束** 生成极简、**中英双语** 的 HTML：每个状态转换一张卡片，`交易前（输入 Cell）→ 交易后（输出 Cell）`，被约束的字段高亮，下方是 `检查对象 | 要求 | 错误码` 规则表；页面顶部有一眼可读的概要（类型、操作数、规则数、网络、维护方、源码）、操作目录、读图图例和术语表，面向不熟悉 CKB 的读者。页面右上角有 中文/EN 切换按钮，选择保存在 localStorage，默认跟随浏览器语言。
 
 零依赖，只需 Node.js ≥ 16。
 
@@ -49,16 +49,18 @@ node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在�
       "layouts": [ { "label": "...", "layout": [ { "name": "S", "size": "1B", "role": {...}, "cons": {...}, "err": "-41", "flex": 1, "color": 0 } ],
                      "hex": [["name", "0x.."]], "note": {...} } ],
       "extras":  [ "header_deps: [ {{D}} ]" ],
+      "note":    { "zh": "本步骤的补充说明", "en": "note for this step" },
       "limits":  [ { "field": "data", "cond": { "zh": "恰好 8 字节", "en": "exactly 8 bytes" }, "err": "-19", "note": {...} } ]
     }
   ],
-  "notes": [ { "zh": "页脚", "en": "footer" } ]
+  "notes": [ { "zh": "页面底部的补充说明", "en": "notes at the bottom" } ]
 }
 ```
 
 - `body` 按等宽字体原样显示；`{{...}}` 标记高亮的被约束字段。
 - `layouts` / 带 `layout` 的 box：彩色字节条 + 字段说明（见 `contracts/multisig_legacy/spec.json`）。
-- `cond` 以 `≤ ≥ = < >` 开头时不加冒号。
+- `limits` 渲染为规则表（`field` | `cond` + `note` | `err`）。
+- `extras`：形如 `header_deps: [ … ]` 的代码行按代码显示，其他文字显示为提示框；步骤的 `note` 同样显示为提示框。
 - 也支持 `.yaml`（简单子集），复杂内容建议 JSON。
 
 ### 链上交易解码器 `out/tx.html`
@@ -91,7 +93,7 @@ node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在�
 
 ## English
 
-Generate a minimal, **bilingual (Chinese/English)** HTML page describing a CKB contract's **cell-flow constraints**: one card per state transition, `input cells → output cells`, constrained fields highlighted, followed by `field: condition (error code)`. A 中文/EN toggle sits at the top right; the choice is stored in localStorage and defaults to the browser language.
+Generate a minimal, **bilingual (Chinese/English)** HTML page describing a CKB contract's **cell-flow constraints**: one card per state transition, `before (input cells) → after (output cells)`, constrained fields highlighted, followed by a `checks | requirement | error code` rules table; each page opens with an at-a-glance summary (kind, actions, rules, network, maintainer, source), an action index, a how-to-read legend and a glossary, for readers new to CKB. A 中文/EN toggle sits at the top right; the choice is stored in localStorage and defaults to the browser language.
 
 Zero dependencies; Node.js ≥ 16.
 
