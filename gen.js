@@ -5,7 +5,7 @@
 // 任意文本字段可为字符串（语言无关）或 {"zh": "...", "en": "..."}。
 'use strict';
 const fs = require('fs'), path = require('path');
-const META = require('./lib/meta.js');
+const META = require('./lib/meta.js'), ST = require('./lib/struct.js');
 let _mh; const MH = () => _mh || (_mh = require('./lib/meta-html.js')(T, esc));
 const pluginOf = id => { try { return require('./lib/contracts.js').loadAll().PLUGINS.find(p => p.id === id); } catch (e) { return null; } };
 
@@ -31,6 +31,9 @@ const UI = {
   navTx: { zh: '交易解码器', en: 'Tx decoder' },
   before: { zh: '交易前 · 输入', en: 'Before · inputs' }, beforeHint: { zh: '会被花掉的 Cell', en: 'cells spent' },
   after: { zh: '交易后 · 输出', en: 'After · outputs' }, afterHint: { zh: '新生成的 Cell', en: 'cells created' },
+  deps: { zh: '引用 · cell_deps / header_deps', en: 'References · cell_deps / header_deps' }, depsHint: { zh: '交易要读取、但不会花掉的 Cell 和区块头', en: 'cells and block headers the transaction reads but does not spend' },
+  wit: { zh: '见证 · witnesses', en: 'Witnesses' }, witHint: { zh: '签名等证明；通常按序号与 inputs 对应（每个脚本组用它第一个 input 的位置）', en: "proofs such as signatures; usually aligned with inputs by position (each script group uses its first input's index)" },
+  lays: { zh: '字节布局', en: 'Byte layouts' }, laysHint: { zh: '字段里的字节怎么排', en: 'how the bytes inside a field are arranged' },
   rules: { zh: '规则', en: 'Rules' }, rulesHint: { zh: '必须全部满足，任何一条不满足，合约就拒绝这笔交易', en: 'all must hold — if any fails, the contract rejects the transaction' },
   rField: { zh: '检查对象', en: 'Checks' }, rCond: { zh: '要求', en: 'Requirement' }, rErr: { zh: '不满足时', en: 'If violated' },
   err: { zh: '错误码 ', en: 'error ' },
@@ -47,6 +50,7 @@ const GLOSS = [
   ['args', '脚本参数，例如所有者公钥的哈希', "script arguments, e.g. the hash of the owner's public key"],
   ['codeHash / hashType', '指明运行哪一份合约代码', 'identify which contract code runs'],
   ['witness', '交易附带的证明，例如签名', 'proofs attached to the transaction, e.g. signatures'],
+  ['WitnessArgs', '最常见的 witness 格式，有 lock / input_type / output_type 三个位置', 'the usual witness format, with three slots: lock / input_type / output_type'],
   ['since', '时间条件：这个输入最早什么时候能被花', 'time condition: the earliest time this input can be spent'],
   ['cell_deps / header_deps', '交易只读引用、不会花掉的 Cell / 区块头', 'cells / block headers the transaction reads without spending'],
   ['0 → 1', '步骤标记：交易前 → 交易后的 Cell 数量，如 0 → 1 表示新建；有的页面用 A / B 表示不同路径', 'step tag: number of cells before → after (0 → 1 = create); some pages use A / B for alternative paths'],
@@ -124,7 +128,39 @@ const layoutBox = b => `<div class="layout"><div class="cl">${T(b.label)}</div>
 <ul class="fields">${b.layout.filter(f => f.role || f.cons || f.err).map(f => `<li><span class="dot c${col(f, b.layout.indexOf(f))}"></span><span><b>${T(f.name, esc)}</b><span class="sz">${T(f.size, esc)}</span></span><span>${T(f.role)}${f.cons ? ` <span class="cons">${T(f.cons)}</span>` : ''}${errB(f.err)}</span></li>`).join('')}</ul>
 ${b.hex ? `<div class="hex">${b.hex.map(h => `<div><span class="hk">${T(h[0], esc)}</span><span>${T(h[1])}</span></div>`).join('')}</div>` : ''}
 ${b.note ? `<div class="note">${T(b.note)}</div>` : ''}</div>`;
-const box = b => b.layout ? layoutBox(b) : `<div class="cell"><div class="cl">${T(b.label)}</div><div class="code">${T(b.body, code)}</div></div>`;
+// Cells and witnesses as rows: lib/struct.js parses the spec's pseudo-struct bodies, and every cell lists the same slots in
+// the same order so inputs and outputs line up. Slots: [key, zh hint, en hint].
+const SLOT = {
+  cell: [['since', '最早何时能花', 'earliest spend time'], ['capacity', '装了多少 CKB', 'how much CKB'], ['lock', '谁能花', 'who can spend'], ['type', '遵守的规则', 'rules it follows'], ['data', '存的数据', 'stored data']],
+  wit: [['lock', '解锁证明（如签名）', 'unlock proof (e.g. signature)'], ['input_type', '给输入的 type 用', "for the input's type"], ['output_type', '给输出的 type 用', "for the output's type"]],
+  script: [['codeHash', '哪份代码', 'which code'], ['hashType', '怎么找代码', 'how the code is found'], ['args', '参数', 'arguments']],
+};
+// struct.js marks highlights with H1…H2; a note line can split one, so unbalanced marks are dropped
+const rv = v => { const s = esc(v); return s.split(ST.H1).length === s.split(ST.H2).length ? s.replace(/\u0001/g, '<span class="hl">').replace(/\u0002/g, '</span>') : s.replace(/[\u0001\u0002]/g, ''); };
+// lang: 'zh' / 'en' inside one language copy of a bilingual body, null for a language-neutral body
+const hint = (h, lang) => h ? `<small>${lang ? esc(lang === 'zh' ? h[1] : h[2]) : T({ zh: h[1], en: h[2] }, esc)}</small>` : '';
+function srows(r, slots, lang, fill) {
+  const row = (f, h) => `<div class="sr${f.v.includes(ST.H1) ? ' hit' : ''}"><div class="sk"><code>${esc(f.k)}</code>${hint(h, lang)}</div><div class="sv">${f.sub ? `<div class="sub${f.hl ? ' shl' : ''}">${f.sub.name ? `<div class="stn">${esc(f.sub.name)}</div>` : ''}${srows(f.sub, SLOT.script, lang, false)}</div>` : rv(f.v)}${f.notes.map(n => `<div class="fn">${rv(n)}</div>`).join('')}</div></div>`;
+  return (slots || []).map(h => { const fs = r.fields.filter(f => f.base === h[0]);
+    return fs.length ? fs.map(f => row(f, h)).join('') : fill && h[0] !== 'since' ? `<div class="sr miss"><div class="sk"><code>${h[0]}</code>${hint(h, lang)}</div><div class="sv">—</div></div>` : ''; }).join('')
+    + r.fields.filter(f => !(slots || []).some(h => h[0] === f.base)).map(f => row(f, null)).join('');
+}
+const slotsOf = (r, lane) => r.name === 'Cell' ? SLOT.cell
+  : r.name === 'WitnessArgs' || (lane === 'wit' && !r.name && r.fields.every(f => SLOT.wit.some(h => h[0] === f.base))) ? SLOT.wit : null;
+// one language copy of a box body: rows when it parses as a struct, else the code block
+const sbody = lane => (s, lang) => { const r = ST.parseStruct(s); if (!r) return `<div class="code">${code(s)}</div>`;
+  return `${r.name && r.name !== 'Cell' ? `<div class="stn">${esc(r.name)}</div>` : ''}<div class="srs">${srows(r, slotsOf(r, lane), lang, true)}</div>${[...r.notes, ...r.post].map(n => `<div class="fn">${rv(n)}</div>`).join('')}`; };
+// bilingual block: like T() but with <div>s, and f also gets the language
+const TB = (x, f) => isI18n(x) ? `<div data-l="zh">${f(x.zh != null ? x.zh : x.en, 'zh')}</div><div data-l="en">${f(x.en != null ? x.en : x.zh, 'en')}</div>` : f(x, null);
+const box = (b, lane) => b.layout ? layoutBox(b) : `<div class="cell"><div class="cl">${T(b.label)}</div>${TB(b.body, sbody(lane))}</div>`;
+// which part of the transaction a box belongs to: references (cell_deps / header_deps), witnesses, or the input → output flow
+const P = x => plain(x, 'en');
+const isWit = b => !b.layout && (/witness/i.test(P(b.label)) || /^\s*(\{\{)?\s*WitnessArgs\b/.test(P(b.body)));
+const isDep = b => /^\s*(extra\s+)?(cell|header)_deps?\b/i.test(P(b.label));
+const secLane = sc => /witness/i.test(P(sc.title)) ? 'wit' : /^\s*(cell|header)_deps?\b/i.test(P(sc.title)) ? 'dep' : '';
+const isDepX = x => /^\s*(cell|header)_deps\s*:/.test(P(x));
+const isWitL = l => /^\s*witness/i.test(P(l.label));
+const lane = (cls, h, body, b = 'lb') => `<div class="lane ${cls}"><div class="lh">${h}</div><div class="${b}">${body}</div></div>`;
 // extras: code-like lines ("header_deps: [ … ]") as code, prose as a note
 const isCode = x => /^[\w.]+\s*:\s*[[{]/.test(plain(x, 'en'));
 const extra = x => isCode(x) ? `<div class="extra"><code>${T(x, code)}</code></div>` : `<div class="tnote">${T(x)}</div>`;
@@ -132,25 +168,39 @@ const rules = ls => !ls || !ls.length ? '' : `<div class="rules"><h3>${T(UI.rule
 <div class="rr rh"><span>#</span><span>${T(UI.rField, esc)}</span><span>${T(UI.rCond, esc)}</span><span>${T(UI.rErr, esc)}</span></div>
 <ol class="rl">${ls.map((l, i) => `<li class="rr"><span class="rn">${i + 1}</span><span class="rf">${T(l.field, esc)}</span><span class="rc">${T(l.cond)}${l.note ? `<span class="rnote">${T(l.note)}</span>` : ''}</span><span>${errB(l.err)}</span></li>`).join('\n')}</ol></div></div>`;
 const none = `<div class="small">${T(UI.none, esc)}</div>`;
-const step = (t, i) => `<section class="card step" id="s${i + 1}">
+// one step drawn in transaction order: references → inputs → outputs → witnesses, then byte layouts and rules
+const step = (t, i) => {
+  const secs = t.sections || [], ins = t.inputs || [], outs = t.outputs || [], flow = b => !isWit(b) && !isDep(b), lays = (t.layouts || []).filter(l => !isWitL(l));
+  const deps = [...secs.filter(s => secLane(s) === 'dep').flatMap(s => s.boxes || []), ...ins.filter(isDep), ...outs.filter(isDep)].map(b => box(b, 'dep'))
+    .concat((t.extras || []).filter(isDepX).map(x => `<div class="extra"><code>${T(x, code)}</code></div>`));
+  // witnesses sit under the column they pair with: input-indexed ones under inputs, output-indexed ones under outputs
+  const wIn = [...ins.filter(isWit), ...secs.filter(s => secLane(s) === 'wit').flatMap(s => s.boxes || [])], wOut = outs.filter(isWit), wL = (t.layouts || []).filter(isWitL);
+  const wits = wIn.length + wOut.length + wL.length ? `<div class="wl">${wIn.map(b => box(b, 'wit')).join('\n')}</div><div></div><div class="wl">${wOut.map(b => box(b, 'wit')).join('\n')}</div>${wL.map(layoutBox).join('\n')}` : '';
+  return `<section class="card step" id="s${i + 1}">
 <div class="sh"><span class="sn">${i + 1}</span><h2>${T(t.title, esc)}</h2>${t.tag != null ? `<span class="tagp">${T(t.tag, esc)}</span>` : ''}</div>
+${deps.length ? lane('l-dep', `<b>${T(UI.deps, esc)}</b><small>${T(UI.depsHint, esc)}</small>`, deps.join('\n')) : ''}
 <div class="flow">
-<div class="col cin"><div class="colh"><b>${T(UI.before, esc)}</b><small>${T(UI.beforeHint, esc)}</small></div>${(t.inputs || []).map(box).join('\n') || none}</div>
+<div class="col cin"><div class="colh"><b>${T(UI.before, esc)}</b><small>${T(UI.beforeHint, esc)}</small></div>${ins.filter(flow).map(b => box(b, 'in')).join('\n') || none}</div>
 <div class="arrow" aria-hidden="true"><span>→</span></div>
-<div class="col cout"><div class="colh"><b>${T(UI.after, esc)}</b><small>${T(UI.afterHint, esc)}</small></div>${(t.outputs || []).map(box).join('\n') || none}</div>
+<div class="col cout"><div class="colh"><b>${T(UI.after, esc)}</b><small>${T(UI.afterHint, esc)}</small></div>${outs.filter(flow).map(b => box(b, 'out')).join('\n') || none}</div>
 </div>
-${(t.sections || []).map(sc => `<div class="sec"><h3>${T(sc.title, esc)}</h3><div class="secgrid">${(sc.boxes || []).map(box).join('\n')}</div></div>`).join('\n')}
-${(t.layouts || []).map(layoutBox).join('\n')}
-${(t.extras || []).map(extra).join('\n')}
+${wits ? lane('l-wit', `<b>${T(UI.wit, esc)}</b><small>${T(UI.witHint, esc)}</small>`, wits, 'lb split') : ''}
+${secs.filter(s => !secLane(s)).map(sc => `<div class="sec"><h3>${T(sc.title, esc)}</h3><div class="secgrid">${(sc.boxes || []).map(b => box(b, isWit(b) ? 'wit' : 'sec')).join('\n')}</div></div>`).join('\n')}
+${lays.length ? `<div class="lays"><h3>${T(UI.lays, esc)} <small>${T(UI.laysHint, esc)}</small></h3>${lays.map(layoutBox).join('\n')}</div>` : ''}
+${(t.extras || []).filter(x => !isDepX(x)).map(extra).join('\n')}
 ${t.note ? `<div class="tnote">${T(t.note)}</div>` : ''}
 ${rules(t.limits)}
 </section>`;
+};
 // jump list of the page's actions (skipped when there is only one)
 const overview = ts => ts.length < 2 ? '' : `<nav class="ov"><h2>${T({ zh: `这个合约有 ${ts.length} 种操作，点击跳转`, en: `${ts.length} actions in this contract — click to jump` }, esc)}</h2><ol class="opl">${ts.map((t, i) => `<li><a href="#s${i + 1}"><span class="sn">${i + 1}</span>${T(t.title, esc)}${t.tag != null ? `<span class="tg">${T(t.tag, esc)}</span>` : ''}</a></li>`).join('')}</ol></nav>`;
 const legend = () => `<div class="legend"><b>${T({ zh: '怎么看', en: 'How to read' }, esc)}</b>
 <span class="lg"><i class="sw sw-in"></i>${T({ zh: '交易前会被花掉的 Cell', en: 'cells spent (before)' }, esc)}</span>
 <span class="lg"><i class="sw sw-out"></i>${T({ zh: '交易后新生成的 Cell', en: 'cells created (after)' }, esc)}</span>
+<span class="lg"><i class="sw sw-dep"></i>${T({ zh: '只读引用（cell_deps / header_deps）', en: 'read-only references (cell_deps / header_deps)' }, esc)}</span>
+<span class="lg"><i class="sw sw-wit"></i>${T({ zh: '见证（签名等证明）', en: 'witnesses (signatures and other proofs)' }, esc)}</span>
 <span class="lg">${T({ zh: '{{黄色}} 合约会检查的字段', en: '{{Yellow}} fields the contract checks' })}</span>
+<span class="lg">${T({ zh: '每个 Cell 都按同样顺序列出 capacity · lock · type · data；— 表示这一步不涉及', en: 'every cell lists capacity · lock · type · data in the same order; — means not involved in this step' }, esc)}</span>
 <span class="lg"><span class="e">${T(UI.err, esc)}</span>${T({ zh: '规则不满足时合约返回的编号', en: 'what the contract returns when a rule fails' }, esc)}</span>
 <details class="gloss"><summary>${T({ zh: '术语小词典', en: 'Glossary' }, esc)}</summary><dl>${GLOSS.map(([k, zh, en]) => `<dt>${esc(k)}</dt><dd>${T({ zh, en }, esc)}</dd>`).join('')}</dl></details></div>`;
 // top bar: brand, plus site links when the page is part of a --all build (cur = 'index' | 'tx' | 'contract')
@@ -195,6 +245,11 @@ function buildTx(outFile) {
   const METAHTML = Object.fromEntries(list.map(c => { const m = META.load(c.id); if (!m) return null; const tags = META.tagsOf(m, pluginOf(c.id));
     return [c.id, mh.chips(tags.filter(t => !mh.of([t], 'kind').length)) + mh.credit(m) + (c.spec ? `<a class="golink" href="${c.id}.html">${T({ zh: '看这个合约的图解 →', en: 'See this contract explained →' }, esc)}</a>` : '') + mh.provenance(m, { compact: true })]; }).filter(Boolean));
   const plugins = C.ordered().map(c => `// ---- contracts/${c.id}/plugin.js ----\n` + fs.readFileSync(c.plugin, 'utf8')).join('\n');
+  // known code cells ("<tx_hash>:<index>" → contract names), so the decoder can say what each cell_dep provides
+  const DEPS = {};
+  for (const c of list) { const m = META.load(c.id), p = pluginOf(c.id), n = p ? p.name || p.id : c.id;
+    for (const d of (m && m.deployments) || []) if (d.cell_dep) { const k = d.cell_dep.out_point.tx_hash + ':' + parseInt(d.cell_dep.out_point.index, 16), a = DEPS[k] = DEPS[k] || [];
+      if (!a.some(x => JSON.stringify(x) === JSON.stringify(n))) a.push(n); } }
   // <option> cannot hold language spans: static English text, swapped by the page script via data-zh-text / data-en-text
   const opt = (v, zh, en) => `<option value="${v}" data-zh-text="${attr(zh)}" data-en-text="${attr(en)}">${esc(en)}</option>`;
   const header = `<header class="ph"><h1>${T(UI.txTitle, esc)}</h1><p class="lead">${T({ zh: '粘贴一笔 CKB 交易的哈希，看看它花掉了哪些 Cell、生成了哪些 Cell，以及相关合约的规则是否都满足。', en: "Paste a CKB transaction hash to see which cells it spent, which it created, and whether each contract's rules hold." }, esc)}</p></header>`;
@@ -212,7 +267,7 @@ ${exs.length > 10 ? `<details class="more"><summary>${T({ zh: `更多示例（${
 <li>${T({ zh: `已支持 ${C.ordered().length} 个合约：`, en: `${C.ordered().length} contracts supported: ` }, esc)}<span class="mono">${C.ordered().map(c => c.id).join(', ')}</span></li></ul></details></section>
 <div id="result"></div>`;
   const html = page({ title: UI.txTitle.zh + ' / ' + UI.txTitle.en, cur: 'tx', header, cards: form }).replace('</style>', () => css + '</style>');
-  const scripts = `<script>window.CKB_META_HTML=${JSON.stringify(METAHTML).replace(/</g, '\\u003c')};</script><script>\n${lib.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${plugins.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${app.replace(/<\/script/gi, '<\\/script')}\n</script>`;
+  const scripts = `<script>window.CKB_META_HTML=${JSON.stringify(METAHTML).replace(/</g, '\\u003c')};window.CKB_DEPS=${JSON.stringify(DEPS).replace(/</g, '\\u003c')};</script><script>\n${lib.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${plugins.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${app.replace(/<\/script/gi, '<\\/script')}\n</script>`;
   fs.mkdirSync(path.dirname(outFile), { recursive: true }); fs.writeFileSync(outFile, html.replace('</body>', () => scripts + '</body>')); console.log(`(tx decoder) -> ${outFile}`);
 }
 
@@ -236,14 +291,15 @@ function buildIndex(od, items) {
   const cards = all.map(card).join('\n'), people = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const fb = (k, g) => `<button class="tag fb g-${g}" type="button" data-f="${k}" data-g="${g}" aria-pressed="false">${mh.name(k)} <small>${tagN[k]}</small></button>`;
   const tagsIn = g => Object.keys(TAX.tags).filter(k => TAX.tags[k].group === g && tagN[k]);
-  const mc = rows => `<div class="mc">${rows.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('')}</div>`;
+  // every mini cell shows all four slots (capacity · lock · type · data), like the contract pages
+  const mc = (cap, lock) => `<div class="mc">${[['capacity', cap], ['lock', lock], ['type', ''], ['data', '']].map(([k, v]) => `<div><span>${k}</span>${v ? `<b>${v}</b>` : '<b class="dim">—</b>'}</div>`).join('')}</div>`;
   const model = `<figure class="model"><div class="mrow">
-<div class="mcol m-in"><div class="mh">${T({ zh: '交易前 · 输入', en: 'Before · input' }, esc)}</div>${mc([['capacity', '100 CKB'], ['lock', T({ zh: 'Alice 的锁', en: "Alice's lock" }, esc)]])}</div>
+<div class="mcol m-in"><div class="mh">${T({ zh: '交易前 · 输入', en: 'Before · input' }, esc)}</div>${mc('100 CKB', T({ zh: 'Alice 的锁', en: "Alice's lock" }, esc))}</div>
 <div class="marr" aria-hidden="true">→</div>
-<div class="mtx"><b>${T({ zh: '合约检查规则', en: 'Contracts check the rules' }, esc)}</b><div>${T({ zh: 'lock：Alice 签名了吗？', en: 'lock: did Alice sign?' }, esc)} ✓</div><div class="small">${T({ zh: 'type：本例没有，有就一起检查', en: 'type: none here; checked when present' }, esc)}</div></div>
+<div class="mtx"><b>${T({ zh: '合约检查规则', en: 'Contracts check the rules' }, esc)}</b><div>${T({ zh: 'witness：附上 Alice 的签名', en: "witness: carries Alice's signature" }, esc)}</div><div>${T({ zh: 'lock：签名对得上吗？', en: 'lock: does the signature match?' }, esc)} ✓</div><div class="small">${T({ zh: 'type：本例没有，有就一起检查', en: 'type: none here; checked when present' }, esc)}</div></div>
 <div class="marr" aria-hidden="true">→</div>
-<div class="mcol m-out"><div class="mh">${T({ zh: '交易后 · 输出', en: 'After · outputs' }, esc)}</div>${mc([['capacity', '60 CKB'], ['lock', T({ zh: 'Bob 的锁', en: "Bob's lock" }, esc)]])}${mc([['capacity', '39.99 CKB'], ['lock', T({ zh: 'Alice（找零）', en: 'Alice (change)' }, esc)]])}</div>
-</div><figcaption class="mcap">${T({ zh: '例：Alice 转 60 CKB 给 Bob。花掉 1 个旧 Cell，生成 2 个新 Cell（给 Bob 的 + 找零给自己的），差额 0.01 CKB 是手续费。每个合约页都用这种「交易前 → 交易后」的卡片来画。', en: "Example: Alice sends 60 CKB to Bob. One old cell is spent and two new ones are created (Bob's, plus Alice's change); the 0.01 CKB difference is the fee. Every contract page is drawn with these before → after cards." }, esc)}</figcaption></figure>`;
+<div class="mcol m-out"><div class="mh">${T({ zh: '交易后 · 输出', en: 'After · outputs' }, esc)}</div>${mc('60 CKB', T({ zh: 'Bob 的锁', en: "Bob's lock" }, esc))}${mc('39.99 CKB', T({ zh: 'Alice（找零）', en: 'Alice (change)' }, esc))}</div>
+</div><figcaption class="mcap">${T({ zh: '例：Alice 转 60 CKB 给 Bob。花掉 1 个旧 Cell，生成 2 个新 Cell（给 Bob 的 + 找零给自己的），差额 0.01 CKB 是手续费。每个 Cell 都由 capacity · lock · type · data 四部分组成；签名放在 witness 里。每个合约页都这样画：交易前 → 交易后，加上 witness 和引用。', en: "Example: Alice sends 60 CKB to Bob. One old cell is spent and two new ones are created (Bob's, plus Alice's change); the 0.01 CKB difference is the fee. Every cell has four parts: capacity · lock · type · data; the signature travels in a witness. Every contract page is drawn this way: before → after, plus witnesses and references." }, esc)}</figcaption></figure>`;
   const header = `<section class="hero"><div><div class="eyebrow">${T(UI.indexTitle, esc)}</div>
 <h1>${T({ zh: '一眼看懂 CKB 智能合约', en: 'CKB smart contracts, at a glance' }, esc)}</h1>
 <p class="lead">${T({ zh: `CKB 上的资产和数据都装在一个个 {{Cell}} 里，可以把它想成“盒子”。每笔交易都会花掉一些旧 Cell、生成一些新 Cell；合约就是规定“怎样变才合法”的规则。这里把 ${n} 个合约一步步画出来：每个操作花掉什么、生成什么、检查哪些规则。`, en: `On CKB, assets and data live in {{cells}} — think of them as boxes. Every transaction spends some old cells and creates new ones; a contract is the set of rules for which changes are allowed. Here ${n} contracts are drawn step by step: what each action spends, what it creates, and which rules it checks.` }, bold)}</p>

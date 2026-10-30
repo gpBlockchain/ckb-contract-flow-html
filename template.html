@@ -60,6 +60,19 @@ button.tag{font-size:14px;min-height:34px;padding:4px 12px;cursor:pointer}button
 .cl{font-size:13px;font-weight:600;color:var(--ink2);margin:0 0 3px;overflow-wrap:anywhere}
 .code{font:14.5px/1.65 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}.ck{color:#64748b}.cc{color:#94a3b8;font-style:italic}
 .hl{background:var(--mark);color:var(--markink);border-radius:4px;padding:0 3px;font-weight:700;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+/* cells / witnesses as rows (key + plain hint | value), and the transaction lanes around them */
+.srs{display:grid;grid-template-columns:fit-content(42%) minmax(0,1fr);margin:0 -6px}
+.sr{grid-column:1/-1;display:grid;grid-template-columns:fit-content(42%) minmax(0,1fr);grid-template-columns:subgrid;column-gap:12px;align-items:baseline;padding:5px 6px;border-top:1px dashed var(--line);border-radius:6px}.sr:first-child{border-top-color:transparent}
+.sk{display:flex;flex-direction:column;min-width:0;line-height:1.3}.sk code{font:600 13.5px/1.4 var(--mono);color:#334155;overflow-wrap:anywhere}.sk small{font-size:11.5px;color:var(--ink3)}
+.sv{min-width:0;font:14px/1.55 var(--mono);overflow-wrap:anywhere}.sr.hit{background:#fffbeb}.sr.hit>.sk code{color:#92400e}.sr.miss .sk code,.sr.miss .sv{color:#b6c0cc}
+.sub{display:grid;grid-template-columns:fit-content(46%) minmax(0,1fr);border-left:2px solid var(--line2);padding-left:6px}.sub .sr{padding:1px 4px;border-top:0}.sub.shl{border-left-color:#eab308;background:#fef9c3;border-radius:0 6px 6px 0}
+.fn{font:12.5px/1.5 var(--sans);color:var(--ink3);margin-top:1px}.stn{font:600 12px var(--mono);color:var(--ink3);margin:0 0 2px}.sub>.stn{grid-column:1/-1;padding-left:4px}.dim{color:var(--ink3)}
+.lane{margin:12px 0;padding:10px 12px;border:1px solid;border-radius:14px}.lh{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin:0 0 8px;line-height:1.4}.lh b{font-size:15px}.lh small{font-size:13px;color:var(--ink2)}
+.lb{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:10px}.lb>.layout,.lb>.extra{grid-column:1/-1;margin:0}
+.lb.split{grid-template-columns:minmax(0,1fr) 46px minmax(0,1fr);gap:10px 0}.wl{display:flex;flex-direction:column;gap:10px;min-width:0}
+.l-dep{background:#f8fafc;border-color:var(--line2)}.l-dep .lh b{color:#334155}.l-wit{background:#fdf4ff;border-color:#f5d0fe}.l-wit .lh b{color:#a21caf}.l-wit .cell{border-color:#f0abfc}
+.sw-dep{border-color:var(--line2);background:#f8fafc}.sw-wit{border-color:#f0abfc;background:#fdf4ff}
+.lays{margin-top:18px}.lays>h3{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;font-size:17px;margin:0}.lays>h3 small{font-size:13.5px;font-weight:400;color:var(--ink2)}
 .sec{margin-top:18px}.sec h3{font-size:15px;margin:0 0 8px;color:var(--ink2)}.secgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:12px}
 .extra{margin-top:14px}.extra code{display:inline-block;max-width:100%;font:14px/1.6 var(--mono);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:4px 10px;white-space:pre-wrap;overflow-wrap:anywhere}
 .tnote{margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--brandbg);border:1px solid #dbeafe;color:#1e3a8a;font-size:15px}.tnote:before{content:'ⓘ ';font-weight:700}
@@ -119,9 +132,10 @@ input,select{font:15px/1.4 var(--sans);padding:10px 12px;border:1px solid var(--
  body{font-size:16px}main{padding:18px 14px 44px}.topin{padding:8px 14px;gap:8px}.nav a{padding:6px 8px;font-size:14px}#lang{min-height:40px}
  .ph h1{font-size:26px}.hero h1{font-size:30px}.lead{font-size:16.5px}
  .card{padding:18px 16px;border-radius:14px;margin-bottom:16px}.ov,.legend{padding:12px 14px}.sh h2{font-size:20px}
- .flow{grid-template-columns:minmax(0,1fr)}.arrow{padding:8px 0}.arrow span{transform:rotate(90deg)}
+ .flow,.lb.split{grid-template-columns:minmax(0,1fr)}.arrow{padding:8px 0}.arrow span{transform:rotate(90deg)}.lb.split>:nth-child(2),.wl:empty{display:none}
  .col{padding:10px}.cell{padding:8px 11px 10px}.code{font-size:13px}
  .rr{grid-template-columns:22px minmax(0,1fr);padding:10px 12px}.rr>:nth-child(n+3){grid-column:2}.rh{display:none}
+ .layout{padding:10px 12px}.strip{flex-wrap:wrap}.seg{min-width:calc(25% - 3px);flex:1 1 auto!important}
  .fields{display:block}.fields li{grid-template-columns:12px minmax(0,1fr);column-gap:10px}.fields li>:last-child{grid-column:2}
  .hex{display:block;font-size:12px}.hex>div{display:block}.hk{display:block}
  .mrow{grid-template-columns:minmax(0,1fr)}.marr{transform:rotate(90deg)}

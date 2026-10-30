@@ -12,7 +12,7 @@
 
 1. **收集来源**：合约源码（含 `#include` 的头文件，如 `common.h`、`rce.h`），固定到 commit；部署信息（code_hash / hash_type / 网络）只采用官方 RFC 或官方部署文档 / 官方 SDK 常量。
 2. **生成骨架**：`node scripts/new-contract.js <id> --kind lock|type`（`<id>` 只含 `[a-z0-9_]`）。
-3. **写 `spec.json`**（静态约束页）：每个状态转换一张卡；所有自然语言文本写成 `{"zh","en"}`；被检查字段用 `{{ }}` 高亮；`limits` 只写源码中真实存在的检查与其**数值**错误码；结构化字节（args / witness / data）用 `layouts`。格式见 README。
+3. **写 `spec.json`**（静态约束页）：每个状态转换一张卡；所有自然语言文本写成 `{"zh","en"}`；被检查字段用 `{{ }}` 高亮；`limits` 只写源码中真实存在的检查与其**数值**错误码；结构化字节（args / witness / data）用 `layouts`。cell 的 body 尽量写成 `Cell{ capacity: …, lock: …, type: …, data: … }`、witness 写成 `WitnessArgs{ … }`，页面会画成字段行；witness / cell_dep / header_dep 的 label 或 section 标题要含这些词，才会放进对应的「见证」「引用」区。格式见 README。
 4. **写 `plugin.js`**（链上解码插件）：填 `match`（已核实常量）、`parse`、`check`，API 见下文。无法离线校验的（签名、VM 执行、扩展脚本）用 `R.NOT_CHECKED`。
 5. **写 `tests.json`**：至少 1 笔真实链上交易（`get_transactions` 按 script 前缀搜索可找到），`expect` 列出必须被识别的插件 id。
 5b. **写 `meta.json`**：
@@ -91,7 +91,7 @@ Repo: <合约仓库 URL>  Contract: <文件路径>  Deployment: <code_hash/hash_
 
 1. **Collect sources**: the contract source (including headers it `#include`s, e.g. `common.h`, `rce.h`), pinned to a commit; deployment info (code_hash / hash_type / network) only from official RFCs, official deployment docs or official SDK constants.
 2. **Scaffold**: `node scripts/new-contract.js <id> --kind lock|type` (`<id>` matches `[a-z0-9_]+`).
-3. **Write `spec.json`** (static constraint page): one card per state transition; every natural-language string as `{"zh","en"}`; checked fields wrapped in `{{ }}`; `limits` lists only checks that exist in the source with their **numeric** error codes; use `layouts` for structured bytes (args / witness / data). Format: see README.
+3. **Write `spec.json`** (static constraint page): one card per state transition; every natural-language string as `{"zh","en"}`; checked fields wrapped in `{{ }}`; `limits` lists only checks that exist in the source with their **numeric** error codes; use `layouts` for structured bytes (args / witness / data). Write cell bodies as `Cell{ capacity: …, lock: …, type: …, data: … }` and witnesses as `WitnessArgs{ … }` so they are drawn as field rows; put `witness` / `cell_dep` / `header_dep` in the label or section title so the box lands in the witness / reference lane. Format: see README.
 4. **Write `plugin.js`** (on-chain decoder plugin): fill `match` (verified constants), `parse`, `check` — API below. Use `R.NOT_CHECKED` for anything that cannot be checked offline (signatures, VM execution, extension scripts).
 5. **Write `tests.json`**: at least one real on-chain tx (find via `get_transactions` with a script prefix search); `expect` lists plugin ids that must be recognized.
 5b. **Write `meta.json`**:

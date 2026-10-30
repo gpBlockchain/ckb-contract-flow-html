@@ -57,7 +57,8 @@ node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在�
 }
 ```
 
-- `body` 按等宽字体原样显示；`{{...}}` 标记高亮的被约束字段。
+- `body` 写成 `Cell{ capacity: …, lock: …, type: { codeHash: …, args: … }, data: … }`（或 `WitnessArgs{ lock, input_type, output_type }`）时，会画成固定顺序的字段行（since · capacity · lock · type · data），嵌套的 `{ … }` 画成子表，`// 注释` 显示在字段下方；其他写法按等宽字体原样显示。`{{...}}` 标记高亮的被约束字段（所在行也会高亮）。
+- 每张卡按交易结构分区：label 以 `cell_dep` / `header_dep` 开头的 box、标题为 `cell_deps` / `header_deps` 的 section、以及 `header_deps: [ … ]` 这类 extras 放进「引用」区；label 含 `witness` 或 body 以 `WitnessArgs{` 开头的 box、标题含 `witnesses` 的 section、label 以 `witness` 开头的 layout 放进「见证」区（来自 inputs 的放在输入列下方，来自 outputs 的放在输出列下方）。
 - `layouts` / 带 `layout` 的 box：彩色字节条 + 字段说明（见 `contracts/multisig_legacy/spec.json`）。
 - `limits` 渲染为规则表（`field` | `cond` + `note` | `err`）。
 - `extras`：形如 `header_deps: [ … ]` 的代码行按代码显示，其他文字显示为提示框；步骤的 `note` 同样显示为提示框。
@@ -110,7 +111,7 @@ Pushing to `main` runs `.github/workflows/pages.yml`, which builds every spec an
 
 ### Spec format
 
-Any text field is either a plain string (language-neutral, e.g. code-like `Cell{ … }`) or `{"zh": "...", "en": "..."}`. Text containing Chinese must be bilingual (enforced by `scripts/check.js`). See the jsonc example in the Chinese section and the files in `contracts/*/spec.json`. `{{...}}` highlights a constrained field; `layout` boxes render byte layouts.
+Any text field is either a plain string (language-neutral, e.g. code-like `Cell{ … }`) or `{"zh": "...", "en": "..."}`. Text containing Chinese must be bilingual (enforced by `scripts/check.js`). See the jsonc example in the Chinese section and the files in `contracts/*/spec.json`. `{{...}}` highlights a constrained field; `layout` boxes render byte layouts. Bodies written as `Cell{ capacity: …, lock: …, type: { codeHash: …, args: … }, data: … }` or `WitnessArgs{ … }` are drawn as field rows in a fixed order (since · capacity · lock · type · data), with nested `{ … }` as sub-tables and `// comments` under the field; anything else is shown as code. Each card follows the transaction layout: boxes labelled `cell_dep…` / `header_dep…`, sections titled `cell_deps` / `header_deps` and `header_deps: [ … ]` extras go to the references lane; boxes labelled `witness…` (or whose body starts with `WitnessArgs{`), sections titled `witnesses` and layouts labelled `witness…` go to the witness lane, under the inputs or outputs column they came from.
 
 ### On-chain transaction decoder `out/tx.html`
 
@@ -164,6 +165,7 @@ template.html          page template
 tx-template.html, tx-app.js   tx decoder UI (generic rendering)
 lib/ckb.js             core: blake2b, molecule, script hash, RPC, fetching, grouping, plugin registry
 lib/contracts.js       discovers contracts/*/ (Node), plugin order via // @requires
+lib/struct.js          parses spec cell / witness bodies (Cell{ … }) into field rows
 contracts/<id>/        spec.json · plugin.js · tests.json
 scripts/check.js       tag balance & bilingual coverage
 scripts/test-tx.js     real-tx tests

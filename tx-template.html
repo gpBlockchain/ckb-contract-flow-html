@@ -9,7 +9,15 @@
 .cki{font-weight:700;text-align:center}.chk .ok .cki{color:var(--out)}.chk .bad{background:var(--errbg)}.chk .bad .cki{color:var(--err)}.chk .unk{color:var(--ink2)}.chk .unk .cki{color:var(--ink3)}.chk .e{margin:0}
 .chkl{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:13px;color:var(--ink3)}
 .gx{margin:-6px 0 10px;font-size:15px;color:var(--ink2)}.golink{display:inline-block;margin:2px 0 8px;font-size:14px;font-weight:600;text-decoration:none}.grp .prov summary{font-size:15px}
+.lbt{display:flex;flex-wrap:wrap;gap:10px}.lbt>.tw{flex:1 1 320px}.tw{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:10px}
+.ot{width:100%;border-collapse:collapse;font-size:13.5px}.ot th,.ot td{padding:5px 8px;text-align:left;vertical-align:top;border-top:1px solid var(--line)}.ot tr:first-child th{border-top:0}
+.ot th{font:600 12.5px/1.3 var(--mono);color:#334155;background:var(--soft);white-space:nowrap}.ot th small{display:block;font:400 11px/1.4 var(--sans);color:var(--ink3)}.ot td{font-family:var(--mono);overflow-wrap:anywhere}.ot td.ix{width:1%;color:var(--ink3);white-space:nowrap}.ot .nw{white-space:nowrap}.ot a{text-decoration:none}
+.l-in{background:var(--inbg);border-color:#fed7aa}.l-in .lh b{color:var(--in)}.l-out{background:var(--outbg);border-color:#bbf7d0}.l-out .lh b{color:var(--out)}
+.varr{text-align:center;margin:-4px 0;line-height:1}.varr span{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#fff;border:1px solid var(--line2);color:var(--ink2)}
 .tagk{display:inline-block;font:12.5px var(--mono);padding:0 8px;border-radius:8px;background:#eef2ff;color:#3730a3;margin-right:6px}.tagu{background:#f3f4f6;color:#6b7280}
-@media (max-width:760px){.form>*{flex:1 1 100%}.chk li{grid-template-columns:22px minmax(0,1fr)}.chk li>.e{grid-column:2;justify-self:start}}
+@media (max-width:760px){.form>*{flex:1 1 100%}.chk li{grid-template-columns:22px minmax(0,1fr)}.chk li>.e{grid-column:2;justify-self:start}
+ .ot,.ot tbody,.ot tr,.ot td{display:block}.ot tr:first-child{display:none}.ot tr{padding:6px 10px;border-top:1px solid var(--line)}.ot tr:nth-child(2){border-top:0}
+ .ot td{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;padding:1px 0;border:0}.ot td:before{content:attr(data-k);font:600 12px/1.7 var(--mono);color:var(--ink3)}
+ html[data-lang=zh] .ot td[data-zh-k]:before{content:attr(data-zh-k)}html[data-lang=en] .ot td[data-en-k]:before{content:attr(data-en-k)}.ot td.ix{display:block;font-weight:700;color:var(--ink2)}.ot td.ix:before{content:'#'}}
 </style>
 <!--TX_BODY-->
