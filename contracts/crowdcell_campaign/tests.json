@@ -1,6 +1,6 @@
 [
  {
-  "tx": "0x8d9dd719b0239c609b6ae1b9fbb30ea2227fb308f892e2c00da94f015aad0825",
+  "tx": "0xe7cc8694569443981742f791ca4ea67c87cc2b6b6067ea1623fedd15322064d9",
   "net": "testnet",
   "name": "CrowdCell campaign creation",
   "expect": [
@@ -8,7 +8,7 @@
   ]
  },
  {
-  "tx": "0x2fa8c37d69cc790db87f4407b901e1c8d09ce03df9381ae93d7637c17898e027",
+  "tx": "0x0027096b8eef9b5c429be956aedf1eabca495ce84224e65c49caf4b3d0584ab5",
   "net": "testnet",
   "name": "CrowdCell pledge (accumulator update)",
   "expect": [
@@ -16,9 +16,9 @@
   ]
  },
  {
-  "tx": "0x374185da3fe9a9eecaf1a1d14c302b3d7c77ab37b78e9c9194e58d4077e6629d",
+  "tx": "0xf911c1515f16de66f8cf47a97a8e0c794579485539ac4b1a4eb6ece03b784fdb",
   "net": "testnet",
-  "name": "CrowdCell finalize Active \u2192 Success",
+  "name": "CrowdCell finalize Active → Success",
   "expect": [
    "crowdcell_campaign"
   ]

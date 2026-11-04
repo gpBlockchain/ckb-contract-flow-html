@@ -1,4 +1,4 @@
-// CROWDCELL_PLEDGE_LOCK — alesfer001/CrowdCell contracts/pledge-lock/src/main.rs @2fd13f6 (testnet only, community)
+// CROWDCELL_PLEDGE_LOCK — alesfer001/CrowdCell contracts/pledge-lock/src/main.rs @acbb40e (testnet only, community)
 (function (R) {
   const H = R.hexToBytes, X = R.bytesToHex, CKB = 100000000n, FEE = CKB, GRACE = 1944000n;
   const amt = (cap, data) => { const d = H(data || '0x'); if (d.length < 72) return cap; const a = R.leToBig(d.subarray(64, 72)); return a <= cap ? a : cap; };
@@ -12,7 +12,8 @@
     return p; }
   function check(g, ctx, p) {
     if (!p.ok) return [R.check(false, 'args ≥ 72 字节', 'args ≥ 72 bytes', 10)];
-    const r = [R.check(true, 'args ≥ 72 字节', 'args ≥ 72 bytes', 10)], outs = ctx.tx.outputs, od = ctx.tx.outputs_data;
+    const r = [R.check(true, 'args ≥ 72 字节', 'args ≥ 72 bytes', 10)], outs = ctx.tx.outputs, od = ctx.tx.outputs_data || [];
+    // Merge (first group input since = 0): main.rs validate_merge
     if (p.path === 'merge') { const same = outs.map((o, j) => j).filter(j => R.scriptHash(outs[j].lock) === g.hash);
       r.push(R.check(g.inputs.length >= 2, 'since = 0：group 输入 ≥ 2（合并）', 'since = 0: ≥ 2 group inputs (merge)', 40));
       if (g.inputs.length < 2) return r;
@@ -20,20 +21,26 @@
       const j = same[0], t0 = ctx.inputs[g.inputs[0]].output.type, th = t0 ? R.scriptHash(t0) : null;
       r.push(R.check(BigInt(outs[j].capacity) === p.cap, '输出 capacity = Σ输入 capacity', 'output capacity = Σ input capacity', 43),
         R.check(th !== null && g.inputs.every(i => ctx.inputs[i].output.type && R.scriptHash(ctx.inputs[i].output.type) === th) && outs[j].type && R.scriptHash(outs[j].type) === th, '输入与输出 type 相同且非空', 'inputs and output share one non-empty type', 45));
-      const ds = g.inputs.map(i => H(ctx.inputs[i].data)), dout = H(od[j]);
+      const ds = g.inputs.map(i => H(ctx.inputs[i].data)), dout = H(od[j] || '0x');
       const okd = ds.every(d => d.length >= 72) && dout.length >= 72;
       r.push(R.check(okd && ds.reduce((s, d) => s + R.leToBig(d.subarray(64, 72)), 0n) === R.leToBig(dout.subarray(64, 72)), 'data ≥ 72B 且 amount 之和相等', 'data ≥ 72B and amount sums equal', 46));
       return r; }
+    // Settle (since ≠ 0): absolute block-number since, deadline, no mixed pledge groups (34), then release / refund.
     const absBlock = (p.since >> 56n) === 0n;
-    r.push(R.check(absBlock, 'since 为绝对区块号（标志字节 0）', 'since is an absolute block number (flag byte 0)', 12)); if (!absBlock) return r;
+    r.push(R.check(absBlock, 'since 为绝对区块号且标志位合法（bits 56–63 = 0）', 'since is an absolute block number with valid flags (bits 56–63 = 0)', 12)); if (!absBlock) return r;
     r.push(R.check(p.since >= p.deadline, `since ${p.since} ≥ deadline ${p.deadline}`, `since ${p.since} ≥ deadline ${p.deadline}`, 13));
+    // Checked here even though main.rs reaches it only after the campaign lookup; either way the tx fails.
     const pc = g.script.code_hash, mixed = ctx.inputs.some(x => x.output && x.output.lock.code_hash === pc && R.scriptHash(x.output.lock) !== g.hash);
     r.push(R.check(!mixed, '未混入其他 pledge-lock group', 'no other pledge-lock group in inputs', 34));
-    r.push(R.NOT_CHECKED('cell_deps 中 campaign 的状态未离线解析（Active → 20；缺失且未过宽限期 → 21）', 'campaign status in cell_deps not resolved offline (Active → 20; missing within grace → 21)', '20 / 21'));
+    // Campaign status comes from cell_deps, which this page does not read: the branch (release / refund) and its
+    // outcome depend on it, so both are reported as not checked. Only the backer-side sum is shown.
     const toBacker = outs.reduce((s, o) => s + (R.scriptHash(o.lock) === p.backer ? BigInt(o.capacity) : 0n), 0n), need = p.cap > FEE ? p.cap - FEE : 0n;
-    if (toBacker >= need) r.push(R.check(true, `退款条件满足：给认捐人 ${toBacker} ≥ Σcapacity − 1 CKB（Failed${p.since >= p.deadline + GRACE ? ' 或宽限期后' : ''}）`, `refund condition met: to backer ${toBacker} ≥ Σcapacity − 1 CKB (Failed${p.since >= p.deadline + GRACE ? ' or after grace' : ''})`, 32));
-    else r.push(R.NOT_CHECKED(`按释放路径：需给创建者 ≥ Σamount ${p.amount}，给认捐人 ≥ ${p.cap - p.amount} − 1 CKB（创建者 lock hash 在 campaign cell_dep 中，未解析）；当前给认捐人 ${toBacker}`, `release path: creator needs ≥ Σamount ${p.amount}, backer ≥ ${p.cap - p.amount} − 1 CKB (creator lock hash is in the campaign cell_dep, not resolved); backer currently gets ${toBacker}`, 32));
+    const met = toBacker >= need ? '满足' : '不满足', metEn = toBacker >= need ? 'met' : 'not met';
+    r.push(R.NOT_CHECKED(
+      `campaign 状态未解析（cell_deps）：Active → 20；缺失且未过宽限期 → 21。Failed 分支：给认捐人 ${toBacker}，${met} ≥ Σcapacity − 1 CKB（32）。Success 分支：需给创建者 ≥ ${p.amount}（创建者 lock hash 在 cell_dep 中，未解析）`,
+      `campaign status not resolved (cell_deps): Active → 20; missing within grace → 21. Failed branch: to backer ${toBacker}, ${metEn} ≥ Σcapacity − 1 CKB (32). Success branch: creator needs ≥ ${p.amount} (creator lock hash is in the cell_dep, not resolved)`,
+      '20 / 21 / 32'));
     return r; }
   R.register({ id: 'crowdcell_pledge_lock', kind: 'lock', name: { zh: 'CrowdCell 认捐 lock', en: 'CrowdCell pledge lock' },
-    match: [{ code_hash: '0xc28d8042a1cf39d02db0cbc769a26faad80b39563c2d2de40536ddb66ae3a525', hash_type: 'data2', net: 'testnet', src: 'alesfer001/CrowdCell README + deployment/deployed-contracts-testnet.json (hash_type data2: off-chain/frontend/src/lib/constants.ts)', deps: { testnet: { tx_hash: '0x1dc0f07d3acd90823932aca7034209cbf5d1bd8ba5c9310ea9bb55b7c0a0beb2', index: '0x0' } } }], parse, check });
+    match: [{ code_hash: '0xc28d8042a1cf39d02db0cbc769a26faad80b39563c2d2de40536ddb66ae3a525', hash_type: 'data2', net: 'testnet', src: 'alesfer001/CrowdCell@acbb40e deployment/deployed-contracts-testnet.json (pledgeLock, deployedAt 2026-10-31; code cell 0x53d7d644…:0, data hash = code_hash checked on chain); hash_type data2 seen on chain (pledge-lock lock scripts in 2026-10-31 txs)', deps: { testnet: { tx_hash: '0x53d7d6447fb21b4da1e211a48a4fb2d5ceafd510ec88c966666b08085708bf1e', index: '0x0' } } }], parse, check });
 })((typeof CKB !== "undefined" ? CKB : require("../../lib/ckb.js")));

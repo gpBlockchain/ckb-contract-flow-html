@@ -4,8 +4,8 @@
     "en": "CrowdCell Pledge Type Script Constraints"
   },
   "subtitle": {
-    "zh": "来源：alesfer001/CrowdCell / contracts/pledge/src/main.rs@2fd13f6　·　0xe45d…b024 (data2，仅测试网)　·　社区合约，未经独立审计",
-    "en": "Source: alesfer001/CrowdCell / contracts/pledge/src/main.rs@2fd13f6　·　0xe45d…b024 (data2, testnet only)　·　community contract, not independently audited"
+    "zh": "来源：alesfer001/CrowdCell / contracts/pledge/src/main.rs@acbb40e（自 2fd13f6 起未改动）　·　0xe45d…b024 (data2，仅测试网，2026-10-31 重新部署)　·　社区合约，未经独立审计",
+    "en": "Source: alesfer001/CrowdCell / contracts/pledge/src/main.rs@acbb40e (unchanged since 2fd13f6)　·　0xe45d…b024 (data2, testnet only, redeployed 2026-10-31)　·　community contract, not independently audited"
   },
   "transitions": [
     {
@@ -26,7 +26,17 @@
       "outputs": [
         {
           "label": "pledge",
-          "body": "Cell{ type: { codeHash: PLEDGE, args: receipt_code_hash 32B? }, data: {{campaign_id≠0}} ‖ {{backer_lock_hash≠0}} ‖ {{amount>0}} }"
+          "body": "Cell{ type: { codeHash: PLEDGE, hashType: data2, args: receipt_code_hash 32B }, lock: PLEDGE_LOCK, data: {{campaign_id≠0}} ‖ {{backer_lock_hash≠0}} ‖ {{amount>0}} }"
+        },
+        {
+          "label": {
+            "zh": "同交易的 receipt（本脚本不检查）",
+            "en": "receipt in the same tx (not checked here)"
+          },
+          "body": {
+            "zh": "Cell{ type: { codeHash: args[0..32], args: 64B }, capacity: 300 CKB, data[0..8] = 认捐额 u64 LE }，由 receipt 合约检查；2026-10-31 测试网交易中的观察",
+            "en": "Cell{ type: { codeHash: args[0..32], args: 64B }, capacity: 300 CKB, data[0..8] = pledged amount u64 LE }, checked by the receipt contract; as observed in 2026-10-31 testnet txs"
+          }
         }
       ],
       "layouts": [
@@ -40,12 +50,12 @@
               "name": "campaign_id",
               "size": "32B",
               "role": {
-                "zh": "campaign 标识（信息性）",
-                "en": "campaign id (informational)"
+                "zh": "campaign 标识；合并与部分退款时输入输出须相同（资金路由以 pledge-lock args 为准）",
+                "en": "campaign id; must match across inputs and output on merge and partial refund (routing is decided by pledge-lock args)"
               },
               "cons": {
-                "zh": "非零；合并 / 部分退款时一致",
-                "en": "non-zero; equal on merge / partial refund"
+                "zh": "非零",
+                "en": "non-zero"
               },
               "err": "3",
               "color": 1,
@@ -55,8 +65,8 @@
               "name": "backer_lock_hash",
               "size": "32B",
               "role": {
-                "zh": "认捐人 lock hash",
-                "en": "backer lock hash"
+                "zh": "认捐人 lock hash（本脚本只检查非零；退款去向由 pledge-lock args 决定）",
+                "en": "backer lock hash (only non-zero is checked here; refund destination is set by pledge-lock args)"
               },
               "cons": {
                 "zh": "非零",
@@ -70,8 +80,8 @@
               "name": "amount",
               "size": "8B",
               "role": {
-                "zh": "认捐额 u64 LE",
-                "en": "amount u64 LE"
+                "zh": "认捐额 u64 LE（shannon）",
+                "en": "amount u64 LE (shannon)"
               },
               "cons": {
                 "zh": "> 0",
@@ -80,6 +90,28 @@
               "err": "5",
               "color": 3,
               "flex": 2
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh": "type args（32B 或更长）",
+            "en": "type args (32B or longer)"
+          },
+          "layout": [
+            {
+              "name": "receipt_code_hash",
+              "size": "32B",
+              "role": {
+                "zh": "receipt 合约 code_hash；部分退款时用它找 receipt 输入",
+                "en": "receipt contract code_hash; used to find the receipt input on partial refund"
+              },
+              "cons": {
+                "zh": "仅比较 code_hash，不比较完整 type script",
+                "en": "only the code_hash is compared, not the full type script"
+              },
+              "color": 4,
+              "flex": 4
             }
           ]
         }
@@ -141,8 +173,8 @@
         {
           "field": "data",
           "cond": {
-            "zh": "每个 data ≥ 72 字节",
-            "en": "every data ≥ 72 bytes"
+            "zh": "每个输入与输出 data ≥ 72 字节",
+            "en": "every input and the output data ≥ 72 bytes"
           },
           "err": "1"
         },
@@ -169,6 +201,14 @@
             "en": "addition overflows"
           },
           "err": "13"
+        },
+        {
+          "field": "data",
+          "cond": {
+            "zh": "读取 group 输入 / 输出数据失败",
+            "en": "failure to load group input / output data"
+          },
+          "err": "9"
         }
       ]
     },
@@ -186,8 +226,8 @@
         {
           "label": "receipt",
           "body": {
-            "zh": "type code_hash = args[0..32] 的 cell，data[0..8] = {{a − a′}}",
-            "en": "cell whose type code_hash = args[0..32], data[0..8] = {{a − a′}}"
+            "zh": "type code_hash = args[0..32] 的输入 cell，data[0..8] = {{a − a′}}（仅 args ≥ 32 字节时要求）",
+            "en": "input cell whose type code_hash = args[0..32], data[0..8] = {{a − a′}} (required only when args ≥ 32 bytes)"
           }
         }
       ],
@@ -198,6 +238,14 @@
         }
       ],
       "limits": [
+        {
+          "field": "data",
+          "cond": {
+            "zh": "输入与输出 data ≥ 72 字节",
+            "en": "input and output data ≥ 72 bytes"
+          },
+          "err": "1"
+        },
         {
           "field": "campaign_id",
           "cond": {
@@ -229,14 +277,22 @@
             "en": "when args ≥ 32 bytes a receipt must be in inputs"
           },
           "err": "17"
+        },
+        {
+          "field": "data",
+          "cond": {
+            "zh": "读取输入 / 输出 / receipt 数据失败",
+            "en": "failure to load input / output / receipt data"
+          },
+          "err": "9"
         }
       ]
     },
     {
       "tag": "1 → 0",
       "title": {
-        "zh": "销毁",
-        "en": "Destroy"
+        "zh": "销毁（释放或退款结算时）",
+        "en": "Destroy (on release or refund settlement)"
       },
       "inputs": [
         {
@@ -289,8 +345,8 @@
         {
           "field": "group",
           "cond": {
-            "zh": "既非 n→1（n≥2）也非 1→1",
-            "en": "neither n→1 (n≥2) nor 1→1"
+            "zh": "既非 n→1（n≥2 且恰好 1 个输出）也非 1→1（1 个输入且 1 个输出）",
+            "en": "neither n→1 (n≥2 and exactly 1 output) nor 1→1 (1 input and 1 output)"
           },
           "err": "10"
         }
@@ -303,16 +359,20 @@
       "en": "Error codes (main.rs): 1 data too short · 3 campaign_id=0 · 4 backer=0 · 5 amount=0 · 7 NO_SCRIPT · 9 LOAD_DATA · 10 MODIFICATION_NOT_ALLOWED · 11 MERGE_DIFFERENT_CAMPAIGNS · 12 MERGE_AMOUNT_MISMATCH · 13 OVERFLOW · 14 CAMPAIGN_MISMATCH · 15 PARTIAL_REFUND_INVALID · 16 REFUND_AMOUNT_MISMATCH · 17 NO_RECEIPT_IN_INPUTS"
     },
     {
-      "zh": "type args 可选：≥ 32 字节时前 32 字节为 receipt 合约 code_hash；不足 32 字节则部分退款不要求 receipt",
-      "en": "type args optional: when ≥ 32 bytes the first 32 are the receipt code_hash; shorter args mean partial refunds need no receipt"
+      "zh": "type args 可选：≥ 32 字节时前 32 字节为 receipt 合约 code_hash，只按 code_hash 匹配（同一 code_hash 的任何 receipt 输入都算数）；不足 32 字节则部分退款不要求 receipt",
+      "en": "type args optional: when ≥ 32 bytes the first 32 are the receipt code_hash, matched by code_hash only (any receipt input with that code_hash counts); shorter args mean partial refunds need no receipt"
     },
     {
-      "zh": "创建时只检查第一个 group 输出，合并时只读第一个 group 输出",
-      "en": "Creation checks only the first group output; merge reads only the first group output"
+      "zh": "创建时输出个数不限，只检查第一个 group 输出；合并要求恰好 1 个 group 输出，否则落入 m → k（错误 10）",
+      "en": "Creation accepts any number of group outputs and checks only the first; merge requires exactly one group output, otherwise the shape falls to m → k (error 10)"
     },
     {
-      "zh": "pledge 是否计入 campaign 由 campaign 类型脚本按 pledge-lock 判断，与本脚本无关",
-      "en": "Whether a pledge counts toward a campaign is decided by the campaign type script via pledge-lock, not here"
+      "zh": "是否计入 campaign 不由本脚本决定：campaign 类型脚本（contracts/campaign/src/main.rs，sum_campaign_pledges）按 pledge-lock code_hash、lock args 中的 campaign hash 与 deadline（bytes 32–40）筛选，并读取 data[64..72] 累加（见 campaign 卡）",
+      "en": "Whether a pledge counts toward a campaign is not decided here: the campaign type script (contracts/campaign/src/main.rs, sum_campaign_pledges) selects pledges by pledge-lock code_hash, the campaign hash and deadline in lock args (bytes 32–40), and sums data[64..72] (see the campaign card)"
+    },
+    {
+      "zh": "截至 2026-11-04，测试网上没有任何合并或部分退款交易（对 pledge 类型脚本检索：没有交易含 2 个以上 pledge 输入，也没有同时含 pledge 输入和 pledge 输出的交易）；这两条路径目前只有源码依据，未经链上验证",
+      "en": "As of 2026-11-04 there is no merge or partial-refund transaction on testnet (a search of the pledge type script finds no tx with two or more pledge inputs, and none with a pledge input and a pledge output); these two paths rest on source reading only, not on-chain runs"
     }
   ]
 }
