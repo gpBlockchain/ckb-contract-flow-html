@@ -10,6 +10,7 @@ for(const f of fs.readdirSync('out')){const h=fs.readFileSync('out/'+f,'utf8');
    if(/[\u4e00-\u9fff]/.test(txt)&&!langs.includes('zh')){zhOut++;console.log(f,'CJK outside zh:',txt.trim().slice(0,60))}
    if(langs.includes('en')&&/[\u4e00-\u9fff]/.test(txt)){enOnly++;console.log(f,'CJK in en:',txt.trim().slice(0,60))}}}
  if(st.length)mis+=st.length;
+ const objStr=(body.match(/\[object Object\]/g)||[]).length;if(objStr){zhOut+=objStr;console.log(f,'unrendered object: [object Object] x'+objStr)}
  const ok=!mis&&!zhOut&&!enOnly&&zhCnt===enCnt;if(!ok)bad++;
  console.log(f.padEnd(14),'tags',mis?'BAD':'ok','zh/en spans',zhCnt,enCnt,ok?'OK':'FAIL');}
 // meta.json: tags (contracts/tags.json), contributors (optional, valid GitHub usernames), source + deployments provenance

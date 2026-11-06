@@ -94,7 +94,7 @@ function parseYaml(src) {
 const col = (f, i) => f.color != null ? f.color : i % 6;
 const layoutBox = b => `<div class="layout"><span class="n">${T(b.label)}</span>
 <div class="strip">${b.layout.map((f, i) => `<div class="seg c${col(f, i)}" style="flex:${f.flex || 1}"><b>${T(f.name, esc)}</b><small>${T(f.size, esc)}</small></div>`).join('')}</div>
-<ul class="fields">${b.layout.filter(f => f.role || f.cons || f.err).map((f, i) => `<li><span class="dot c${col(f, b.layout.indexOf(f))}"></span><b>${T(f.name, esc)}</b> <span class="sz">${T(f.size, esc)}</span>　${T(f.role)}${f.cons ? `　<span class="cons">${T(f.cons)}</span>` : ''}${f.err ? ` <span class="e">(${esc(f.err)})</span>` : ''}</li>`).join('')}</ul>
+<ul class="fields">${b.layout.filter(f => f.role || f.cons || f.err).map((f, i) => `<li><span class="dot c${col(f, b.layout.indexOf(f))}"></span><b>${T(f.name, esc)}</b> <span class="sz">${T(f.size, esc)}</span>　${T(f.role)}${f.cons ? `　<span class="cons">${T(f.cons)}</span>` : ''}${f.err ? ` <span class="e">(${T(f.err, esc)})</span>` : ''}</li>`).join('')}</ul>
 ${b.hex ? `<div class="hex">${b.hex.map(h => `<div><span class="hk">${T(h[0], esc)}</span>${T(h[1])}</div>`).join('')}</div>` : ''}
 ${b.note ? `<div class="note">${T(b.note)}</div>` : ''}</div>`;
 const box = b => b.layout ? layoutBox(b) : `<div class="cell"><span class="n">${T(b.label)}</span>${T(b.body)}</div>`;
@@ -116,7 +116,7 @@ ${(t.sections || []).map(sc => `<div class="sec"><h3>${T(sc.title, esc)}</h3><di
 ${(t.layouts || []).map(layoutBox).join('\n')}
 ${(t.extras || []).map(x => `<div class="extra">${T(x)}</div>`).join('\n')}
 ${t.limits && t.limits.length ? `<div class="limits"><h3>${T(UI.limits, esc)}</h3><ul>
-${t.limits.map(l => `<li><b>${T(l.field, esc)}</b>${sep(l.cond)}${T(l.cond)}${l.err != null && l.err !== '' ? ` <span class="e">(${esc(l.err)})</span>` : ''}${l.note ? ` <span class="note">(${T(l.note)})</span>` : ''}</li>`).join('\n')}
+${t.limits.map(l => `<li><b>${T(l.field, esc)}</b>${sep(l.cond)}${T(l.cond)}${l.err != null && l.err !== '' ? ` <span class="e">(${T(l.err, esc)})</span>` : ''}${l.note ? ` <span class="note">(${T(l.note)})</span>` : ''}</li>`).join('\n')}
 </ul></div>` : ''}
 </div>`).join('\n');
   const title = spec.title || UI.defTitle;
