@@ -82,6 +82,7 @@ Re-scan: every ccc KnownScript constant (mainnet + testnet) is now matched. Not 
 - **RGB++ airdrop badge / token metadata types**: no public source located (see row above).
 - **Fiber UDT whitelist entries** in nervosnetwork/fiber config (e.g. USDI on mainnet, RUSD on testnet): these are xUDT tokens, which the xudt plugin already decodes.
 
+
 ## Added on branch `add-missing-contracts` (2026-11-06)
 
 | id | Name | Mainnet code_hash | Testnet code_hash | Source code | Binary | Status |
@@ -91,6 +92,8 @@ Re-scan: every ccc KnownScript constant (mainnet + testnet) is now matched. Not 
 | ckbfs_v2 | CKBFS V2 | `0x31e6376287d223b8c0410d562fb422f04d1d617b2947596a14c3d2efb7218d3a` (data1); `0xfd2058c9a0c0183354cf637e25d2707ffa9bb6fa2ba9b29f4ebc6be3e54ad7eb` (type) | `0x31e6376287d223b8c0410d562fb422f04d1d617b2947596a14c3d2efb7218d3a` (data1); `0x7c6dcab8268201f064dc8676b5eafa60ca2569e5c6209dcbab0eb64a9cb3aaa3` (type) | code-monad/ckbfs @db973a8 | unverified | added |
 | ckbfs_v3 | CKBFS V3 | `0xb5d13ffe0547c78021c01fe24dce2e959a1ed8edbca3cb93dd2e9f57fb56d695` (data1); `0xcc5411e8b70e551d7a3dd806256533cff6bc12118b48dd7b2d5d2292c3651add` (type) | `0xb5d13ffe0547c78021c01fe24dce2e959a1ed8edbca3cb93dd2e9f57fb56d695` (data1); `0xaebf5a7b541da9603c2066a9768d3d18fea2e7f3c1943821611545155fecc671` (type) | code-monad/ckbfs @4ee6689 | unverified | added |
 | cota_registry | cota_registry | `0x90ca618be6c15f5857d3cbd09f9f24ca6770af047ba9ee70989ec3b229419ac7` (type) | `0x9302db6cc1344b81a5efee06962abcb40427ecfcbe69d471b01b2658ed948075` (type) | — (no public source found, unconfirmed with maintainer) | no-source | no-source (match-only plugin added) |
+| dotbit_income | .bit IncomeCell Type | `0x6c1d69a358954fc471a2ffa82a98aed5a4912e6002a5e761524f2304ab53bf39` (type) | `0x08d1cdc6ab92d9cabe0096a2c7642f73d0ef1b24c94c43f21c6c3a32ffe0bb5e` (type) | dotbitHQ/did-contracts @0cc9fbf | unverified | added |
+| dotbit_reverse_record | .bit ReverseRecordCell Type | `0xebc9e13658f6df13593cf59b7e9cd159602b6c3c7d54b14dea43bae600ebae11` (type) | `0x61711416468fa5211ead5f24c6f3efadfbbc332274c5d40e50c6feadcb5f9606` (type) | dotbitHQ/did-contracts @0cc9fbf | unverified | added |
 | dotbit_time_index_state | .bit Time Index State Type | `0x3a468d53352eb855521dabed0dc7036929bfe72766ad58f801edfbae564f7b43` (type) | `0x554cff969f3148e3c620749384004e9692e67c429f621554d139b505a281c7b8` (type) | dotbitHQ/ckb-time-script @37343ab | unverified | added |
 | dotbit_time_info | .bit Time Info Type | `0x9e537bf5b8ec044ca3f53355e879f3fd8832217e4a9b41d9994cf0c547241a79` (type) | `0x96248cdefb09eed910018a847cfb51ad044c2d7db650112931760e3ef34a7e9a` (type) | dotbitHQ/ckb-time-script @37343ab | unverified | added |
 | flashsigner | flashsigner | `0x081dbffa88dab54ba426d231ca64eb760cea2fe9e16761a1da400da1b2cbe128` (type) | `0x577a5e5930e2ecdd6200765f3442e6119dc99e87df474f22f13cab819c80b242` (type) | — (no public source found, unconfirmed with maintainer) | no-source | no-source (match-only plugin added) |
@@ -110,4 +113,13 @@ Re-scan: every ccc KnownScript constant (mainnet + testnet) is now matched. Not 
 | utxoswap_proxy_lock | utxoswap_proxy_lock | `0x7ef6e226ca9a3514ac76759f0b1550e70c9aa10aff89111fedf2c9d800d256f7` (type) | `0x30e2c8a0cc9c27b2b2125ecf3aabe74acd692fe2b6635bcee02dab6973fbb593` (type) | — (no public source found, unconfirmed with maintainer) | no-source | no-source (match-only plugin added) |
 | zero_lock | zero_lock | — | — | nervosnetwork/ckb @426736a | builtin | added |
 
-Still todo from the 2026-11-06 request: .bit das-lock, account-cell-type, income-cell-type, reverse-record-cell-type (dotbitHQ/did-contracts + das-lock; rules depend on config cells in cell_deps); Nervape shadow lock (source read, no deployed hash found); wCKB (no contract source / hash found); ccBTC Oracle cell (no hash found); CKBFS V1 (not requested).
+Hash findings, not added yet:
+
+- .bit AccountCell type: mainnet `0x4f170a048198408f4f4d36bdbcddcebe7a0ae85244d3ab08fd40a80cbfc70918` (type), testnet `0x1106d9eaccde0995a7e07e80dd0ce7509f21752538dfdd1ee2526d24574846b1` (type); did-contracts `.env.mainnet` / `.env.testnet2` @0cc9fbf and das-lib env.go; live on chain. Not added: ~5,400 lines of rules, mostly config-driven.
+- .bit das-lock: mainnet `0x9376c3b5811942960a846691e16e477cf43d7c7fa654067c9948dfcd09a32137` (type), testnet `0x326df166e3f0a900a0aee043e31a4dea0f01ea3307e6e235f09d1b4220b75fbd` (type); same sources; live on chain. Not added: multi-chain signature dispatch in C (dotbitHQ/das-lock).
+- .bit DID Cell = existing `spore_did` entry (`0xcfba73b5…` mainnet / `0x0b1f412f…` testnet, DID_CELL_TYPE_ID in did-contracts .env). Its code cell (data hash `0x45721f0b…`) differs from Spore v2 (`0x4a4dce1d…`), so the spore plugin rules may not match it exactly.
+- wCKB asset type: mainnet `0x42a0b2aacc836c0fc2bbd421a9020de42b8411584190f30be547fdf54214acc3` (type), code cell `0x8dae0c83…:4` (same deploy tx as Stable++ vault lock), data hash `0xe3155dd1…`; no public source found.
+- ccToken (ccBTC) contracts: source at ccTokens/Smart-Contract-Nervos (config-cell-type, tick-cell-type, governance-member-cell-type, xUDT extension/owner libs); mainnet config-cell-type `0x470452746a7abdb1f1723c5bd10d8b5bcda0dc4f00881cb9c6d8cf84b697d475` seen on chain. The ccBTC asset binary itself is not in that repo; which cell is the "Oracle Cell" is unresolved.
+- dCKB DAO info type `0x6fb198a4ef2cc0fa63c2ef7596c169452323d8ce678bdb3f75c77dc1eac2f47f` (data) and Udt owner lock `0x29a81473e24924e394a9148ab357c2492fedf65241848b7a87539a7db9c3d43f` (data): from dckb-rescuer/v1-core README (community); source in NexisDao-core; not added.
+- Nervape shadow lock (nervape/delegate-lock @f12f49c): no deployed hash found.
+- CKBFS V1: not requested.
