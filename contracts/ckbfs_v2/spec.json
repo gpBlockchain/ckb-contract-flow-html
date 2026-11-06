@@ -208,7 +208,7 @@
       "outputs": [
         {
           "label": "CKBFS cell",
-          "body": "Cell{ type: 同上 / same,\n  data: { indexes: {{I′ ≠ []}}, checksum: {{c1}}, content_type, filename,\n          backlinks: B ‖ {{BackLink{ indexes, checksum, tx_hash }}} } }"
+          "body": "Cell{ type: same,\n  data: { indexes: {{I′ ≠ []}}, checksum: {{c1}}, content_type, filename,\n          backlinks: B ‖ {{BackLink{ indexes, checksum, tx_hash }}} } }"
         },
         {
           "label": "witnesses[i], i ∈ I′",
@@ -265,7 +265,7 @@
       "outputs": [
         {
           "label": "CKBFS cell",
-          "body": "Cell{ lock: {{B′}}, type: 同上 / same,\n  data: { indexes: {{[]}}, checksum: c0, content_type, filename, backlinks: {{…}} } }"
+          "body": "Cell{ lock: {{B′}}, type: same,\n  data: { indexes: {{[]}}, checksum: c0, content_type, filename, backlinks: {{…}} } }"
         }
       ],
       "limits": [

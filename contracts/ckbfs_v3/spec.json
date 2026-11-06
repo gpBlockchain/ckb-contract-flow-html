@@ -269,7 +269,7 @@
       "outputs": [
         {
           "label": "CKBFS cell",
-          "body": "Cell{ type: 同上 / same, data: { index: {{i1}}, checksum: {{c1}}, content_type, filename } }"
+          "body": "Cell{ type: same, data: { index: {{i1}}, checksum: {{c1}}, content_type, filename } }"
         },
         {
           "label": "witnesses[i1]（head）",
