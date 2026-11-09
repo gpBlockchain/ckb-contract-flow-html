@@ -19,12 +19,15 @@ const T = (x, f = hl) => x == null ? '' : isI18n(x)
 const plain = (x, lang) => x == null ? '' : isI18n(x) ? (x[lang] != null ? x[lang] : x.zh || x.en) : String(x);
 const UI = {
   limits: { zh: '限制', en: 'Constraints' },
-  colon: { zh: '：', en: ': ' },
-  toggle: { zh: 'EN', en: '中文' },
+  contracts: { zh: '合约', en: 'Contracts' },
+  none: { zh: '（无）', en: '(none)' },
   defTitle: { zh: 'CKB 合约约束', en: 'CKB Contract Constraints' },
   txTitle: { zh: '链上交易解码器', en: 'On-chain Transaction Decoder' },
   indexTitle: { zh: 'CKB 合约 Cell 流转约束', en: 'CKB Contract Cell-Flow Constraints' },
+  indexSub: { zh: '把每个 CKB 合约拆成状态转换：输入 Cell → 输出 Cell，高亮被约束的字段，逐条列出条件与错误码。', en: 'Every CKB contract broken into state transitions: input cells → output cells, constrained fields highlighted, each condition listed with its error code.' },
 };
+// shared inline icons (paths closed explicitly: scripts/check.js balances every tag)
+const ARROW = '<div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></div>';
 
 function loadSpec(file) {
   const txt = fs.readFileSync(file, 'utf8');
@@ -91,42 +94,45 @@ function parseYaml(src) {
 }
 
 // Byte-layout box / 字节布局 box：{ label, layout:[{name,size,color,flex,role,cons,err}], hex?:[[k,v]], note? }
-const col = (f, i) => f.color != null ? f.color : i % 6;
+const col = (f, i) => f.color != null ? f.color : i % 8;
 const layoutBox = b => `<div class="layout"><span class="n">${T(b.label)}</span>
 <div class="strip">${b.layout.map((f, i) => `<div class="seg c${col(f, i)}" style="flex:${f.flex || 1}"><b>${T(f.name, esc)}</b><small>${T(f.size, esc)}</small></div>`).join('')}</div>
-<ul class="fields">${b.layout.filter(f => f.role || f.cons || f.err).map((f, i) => `<li><span class="dot c${col(f, b.layout.indexOf(f))}"></span><b>${T(f.name, esc)}</b> <span class="sz">${T(f.size, esc)}</span>　${T(f.role)}${f.cons ? `　<span class="cons">${T(f.cons)}</span>` : ''}${f.err ? ` <span class="e">(${T(f.err, esc)})</span>` : ''}</li>`).join('')}</ul>
-${b.hex ? `<div class="hex">${b.hex.map(h => `<div><span class="hk">${T(h[0], esc)}</span>${T(h[1])}</div>`).join('')}</div>` : ''}
+<ul class="fields">${b.layout.filter(f => f.role || f.cons || f.err).map(f => `<li><span class="fk"><span class="dot c${col(f, b.layout.indexOf(f))}"></span><b>${T(f.name, esc)}</b><span class="sz">${T(f.size, esc)}</span></span><span class="fd">${T(f.role)}${f.cons ? `<span class="cons">${T(f.cons)}</span>` : ''}</span><span class="e">${f.err ? T(f.err, esc) : ''}</span></li>`).join('')}</ul>
+${b.hex ? `<div class="hex">${b.hex.map(h => `<div><span class="hk">${T(h[0], esc)}</span><span class="hv">${T(h[1])}</span></div>`).join('')}</div>` : ''}
 ${b.note ? `<div class="note">${T(b.note)}</div>` : ''}</div>`;
 const box = b => b.layout ? layoutBox(b) : `<div class="cell"><span class="n">${T(b.label)}</span>${T(b.body)}</div>`;
-const sep = c => /^[≤≥=<>]/.test(plain(c, 'zh')) ? ' ' : T(UI.colon, esc);
+const none = `<div class="none">${T(UI.none, esc)}</div>`;
 
 function render(spec, id) {
   const meta = id ? META.load(id) : null, plugin = id ? pluginOf(id) : null;
   const head = meta ? MH().chips(META.tagsOf(meta, plugin)) + MH().credit(meta) : '';
   const prov = meta ? `<div class="card">${MH().provenance(meta)}</div>` : '';
-  const cards = (spec.transitions || []).map(t => `
-<div class="card">
-<h2><span>${T(t.tag, esc)}</span>${T(t.title, esc)}</h2>
+  const ts = spec.transitions || [];
+  const crumb = id ? `<nav class="crumb"><a href="index.html">${T(UI.contracts, esc)}</a><span aria-hidden="true">/</span><code>${esc(id)}</code></nav>` : '';
+  const toc = ts.length > 1 ? `<nav class="toc">${ts.map((t, i) => `<a href="#t${i + 1}"><span class="tg">${T(t.tag, esc)}</span>${T(t.title, esc)}</a>`).join('')}</nav>` : '';
+  const cards = ts.map((t, i) => `
+<div class="card" id="t${i + 1}">
+<h2><span class="tg">${T(t.tag, esc)}</span>${T(t.title, esc)}</h2>
 <div class="flow">
-<div class="col cin"><div class="colh">${T({ zh: 'Inputs 输入', en: 'Inputs' }, esc)}</div>${(t.inputs || []).map(box).join('\n')}</div>
-<div class="arrow">➜</div>
-<div class="col cout"><div class="colh">${T({ zh: 'Outputs 输出', en: 'Outputs' }, esc)}</div>${(t.outputs || []).map(box).join('\n')}</div>
+<div class="col cin"><div class="colh">${T({ zh: 'Inputs 输入', en: 'Inputs' }, esc)}</div>${(t.inputs || []).map(box).join('\n') || none}</div>
+${ARROW}
+<div class="col cout"><div class="colh">${T({ zh: 'Outputs 输出', en: 'Outputs' }, esc)}</div>${(t.outputs || []).map(box).join('\n') || none}</div>
 </div>
 ${(t.sections || []).map(sc => `<div class="sec"><h3>${T(sc.title, esc)}</h3><div class="secgrid">${(sc.boxes || []).map(box).join('\n')}</div></div>`).join('\n')}
 ${(t.layouts || []).map(layoutBox).join('\n')}
 ${(t.extras || []).map(x => `<div class="extra">${T(x)}</div>`).join('\n')}
 ${t.limits && t.limits.length ? `<div class="limits"><h3>${T(UI.limits, esc)}</h3><ul>
-${t.limits.map(l => `<li><b>${T(l.field, esc)}</b>${sep(l.cond)}${T(l.cond)}${l.err != null && l.err !== '' ? ` <span class="e">(${T(l.err, esc)})</span>` : ''}${l.note ? ` <span class="note">(${T(l.note)})</span>` : ''}</li>`).join('\n')}
+${t.limits.map(l => `<li><b>${T(l.field, esc)}</b><span class="lc">${T(l.cond)}${l.note ? `<span class="note">${T(l.note)}</span>` : ''}</span><span class="e">${l.err != null && l.err !== '' ? T(l.err, esc) : ''}</span></li>`).join('\n')}
 </ul></div>` : ''}
 </div>`).join('\n');
   const title = spec.title || UI.defTitle;
   const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
   return tpl.replace('{{DOC_TITLE}}', esc(plain(title, 'zh') === plain(title, 'en') ? plain(title, 'en') : plain(title, 'zh') + ' / ' + plain(title, 'en')))
-    .replace('{{TOGGLE}}', T(UI.toggle, esc))
+    .replace('{{CRUMB}}', () => crumb)
     .replace('{{TITLE}}', T(title, esc))
     .replace('{{SUBTITLE}}', T(spec.subtitle) + head)
-    .replace('{{CARDS}}', () => cards + prov)
-    .replace('{{FOOTER}}', spec.notes ? `<div class="sub">${(Array.isArray(spec.notes) ? spec.notes : [spec.notes]).map(n => T(n)).join('<br>')}</div>` : '');
+    .replace('{{CARDS}}', () => toc + cards + prov)
+    .replace('{{FOOTER}}', spec.notes ? `<div class="notes"><div>${(Array.isArray(spec.notes) ? spec.notes : [spec.notes]).map(n => T(n)).join('<br>')}</div></div>` : '');
 }
 
 function build(inFile, outFile, id) {
@@ -144,17 +150,20 @@ function buildTx(outFile) {
   const css = extra.slice(extra.indexOf('<style>'), extra.indexOf('</style>') + 8);
   const lib = fs.readFileSync(path.join(__dirname, 'lib/ckb.js'), 'utf8'), app = fs.readFileSync(path.join(__dirname, 'tx-app.js'), 'utf8');
   const C = require('./lib/contracts.js');
-  const EX = C.list().filter(c => c.tests).flatMap(c => JSON.parse(fs.readFileSync(c.tests, 'utf8')).map(t => [t.tx, t.name || c.id, t.net || 'mainnet'])).filter((x, i, a) => a.findIndex(y => y[0] === x[0]) === i);
+  const EX = C.list().filter(c => c.tests).flatMap(c => JSON.parse(fs.readFileSync(c.tests, 'utf8')).map(t => [t.tx, t.name || c.id, t.net || 'mainnet', c.id])).filter((x, i, a) => a.findIndex(y => y[0] === x[0]) === i);
+  const EXG = {}; for (const [h, n, net, id] of EX) (EXG[id] = EXG[id] || []).push(`<a href="#" class="ex" data-h="${h}" data-net="${net}">${esc(n)}</a>`);
   const METAHTML = Object.fromEntries(C.list().map(c => { const m = META.load(c.id); return m ? [c.id, MH().chips(META.tagsOf(m, pluginOf(c.id))) + MH().credit(m) + MH().provenance(m, { compact: true })] : null; }).filter(Boolean));
   const plugins = C.ordered().map(c => `// ---- contracts/${c.id}/plugin.js ----\n` + fs.readFileSync(c.plugin, 'utf8')).join('\n');
-  const form = `<div class="card"><div class="form">
-<select id="net"><option value="https://mainnet.ckb.dev/rpc">mainnet · https://mainnet.ckb.dev/rpc</option><option value="https://testnet.ckb.dev/rpc">testnet · https://testnet.ckb.dev/rpc</option><option value="custom">${T({ zh: '自定义 RPC', en: 'custom RPC' }, esc)}</option></select>
-<input id="custom" style="display:none" placeholder="http://127.0.0.1:8114">
-<input id="hash" placeholder="0x… tx hash"><button class="go" id="go">${T({ zh: '解码', en: 'Decode' }, esc)}</button></div>
-<div class="small">${T({ zh: '主网示例：', en: 'Mainnet examples: ' }, esc)}${EX.map(([h, n, net]) => `<a href="#" class="ex" data-h="${h}" data-net="${net}">${esc(n)}</a>`).join(' · ')}</div>
-<div class="small">${T({ zh: `说明：按 lock / type script hash 分组；已加载插件：${C.ordered().map(c => c.id).join('、')}；签名不校验（标记 ○）。数据仅从你选择的 RPC 读取。`, en: `Notes: grouped by lock / type script hash; loaded plugins: ${C.ordered().map(c => c.id).join(', ')}; signatures are NOT verified (marked ○). Data is read only from the RPC you choose.` })}</div></div>
+  const ids = C.ordered().map(c => c.id);
+  const form = `<div class="card dec"><div class="bar">
+<select id="net" aria-label="RPC"><option value="https://mainnet.ckb.dev/rpc">mainnet · https://mainnet.ckb.dev/rpc</option><option value="https://testnet.ckb.dev/rpc">testnet · https://testnet.ckb.dev/rpc</option><option value="custom">custom RPC</option></select>
+<input id="hash" placeholder="0x… tx hash" aria-label="tx hash" spellcheck="false" autocomplete="off"><button class="btn" id="go">${T({ zh: '解码', en: 'Decode' }, esc)}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></div>
+<input id="custom" class="inp" style="display:none" placeholder="http://127.0.0.1:8114" aria-label="custom RPC" spellcheck="false">
+<details class="exs"><summary>${T({ zh: '示例交易', en: 'Example transactions' }, esc)}<span class="cnt">${EX.length}</span></summary><div class="exl">${Object.entries(EXG).map(([id, xs]) => `<div class="exg"><code>${esc(id)}</code><div>${xs.join('')}</div></div>`).join('')}</div></details>
+<p class="small dnote">${T({ zh: '按 lock / type script hash 分组；签名不校验（标记 ○）；数据仅从你选择的 RPC 读取。', en: 'Grouped by lock / type script hash; signatures are NOT verified (marked ○); data is read only from the RPC you choose.' })}</p>
+<details class="more"><summary>${T({ zh: '已加载插件', en: 'Loaded plugins' }, esc)}<span class="cnt">${ids.length}</span></summary><p class="plg">${ids.map(x => `<code>${esc(x)}</code>`).join(' ')}</p></details></div>
 <div id="result"></div>`;
-  const html = tpl.replace('{{DOC_TITLE}}', esc(UI.txTitle.zh + ' / ' + UI.txTitle.en)).replace('{{TOGGLE}}', T(UI.toggle, esc))
+  const html = tpl.replace('{{DOC_TITLE}}', esc(UI.txTitle.zh + ' / ' + UI.txTitle.en)).replace('{{CRUMB}}', '')
     .replace('{{TITLE}}', T(UI.txTitle, esc)).replace('{{SUBTITLE}}', T({ zh: '输入交易 hash，解码为 cell 流转卡片并做无签名约束检查', en: 'Enter a tx hash to decode it into cell-flow cards with signature-free constraint checks' }))
     .replace('{{CARDS}}', form).replace('{{FOOTER}}', '')
     .replace('</style>', () => css.replace('<style>', '').replace('</style>', '') + '</style>');
@@ -175,25 +184,27 @@ function main() {
     const cards = items.filter(([n]) => n !== 'tx').map(([n, t]) => { const m = META.load(n) || {}, tags = META.tagsOf(m, pluginOf(n));
       (m.contributors || []).forEach(u => counts[u] = (counts[u] || 0) + 1);
       const text = [n, plain(t, 'zh'), plain(t, 'en'), ...tags.map(x => META.TAX.tags[x] ? META.TAX.tags[x].zh + ' ' + META.TAX.tags[x].en : x)].join(' ').toLowerCase();
-      return `<li class="ci" data-tags="${esc(tags.join(' '))}" data-text="${esc(text)}"><a href="${n}.html">${T(t, esc)}</a> ${mh.badge(m)}<div class="mono small">${esc(n)}</div>${mh.chips(tags)}${(m.contributors || []).length ? `<div class="avs">${m.contributors.map(mh.avatar).join('')}</div>` : ''}</li>`; }).join('');
-    const groups = Object.entries(META.TAX.groups).map(([g, d]) => `<div class="fg"><b>${T(d.label, esc)}</b> ${Object.entries(META.TAX.tags).filter(([, x]) => x.group === g).map(([k, x]) => `<button class="tag g-${g}" data-f="${k}" data-g="${g}" aria-pressed="false">${T({ zh: x.zh, en: x.en }, esc)}</button>`).join('')}</div>`).join('');
+      return `<li class="ci" data-tags="${esc(tags.join(' '))}" data-text="${esc(text)}"><a href="${n}.html">${T(t, esc)}</a>${mh.badge(m)}<div class="mono">${esc(n)}</div>${mh.chips(tags)}${(m.contributors || []).length ? `<div class="avs">${m.contributors.map(mh.avatar).join('')}</div>` : ''}</li>`; }).join('');
+    const groups = Object.entries(META.TAX.groups).map(([g, d]) => `<div class="fg"><b>${T(d.label, esc)}</b>${Object.entries(META.TAX.tags).filter(([, x]) => x.group === g).map(([k, x]) => `<button class="tag g-${g}" data-f="${k}" data-g="${g}" aria-pressed="false">${T({ zh: x.zh, en: x.en }, esc)}</button>`).join('')}</div>`).join('');
     const people = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    const hero = `<style>.hero{background:#f5f8ff;color:#1f2937;border:1px solid #c7d2fe;border-left:4px solid #4f6bed;border-radius:12px;padding:16px;margin-bottom:16px}.hero h2{margin:0 0 4px;color:#1e3a8a;font-size:1.2em}.hero p{margin:0 0 12px;color:#4b5563;font-size:.92em}.hero .row{display:flex;gap:8px;flex-wrap:wrap}.hero input{flex:1 1 260px;min-width:0;padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;font-family:monospace;font-size:14px}.hero select{padding:10px;border-radius:8px;border:1px solid #cbd5e1;background:#fff}.hero button{padding:10px 18px;border-radius:8px;border:0;background:#4f6bed;color:#fff;font-weight:600;cursor:pointer}.hero a{color:#4f6bed}</style>
-<div class="hero"><h2>${T(UI.txTitle, esc)}</h2><p>${T({ zh: '粘贴交易 hash，一键拆成 cell 流转卡片，并按合约规则逐条检查', en: 'Paste a tx hash to split it into cell-flow cards and check each contract rule' }, esc)}</p>
-<div class="row"><input id="hx" placeholder="0x… tx hash" aria-label="tx hash"><select id="hn"><option value="https://mainnet.ckb.dev/rpc">mainnet</option><option value="https://testnet.ckb.dev/rpc">testnet</option></select><button id="hg">${T({ zh: '解码', en: 'Decode' }, esc)}</button></div>
-<div class="small" style="margin-top:8px"><a href="tx.html">${T({ zh: '打开完整解码器 →', en: 'Open full decoder →' }, esc)}</a></div></div>
+    const go = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>`;
+    const hero = `<section class="hero"><div class="hero-h"><span class="hero-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"></path><path d="M8 9h5M8 12h8M8 15h6"></path></svg></span>
+<div><h2>${T(UI.txTitle, esc)}</h2><p>${T({ zh: '粘贴交易 hash，一键拆成 cell 流转卡片，并按合约规则逐条检查', en: 'Paste a tx hash to split it into cell-flow cards and check each contract rule' }, esc)}</p></div></div>
+<div class="bar"><input id="hx" placeholder="0x… tx hash" aria-label="tx hash" spellcheck="false" autocomplete="off"><select id="hn" aria-label="network"><option value="https://mainnet.ckb.dev/rpc">mainnet</option><option value="https://testnet.ckb.dev/rpc">testnet</option></select><button class="btn" id="hg">${T({ zh: '解码', en: 'Decode' }, esc)}${go}</button></div>
+<a class="hero-link" href="tx.html">${T({ zh: '打开完整解码器 →', en: 'Open full decoder →' }, esc)}</a></section>
 <script>(function(){var i=document.getElementById('hx'),n=document.getElementById('hn');function g(){var h=i.value.trim();if(!h)return i.focus();location.href='tx.html#'+new URLSearchParams({tx:h,rpc:n.value})}document.getElementById('hg').onclick=g;i.onkeydown=function(e){if(e.key==='Enter')g()}})();</script>`;
-    const list = hero + `<div class="card"><div class="form"><input id="q" type="search" placeholder="search / 搜索 (id, name, tag)" aria-label="search"></div>
-<div class="filters">${groups}</div><div id="projsel">${Object.keys(mh.PROJ).filter(k => META.TAX.tags[k]).map(mh.projectPanel).join('')}</div><div class="small cntrow"><span id="cnt"></span> <button id="copylink" class="copyl" type="button" title="copy a link to this filtered view">${T({ zh: '复制链接', en: 'Copy link' }, esc)}<span class="okm">${T({ zh: ' ✓ 已复制', en: ' ✓ copied' }, esc)}</span></button></div><ul class="cards">${cards}</ul>
-</div>
+    const list = hero + `<section class="browse"><div class="sh"><h2>${T(UI.contracts, esc)}</h2></div>
+<div class="card fpanel"><div class="search"><input id="q" class="inp" type="search" placeholder="search / 搜索 (id, name, tag)" aria-label="search" autocomplete="off" spellcheck="false"><kbd class="kbd">/</kbd></div>
+<div class="filters">${groups}</div><div id="projsel">${Object.keys(mh.PROJ).filter(k => META.TAX.tags[k]).map(mh.projectPanel).join('')}</div></div>
+<div class="cntrow"><span id="cnt"></span><button id="copylink" class="copyl" type="button" title="copy a link to this filtered view">${T({ zh: '复制链接', en: 'Copy link' }, esc)}<span class="okm">${T({ zh: ' ✓ 已复制', en: ' ✓ copied' }, esc)}</span></button></div><ul class="cards">${cards}</ul></section>
 <div class="card" id="skill"><h2>${T({ zh: '一句话让 AI 生成', en: 'One sentence to your AI agent' }, esc)}</h2><p class="small">${T({ zh: '填入合约仓库 URL 或本地路径，复制这句话发给任意 coding agent（Claude Code / Cursor / Codex…），无需安装。', en: 'Fill in a contract repo URL or local path, copy the sentence and paste it to any coding agent (Claude Code / Cursor / Codex…). No install needed.' }, esc)}</p>
-<div class="form"><input id="sku" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #ccc;border-radius:8px" placeholder="https://github.com/owner/repo  or  /path/to/local/repo" aria-label="repo url"></div>
-<pre class="mono" id="skp" style="white-space:pre-wrap"></pre><button id="skc" style="padding:6px 16px;border-radius:8px;border:1px solid #4f6bed;background:#4f6bed;color:#fff;cursor:pointer">${T({ zh: '复制', en: 'Copy' }, esc)}</button>
-<details class="small"><summary>${T({ zh: '可选：安装为 skill', en: 'Optional: install as a skill' }, esc)}</summary><pre class="mono" style="white-space:pre-wrap">npx skills add gpBlockchain/ckb-contract-flow-html -g -y -a claude-code cursor codex
+<input id="sku" class="inp" placeholder="https://github.com/owner/repo  or  /path/to/local/repo" aria-label="repo url" spellcheck="false">
+<div class="code"><pre id="skp"></pre><button id="skc" class="copyl" type="button">${T({ zh: '复制', en: 'Copy' }, esc)}<span class="okm"> ✓</span></button></div>
+<details class="more"><summary>${T({ zh: '可选：安装为 skill', en: 'Optional: install as a skill' }, esc)}</summary><pre>npx skills add gpBlockchain/ckb-contract-flow-html -g -y -a claude-code cursor codex
 curl -fsSL https://raw.githubusercontent.com/gpBlockchain/ckb-contract-flow-html/main/install.sh | sh
 /plugin marketplace add gpBlockchain/ckb-contract-flow-html   (Claude Code)</pre><a href="https://github.com/gpBlockchain/ckb-contract-flow-html/blob/main/skills/ckb-contract-flow/SKILL.md">SKILL.md →</a></details></div>
-<script>(function(){var R='https://raw.githubusercontent.com/gpBlockchain/ckb-contract-flow-html/main/skills/ckb-contract-flow/SKILL.md',u=document.getElementById('sku'),p=document.getElementById('skp');function f(){var v=u.value.trim(),zh=document.documentElement.getAttribute('data-lang')==='zh',r=v||(zh?'<合约仓库 URL 或本地路径>':'<contract repo URL or local path>');p.textContent=zh?'阅读 '+R+' 并按其步骤为 '+r+' 生成合约 cell 流转 HTML':'Read '+R+' and follow it to generate a cell-flow HTML for '+r}u.oninput=f;f();document.addEventListener('click',function(e){if(e.target.id!=='skc')setTimeout(f,0)});document.getElementById('skc').onclick=function(){f();navigator.clipboard&&navigator.clipboard.writeText(p.textContent)}})();</script>
-<div class="card"><h2>${T({ zh: '贡献者', en: 'Contributors' }, esc)}</h2>${people.length ? `<ul class="people">${people.map(([u, k]) => `<li>${mh.avatar(u)} <a href="https://github.com/${esc(u)}">@${esc(u)}</a> · ${k}</li>`).join('')}</ul>` : ''}
+<script>(function(){var R='https://raw.githubusercontent.com/gpBlockchain/ckb-contract-flow-html/main/skills/ckb-contract-flow/SKILL.md',u=document.getElementById('sku'),p=document.getElementById('skp'),c=document.getElementById('skc');function f(){var v=u.value.trim(),zh=document.documentElement.getAttribute('data-lang')==='zh',r=v||(zh?'<合约仓库 URL 或本地路径>':'<contract repo URL or local path>');p.textContent=zh?'阅读 '+R+' 并按其步骤为 '+r+' 生成合约 cell 流转 HTML':'Read '+R+' and follow it to generate a cell-flow HTML for '+r}u.oninput=f;f();document.addEventListener('click',function(e){if(e.target.id!=='skc')setTimeout(f,0)});c.onclick=function(){f();if(navigator.clipboard)navigator.clipboard.writeText(p.textContent).then(function(){c.setAttribute('data-ok','1');setTimeout(function(){c.removeAttribute('data-ok')},1500)})}})();</script>
+<div class="card"><h2>${T({ zh: '贡献者', en: 'Contributors' }, esc)}</h2>${people.length ? `<ul class="people">${people.map(([u, k]) => `<li>${mh.avatar(u)}<a href="https://github.com/${esc(u)}">@${esc(u)}</a><span class="k">${k}</span></li>`).join('')}</ul>` : ''}
 <div class="small">${T({ zh: '欢迎贡献新合约：见 docs/ADD_CONTRACT.md，并在 meta.json 的 contributors 中加上你的 GitHub 用户名。', en: 'New contracts welcome: see docs/ADD_CONTRACT.md and add your GitHub username to contributors in meta.json.' }, esc)}</div></div>
 <script>(function(){var on={},q=document.getElementById('q'),li=[].slice.call(document.querySelectorAll('.ci')),cnt=document.getElementById('cnt'),bs=[].slice.call(document.querySelectorAll('.filters button'));
 // URL sync: ?<group>=a,b (project values without the "p-" prefix) &q=text; location.hash is left untouched
@@ -204,10 +215,11 @@ function toURL(){var u=new URLSearchParams();Object.keys(on).sort().forEach(func
 function fromURL(){var u=new URLSearchParams(location.search);on={};bs.forEach(function(b){var g=b.getAttribute('data-g'),k=b.getAttribute('data-f'),v=(u.get(g)||'').split(',').filter(Boolean).map(function(x){return pre(g)+x}),a=v.indexOf(k)>=0;if(a)(on[g]=on[g]||[]).push(k);b.setAttribute('aria-pressed',a)});q.value=u.get('q')||'';run()}
 bs.forEach(function(b){b.onclick=function(){var g=b.getAttribute('data-g'),k=b.getAttribute('data-f'),a=on[g]=on[g]||[],i=a.indexOf(k);if(i>=0)a.splice(i,1);else a.push(k);b.setAttribute('aria-pressed',i<0);run();toURL()}});
 q.oninput=function(){run();toURL()};window.addEventListener('popstate',fromURL);
+document.addEventListener('keydown',function(e){var t=e.target;if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName||'')&&!t.isContentEditable){e.preventDefault();q.focus()}});
 var cp=document.getElementById('copylink');if(cp)cp.onclick=function(){var url=location.href,done=function(){cp.setAttribute('data-ok','1');setTimeout(function(){cp.removeAttribute('data-ok')},1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done,function(){prompt('URL',url)});else prompt('URL',url)};
 fromURL()})();</script>`;
     fs.writeFileSync(path.join(od, 'index.html'), tpl.replace('{{DOC_TITLE}}', esc(UI.indexTitle.zh + ' / ' + UI.indexTitle.en))
-      .replace('{{TOGGLE}}', T(UI.toggle, esc)).replace('{{TITLE}}', T(UI.indexTitle, esc)).replace('{{SUBTITLE}}', '')
+      .replace('{{CRUMB}}', '').replace('{{TITLE}}', T(UI.indexTitle, esc)).replace('{{SUBTITLE}}', () => `<p class="lead">${T(UI.indexSub, esc)}</p>`)
       .replace('{{CARDS}}', () => list).replace('{{FOOTER}}', ''));
   } else {
     build(a[0], a[1] || path.join('out', path.basename(a[0]).replace(/\.(json|ya?ml)$/i, '') + '.html'));
