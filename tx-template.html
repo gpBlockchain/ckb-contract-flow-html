@@ -23,12 +23,15 @@
 .tagk{display:inline-flex;align-items:center;margin-right:6px;padding:0 7px;border:1px solid var(--ac-line);border-radius:6px;background:var(--ac-bg);color:var(--ac-fg);font:600 11px/18px var(--sans);white-space:nowrap;vertical-align:1px}
 .tagu{border-color:var(--line);background:var(--surface-3);color:var(--fg-3)}
 h2 .tagk{margin:0;padding:0 9px;font-size:12px;line-height:24px}
+a.tagk:hover{border-color:var(--ac);text-decoration:none}
+.golink{display:inline-flex;align-items:center;gap:4px;margin-left:auto;font-size:13px;font-weight:500;letter-spacing:0}
+.golink svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .card>.kv .mono{font-size:12.5px}
 .card>.cell{margin-top:12px}
-.chk .ic{align-self:center;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;font:700 10.5px/1 var(--sans)}
-.chk .ok .ic{background:var(--ok-bg);color:var(--ok)}
-.chk .bad .ic{background:var(--err-bg);color:var(--err)}
-.chk .unk .ic{background:var(--surface-3);color:var(--fg-4)}
+.ic{align-self:center;flex:none;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;font:700 10.5px/1 var(--sans)}
+.chk .ok .ic,.ic.ok{background:var(--ok-bg);color:var(--ok)}
+.chk .bad .ic,.ic.bad{background:var(--err-bg);color:var(--err)}
+.chk .unk .ic,.ic.unk{background:var(--surface-3);color:var(--fg-4)}
 .chk .ok .e,.chk .unk .e{border-color:var(--line);background:var(--surface-3);color:var(--fg-3)}
 .chk .unk .lc{color:var(--fg-3)}
 .chk .bad .lc{color:var(--err)}

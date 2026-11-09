@@ -25,9 +25,44 @@ const UI = {
   txTitle: { zh: '链上交易解码器', en: 'On-chain Transaction Decoder' },
   indexTitle: { zh: 'CKB 合约 Cell 流转约束', en: 'CKB Contract Cell-Flow Constraints' },
   indexSub: { zh: '把每个 CKB 合约拆成状态转换：输入 Cell → 输出 Cell，高亮被约束的字段，逐条列出条件与错误码。', en: 'Every CKB contract broken into state transitions: input cells → output cells, constrained fields highlighted, each condition listed with its error code.' },
+  txSub: { zh: '输入交易 hash，解码为 cell 流转卡片并做无签名约束检查', en: 'Enter a tx hash to decode it into cell-flow cards with signature-free constraint checks' },
+  examples: { zh: '真实交易', en: 'Real transactions' },
+  examplesSub: { zh: '在解码器里打开，看这些规则在链上交易中的实际检查结果。', en: 'Open one in the decoder to see these rules checked against a real on-chain transaction.' },
+  openDecoder: { zh: '在解码器中打开', en: 'Open in decoder' },
+  lgIn: { zh: '输入：交易消耗的 Cell', en: 'Inputs: cells the transaction consumes' },
+  lgOut: { zh: '输出：交易创建的 Cell', en: 'Outputs: cells it creates' },
+  lgHl: { zh: '脚本会检查的字段', en: 'a field the script checks' },
+  lgErr: { zh: '条件不满足时脚本返回的错误码', en: 'error code the script returns when the condition fails' },
+  notFound: { zh: '页面不存在', en: 'Page not found' },
 };
+// public site root (GitHub Pages) for canonical / Open Graph / sitemap URLs; forks can set SITE_URL
+const SITE = (process.env.SITE_URL || 'https://gpblockchain.github.io/ckb-contract-flow-html/').replace(/\/?$/, '/');
+const RPC = { mainnet: 'https://mainnet.ckb.dev/rpc', testnet: 'https://testnet.ckb.dev/rpc' };
+const attr = s => esc(s).replace(/"/g, '&quot;');
 // shared inline icons (paths closed explicitly: scripts/check.js balances every tag)
 const ARROW = '<div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></div>';
+const GO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>';
+const EXT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg>';
+// "how to read" strip: [sample html, bilingual text] pairs
+const legend = (items, cls = '') => `<div class="legend${cls}">${items.map(([x, t]) => `<span class="lg">${x}<span>${T(t, esc)}</span></span>`).join('')}</div>`;
+const FLOW_LEGEND = legend([['<i class="sw sw-in"></i>', UI.lgIn], ['<i class="sw sw-out"></i>', UI.lgOut],
+  [`<span class="hl">${T({ zh: '字段', en: 'field' }, esc)}</span>`, UI.lgHl], ['<span class="e">-2</span>', UI.lgErr]]);
+
+// Fill template.html. Every page goes through here, so no placeholder is left behind.
+function page({ docTitle, desc, file, crumb = '', title, subtitle = '', cards = '', footer = '', head = '' }) {
+  const url = file == null ? '' : SITE + (file === 'index.html' ? '' : file);
+  const meta = [`<meta name="description" content="${attr(desc)}">`, url && `<link rel="canonical" href="${attr(url)}">`,
+    '<meta property="og:type" content="website">', '<meta property="og:site_name" content="CKB Contract Flow">',
+    `<meta property="og:title" content="${attr(docTitle)}">`, `<meta property="og:description" content="${attr(desc)}">`, url && `<meta property="og:url" content="${attr(url)}">`,
+    `<meta property="og:image" content="${attr(SITE)}og.png">`, '<meta property="og:image:width" content="1200">', '<meta property="og:image:height" content="630">',
+    '<meta name="twitter:card" content="summary_large_image">', head].filter(Boolean).join('\n');
+  return fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8')
+    .replace('{{DOC_TITLE}}', () => esc(docTitle)).replace('{{HEAD}}', () => meta).replace('{{CRUMB}}', () => crumb)
+    .replace('{{TITLE}}', () => T(title, esc)).replace('{{SUBTITLE}}', () => subtitle)
+    .replace('{{CARDS}}', () => cards).replace('{{FOOTER}}', () => footer);
+}
+const bi = x => plain(x, 'zh') === plain(x, 'en') ? plain(x, 'en') : plain(x, 'zh') + ' / ' + plain(x, 'en');
+const testsOf = id => { const f = path.join(__dirname, 'contracts', id, 'tests.json'); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : []; };
 
 function loadSpec(file) {
   const txt = fs.readFileSync(file, 'utf8');
@@ -109,7 +144,11 @@ function render(spec, id) {
   const prov = meta ? `<div class="card">${MH().provenance(meta)}</div>` : '';
   const ts = spec.transitions || [];
   const crumb = id ? `<nav class="crumb"><a href="index.html">${T(UI.contracts, esc)}</a><span aria-hidden="true">/</span><code>${esc(id)}</code></nav>` : '';
-  const toc = ts.length > 1 ? `<nav class="toc">${ts.map((t, i) => `<a href="#t${i + 1}"><span class="tg">${T(t.tag, esc)}</span>${T(t.title, esc)}</a>`).join('')}</nav>` : '';
+  const exs = id ? testsOf(id) : [], mh = MH();
+  const toc = ts.length > 1 || exs.length ? `<nav class="toc">${ts.map((t, i) => `<a href="#t${i + 1}"><span class="tg">${T(t.tag, esc)}</span>${T(t.title, esc)}</a>`).join('')}${exs.length ? `<a href="#txs"><span class="tg">tx</span>${T(UI.examples, esc)}<span class="cnt">${exs.length}</span></a>` : ''}</nav>` : '';
+  // real txs from tests.json → open in the decoder (deep link) or the explorer
+  const examples = exs.length ? `<div class="card" id="txs"><h2>${T(UI.examples, esc)}<span class="cnt">${exs.length}</span></h2><p class="small">${T(UI.examplesSub, esc)}</p>
+<ul class="txl">${exs.map(t => { const net = t.net || 'mainnet'; return `<li><a class="txa" href="${attr('tx.html#' + new URLSearchParams({ tx: t.tx, rpc: RPC[net] }))}"><span class="txn">${esc(t.name || t.tx)}</span><code>${esc(mh.short(t.tx))}</code>${mh.chip(net)}<span class="go">${T(UI.openDecoder, esc)}${GO}</span></a><a class="exp" href="${attr(mh.EXP[net] + '/transaction/' + t.tx)}" target="_blank" rel="noopener" title="CKB Explorer" aria-label="CKB Explorer">${EXT}</a></li>`; }).join('')}</ul></div>` : '';
   const cards = ts.map((t, i) => `
 <div class="card" id="t${i + 1}">
 <h2><span class="tg">${T(t.tag, esc)}</span>${T(t.title, esc)}</h2>
@@ -125,14 +164,11 @@ ${t.limits && t.limits.length ? `<div class="limits"><h3>${T(UI.limits, esc)}</h
 ${t.limits.map(l => `<li><b>${T(l.field, esc)}</b><span class="lc">${T(l.cond)}${l.note ? `<span class="note">${T(l.note)}</span>` : ''}</span><span class="e">${l.err != null && l.err !== '' ? T(l.err, esc) : ''}</span></li>`).join('\n')}
 </ul></div>` : ''}
 </div>`).join('\n');
-  const title = spec.title || UI.defTitle;
-  const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
-  return tpl.replace('{{DOC_TITLE}}', esc(plain(title, 'zh') === plain(title, 'en') ? plain(title, 'en') : plain(title, 'zh') + ' / ' + plain(title, 'en')))
-    .replace('{{CRUMB}}', () => crumb)
-    .replace('{{TITLE}}', T(title, esc))
-    .replace('{{SUBTITLE}}', T(spec.subtitle) + head)
-    .replace('{{CARDS}}', () => toc + cards + prov)
-    .replace('{{FOOTER}}', spec.notes ? `<div class="notes"><div>${(Array.isArray(spec.notes) ? spec.notes : [spec.notes]).map(n => T(n)).join('<br>')}</div></div>` : '');
+  const title = spec.title || UI.defTitle, n = ts.length;
+  return page({ docTitle: bi(title), file: id ? id + '.html' : null, crumb, title, subtitle: T(spec.subtitle) + head,
+    desc: `${plain(title, 'zh')}：${n} 个状态转换的输入/输出 Cell、被检查的字段与错误码。 ${plain(title, 'en')}: input/output cells, checked fields and error codes for ${n} state transition${n === 1 ? '' : 's'}.`,
+    cards: toc + FLOW_LEGEND + cards + examples + prov,
+    footer: spec.notes ? `<div class="notes"><div>${(Array.isArray(spec.notes) ? spec.notes : [spec.notes]).map(n => T(n)).join('<br>')}</div></div>` : '' });
 }
 
 function build(inFile, outFile, id) {
@@ -145,7 +181,6 @@ function build(inFile, outFile, id) {
 
 // On-chain tx decoder page (same look & toggle)
 function buildTx(outFile) {
-  const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
   const extra = fs.readFileSync(path.join(__dirname, 'tx-template.html'), 'utf8');
   const css = extra.slice(extra.indexOf('<style>'), extra.indexOf('</style>') + 8);
   const lib = fs.readFileSync(path.join(__dirname, 'lib/ckb.js'), 'utf8'), app = fs.readFileSync(path.join(__dirname, 'tx-app.js'), 'utf8');
@@ -156,18 +191,18 @@ function buildTx(outFile) {
   const plugins = C.ordered().map(c => `// ---- contracts/${c.id}/plugin.js ----\n` + fs.readFileSync(c.plugin, 'utf8')).join('\n');
   const ids = C.ordered().map(c => c.id);
   const form = `<div class="card dec"><div class="bar">
-<select id="net" aria-label="RPC"><option value="https://mainnet.ckb.dev/rpc">mainnet · https://mainnet.ckb.dev/rpc</option><option value="https://testnet.ckb.dev/rpc">testnet · https://testnet.ckb.dev/rpc</option><option value="custom">custom RPC</option></select>
-<input id="hash" placeholder="0x… tx hash" aria-label="tx hash" spellcheck="false" autocomplete="off"><button class="btn" id="go">${T({ zh: '解码', en: 'Decode' }, esc)}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></div>
+<select id="net" aria-label="RPC"><option value="${RPC.mainnet}">mainnet · ${RPC.mainnet}</option><option value="${RPC.testnet}">testnet · ${RPC.testnet}</option><option value="custom">custom RPC</option></select>
+<input id="hash" placeholder="0x… tx hash" aria-label="tx hash" spellcheck="false" autocomplete="off"><button class="btn" id="go">${T({ zh: '解码', en: 'Decode' }, esc)}${GO}</button></div>
 <input id="custom" class="inp" style="display:none" placeholder="http://127.0.0.1:8114" aria-label="custom RPC" spellcheck="false">
 <details class="exs"><summary>${T({ zh: '示例交易', en: 'Example transactions' }, esc)}<span class="cnt">${EX.length}</span></summary><div class="exl">${Object.entries(EXG).map(([id, xs]) => `<div class="exg"><code>${esc(id)}</code><div>${xs.join('')}</div></div>`).join('')}</div></details>
-<p class="small dnote">${T({ zh: '按 lock / type script hash 分组；签名不校验（标记 ○）；数据仅从你选择的 RPC 读取。', en: 'Grouped by lock / type script hash; signatures are NOT verified (marked ○); data is read only from the RPC you choose.' })}</p>
+${legend([['<span class="ic ok">✓</span>', { zh: '检查通过', en: 'check passed' }], ['<span class="ic bad">✗</span>', { zh: '检查不通过', en: 'check failed' }], ['<span class="ic unk">○</span>', { zh: '未检查（签名不校验）', en: 'not checked (signatures are NOT verified)' }]], ' lg-tx')}
+<p class="small dnote">${T({ zh: '按 lock / type script hash 分组；数据仅从你选择的 RPC 读取。', en: 'Grouped by lock / type script hash; data is read only from the RPC you choose.' })}</p>
 <details class="more"><summary>${T({ zh: '已加载插件', en: 'Loaded plugins' }, esc)}<span class="cnt">${ids.length}</span></summary><p class="plg">${ids.map(x => `<code>${esc(x)}</code>`).join(' ')}</p></details></div>
 <div id="result"></div>`;
-  const html = tpl.replace('{{DOC_TITLE}}', esc(UI.txTitle.zh + ' / ' + UI.txTitle.en)).replace('{{CRUMB}}', '')
-    .replace('{{TITLE}}', T(UI.txTitle, esc)).replace('{{SUBTITLE}}', T({ zh: '输入交易 hash，解码为 cell 流转卡片并做无签名约束检查', en: 'Enter a tx hash to decode it into cell-flow cards with signature-free constraint checks' }))
-    .replace('{{CARDS}}', form).replace('{{FOOTER}}', '')
+  const html = page({ docTitle: bi(UI.txTitle), desc: UI.txSub.zh + '。 ' + UI.txSub.en + '.', file: 'tx.html', title: UI.txTitle, subtitle: T(UI.txSub), cards: form })
     .replace('</style>', () => css.replace('<style>', '').replace('</style>', '') + '</style>');
-    const scripts = `<script>window.CKB_META_HTML=${JSON.stringify(METAHTML).replace(/</g, '\\u003c')};</script><script>\n${lib.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${plugins.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${app.replace(/<\/script/gi, '<\\/script')}\n</script>`;
+  const pages = C.list().filter(c => c.spec).map(c => c.id); // decoder links a recognized script to its constraints page
+    const scripts = `<script>window.CKB_META_HTML=${JSON.stringify(METAHTML).replace(/</g, '\\u003c')};window.CKB_PAGES=${JSON.stringify(pages)};</script><script>\n${lib.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${plugins.replace(/<\/script/gi, '<\\/script')}\n</script><script>\n${app.replace(/<\/script/gi, '<\\/script')}\n</script>`;
   const html2 = html.replace('</body>', () => scripts + '</body>');
   fs.mkdirSync(path.dirname(outFile), { recursive: true }); fs.writeFileSync(outFile, html2); console.log(`(tx decoder) -> ${outFile}`);
 }
@@ -180,23 +215,23 @@ function main() {
     for (const c of require('./lib/contracts.js').list()) if (c.spec) items.push([c.id, build(c.spec, path.join(od, c.id + '.html'), c.id).title || c.id]);
     buildTx(path.join(od, 'tx.html'));
     items.push(['tx', UI.txTitle]);
-    const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8'), mh = MH(), counts = {};
+    const mh = MH(), counts = {}, st = {};
     const cards = items.filter(([n]) => n !== 'tx').map(([n, t]) => { const m = META.load(n) || {}, tags = META.tagsOf(m, pluginOf(n));
-      (m.contributors || []).forEach(u => counts[u] = (counts[u] || 0) + 1);
+      (m.contributors || []).forEach(u => counts[u] = (counts[u] || 0) + 1); st[mh.status(m)] = (st[mh.status(m)] || 0) + 1;
       const text = [n, plain(t, 'zh'), plain(t, 'en'), ...tags.map(x => META.TAX.tags[x] ? META.TAX.tags[x].zh + ' ' + META.TAX.tags[x].en : x)].join(' ').toLowerCase();
       return `<li class="ci" data-tags="${esc(tags.join(' '))}" data-text="${esc(text)}"><a href="${n}.html">${T(t, esc)}</a>${mh.badge(m)}<div class="mono">${esc(n)}</div>${mh.chips(tags)}${(m.contributors || []).length ? `<div class="avs">${m.contributors.map(mh.avatar).join('')}</div>` : ''}</li>`; }).join('');
     const groups = Object.entries(META.TAX.groups).map(([g, d]) => `<div class="fg"><b>${T(d.label, esc)}</b>${Object.entries(META.TAX.tags).filter(([, x]) => x.group === g).map(([k, x]) => `<button class="tag g-${g}" data-f="${k}" data-g="${g}" aria-pressed="false">${T({ zh: x.zh, en: x.en }, esc)}</button>`).join('')}</div>`).join('');
     const people = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    const go = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>`;
     const hero = `<section class="hero"><div class="hero-h"><span class="hero-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"></path><path d="M8 9h5M8 12h8M8 15h6"></path></svg></span>
 <div><h2>${T(UI.txTitle, esc)}</h2><p>${T({ zh: '粘贴交易 hash，一键拆成 cell 流转卡片，并按合约规则逐条检查', en: 'Paste a tx hash to split it into cell-flow cards and check each contract rule' }, esc)}</p></div></div>
-<div class="bar"><input id="hx" placeholder="0x… tx hash" aria-label="tx hash" spellcheck="false" autocomplete="off"><select id="hn" aria-label="network"><option value="https://mainnet.ckb.dev/rpc">mainnet</option><option value="https://testnet.ckb.dev/rpc">testnet</option></select><button class="btn" id="hg">${T({ zh: '解码', en: 'Decode' }, esc)}${go}</button></div>
+<div class="bar"><input id="hx" placeholder="0x… tx hash" aria-label="tx hash" spellcheck="false" autocomplete="off"><select id="hn" aria-label="network"><option value="${RPC.mainnet}">mainnet</option><option value="${RPC.testnet}">testnet</option></select><button class="btn" id="hg">${T({ zh: '解码', en: 'Decode' }, esc)}${GO}</button></div>
 <a class="hero-link" href="tx.html">${T({ zh: '打开完整解码器 →', en: 'Open full decoder →' }, esc)}</a></section>
 <script>(function(){var i=document.getElementById('hx'),n=document.getElementById('hn');function g(){var h=i.value.trim();if(!h)return i.focus();location.href='tx.html#'+new URLSearchParams({tx:h,rpc:n.value})}document.getElementById('hg').onclick=g;i.onkeydown=function(e){if(e.key==='Enter')g()}})();</script>`;
     const list = hero + `<section class="browse"><div class="sh"><h2>${T(UI.contracts, esc)}</h2></div>
 <div class="card fpanel"><div class="search"><input id="q" class="inp" type="search" placeholder="search / 搜索 (id, name, tag)" aria-label="search" autocomplete="off" spellcheck="false"><kbd class="kbd">/</kbd></div>
 <div class="filters">${groups}</div><div id="projsel">${Object.keys(mh.PROJ).filter(k => META.TAX.tags[k]).map(mh.projectPanel).join('')}</div></div>
-<div class="cntrow"><span id="cnt"></span><button id="copylink" class="copyl" type="button" title="copy a link to this filtered view">${T({ zh: '复制链接', en: 'Copy link' }, esc)}<span class="okm">${T({ zh: ' ✓ 已复制', en: ' ✓ copied' }, esc)}</span></button></div><ul class="cards">${cards}</ul></section>
+<div class="cntrow"><span id="cnt"></span><button id="copylink" class="copyl" type="button" title="copy a link to this filtered view">${T({ zh: '复制链接', en: 'Copy link' }, esc)}<span class="okm">${T({ zh: ' ✓ 已复制', en: ' ✓ copied' }, esc)}</span></button></div>
+${legend(Object.keys(mh.BADGE).filter(s => st[s]).map(s => [mh.badgeOf(s), { zh: mh.MEANING[s][0], en: mh.MEANING[s][1] }]), ' lg-b')}<ul class="cards">${cards}</ul></section>
 <div class="card" id="skill"><h2>${T({ zh: '一句话让 AI 生成', en: 'One sentence to your AI agent' }, esc)}</h2><p class="small">${T({ zh: '填入合约仓库 URL 或本地路径，复制这句话发给任意 coding agent（Claude Code / Cursor / Codex…），无需安装。', en: 'Fill in a contract repo URL or local path, copy the sentence and paste it to any coding agent (Claude Code / Cursor / Codex…). No install needed.' }, esc)}</p>
 <input id="sku" class="inp" placeholder="https://github.com/owner/repo  or  /path/to/local/repo" aria-label="repo url" spellcheck="false">
 <div class="code"><pre id="skp"></pre><button id="skc" class="copyl" type="button">${T({ zh: '复制', en: 'Copy' }, esc)}<span class="okm"> ✓</span></button></div>
@@ -218,9 +253,18 @@ q.oninput=function(){run();toURL()};window.addEventListener('popstate',fromURL);
 document.addEventListener('keydown',function(e){var t=e.target;if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName||'')&&!t.isContentEditable){e.preventDefault();q.focus()}});
 var cp=document.getElementById('copylink');if(cp)cp.onclick=function(){var url=location.href,done=function(){cp.setAttribute('data-ok','1');setTimeout(function(){cp.removeAttribute('data-ok')},1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done,function(){prompt('URL',url)});else prompt('URL',url)};
 fromURL()})();</script>`;
-    fs.writeFileSync(path.join(od, 'index.html'), tpl.replace('{{DOC_TITLE}}', esc(UI.indexTitle.zh + ' / ' + UI.indexTitle.en))
-      .replace('{{CRUMB}}', '').replace('{{TITLE}}', T(UI.indexTitle, esc)).replace('{{SUBTITLE}}', () => `<p class="lead">${T(UI.indexSub, esc)}</p>`)
-      .replace('{{CARDS}}', () => list).replace('{{FOOTER}}', ''));
+    fs.writeFileSync(path.join(od, 'index.html'), page({ docTitle: bi(UI.indexTitle), desc: UI.indexSub.zh + ' ' + UI.indexSub.en, file: 'index.html',
+      title: UI.indexTitle, subtitle: `<p class="lead">${T(UI.indexSub, esc)}</p>`, cards: list }));
+    // GitHub Pages serves 404.html for any missing path, at any depth: <base> keeps the relative links working
+    fs.writeFileSync(path.join(od, '404.html'), page({ docTitle: bi(UI.notFound), desc: UI.notFound.zh + ' / ' + UI.notFound.en, file: null,
+      head: `<meta name="robots" content="noindex">\n<base href="${attr(SITE)}">`, title: UI.notFound,
+      subtitle: `<p class="lead">${T({ zh: '链接可能已失效，或者合约改了名字。可以在首页搜一下：', en: 'The link may be broken, or the contract was renamed. Try searching the index:' }, esc)}</p>`,
+      cards: `<div class="card nf"><div class="bar"><input id="nq" placeholder="id / name / tag" aria-label="search" spellcheck="false" autocomplete="off"><button class="btn" id="ng">${T({ zh: '搜索', en: 'Search' }, esc)}${GO}</button></div>
+<div class="nf-a"><a class="copyl" href="index.html">${T({ zh: '返回首页', en: 'Back to the index' }, esc)}</a><a class="copyl" href="tx.html">${T(UI.txTitle, esc)}</a></div></div>
+<script>(function(){var q=document.getElementById('nq'),w='';try{w=decodeURIComponent(location.pathname.split('/').pop()||'').replace(/\.html?$/i,'')}catch(e){}if(w&&w!=='404')q.value=w;function s(){location.href=new URL('index.html'+(q.value.trim()?'?q='+encodeURIComponent(q.value.trim()):''),document.baseURI).href}document.getElementById('ng').onclick=s;q.onkeydown=function(e){if(e.key==='Enter')s()}})();</script>` }));
+    const urls = ['', 'tx.html', ...items.filter(([n]) => n !== 'tx').map(([n]) => n + '.html')];
+    fs.writeFileSync(path.join(od, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `<url><loc>${esc(SITE + u)}</loc></url>`).join('\n')}\n</urlset>\n`);
+    fs.copyFileSync(path.join(__dirname, 'assets', 'og.png'), path.join(od, 'og.png')); // Open Graph image (source: assets/og.html)
   } else {
     build(a[0], a[1] || path.join('out', path.basename(a[0]).replace(/\.(json|ya?ml)$/i, '') + '.html'));
   }

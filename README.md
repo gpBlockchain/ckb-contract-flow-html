@@ -13,7 +13,7 @@
 ### 用法
 
 ```bash
-node gen.js --all out                 # 构建 contracts/*/spec.json + tx.html + index.html
+node gen.js --all out                 # 构建 contracts/*/spec.json + tx.html + index.html + 404.html + sitemap.xml
 node gen.js contracts/sudt/spec.json my.html   # 单个 spec
 node scripts/new-contract.js <id>     # 新合约骨架（见 docs/ADD_CONTRACT.md）
 node scripts/test-tx.js [id|txhash…]  # 真实交易测试（contracts/*/tests.json）
@@ -30,7 +30,7 @@ node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在�
 
 每个目录：`spec.json`（静态约束页）、`plugin.js`（tx.html 解码插件）、`tests.json`（真实交易测试）。新增合约请看 **[docs/ADD_CONTRACT.md](docs/ADD_CONTRACT.md)**。YAML 示例：`docs/example-spec.yaml`。
 
-推送到 `main` 后，`.github/workflows/pages.yml` 构建所有 spec 并发布到 GitHub Pages（需在 Settings → Pages 把 Source 设为 *GitHub Actions*）。
+推送到 `main` 后，`.github/workflows/pages.yml` 构建所有 spec 并发布到 GitHub Pages（需在 Settings → Pages 把 Source 设为 *GitHub Actions*）。canonical / Open Graph / sitemap 里的绝对地址默认指向 `https://gpblockchain.github.io/ckb-contract-flow-html/`，fork 部署时用 `SITE_URL=https://<you>.github.io/<repo>/ node gen.js --all out` 覆盖。
 
 ### Spec 格式
 
@@ -98,13 +98,13 @@ Zero dependencies; Node.js ≥ 16.
 ### Usage
 
 ```bash
-node gen.js --all out                 # build contracts/*/spec.json + tx.html + index.html
+node gen.js --all out                 # build contracts/*/spec.json + tx.html + index.html + 404.html + sitemap.xml
 node scripts/new-contract.js <id>     # scaffold a contract (see docs/ADD_CONTRACT.md)
 node scripts/test-tx.js [id|txhash…]  # real-tx tests (contracts/*/tests.json)
 node scripts/check.js                 # tag balance + bilingual coverage (run from repo root)
 ```
 
-Pushing to `main` runs `.github/workflows/pages.yml`, which builds every spec and deploys `out/` to GitHub Pages (set Settings → Pages → Source to *GitHub Actions*).
+Pushing to `main` runs `.github/workflows/pages.yml`, which builds every spec and deploys `out/` to GitHub Pages (set Settings → Pages → Source to *GitHub Actions*). Absolute URLs in canonical / Open Graph / sitemap default to `https://gpblockchain.github.io/ckb-contract-flow-html/`; forks override them with `SITE_URL=https://<you>.github.io/<repo>/ node gen.js --all out`.
 
 ### Spec format
 
@@ -157,8 +157,9 @@ Then save it as `contracts/<id>/spec.json` (full procedure: docs/ADD_CONTRACT.md
 ### Layout
 
 ```
-gen.js                 generator (static pages + tx.html + index)
+gen.js                 generator (static pages + tx.html + index + 404.html + sitemap.xml)
 template.html          page template
+assets/og.html, og.png social preview image (og.png is a 1200×630 render of og.html; copied to out/)
 tx-template.html, tx-app.js   tx decoder UI (generic rendering)
 lib/ckb.js             core: blake2b, molecule, script hash, RPC, fetching, grouping, plugin registry
 lib/contracts.js       discovers contracts/*/ (Node), plugin order via // @requires

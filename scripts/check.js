@@ -1,6 +1,6 @@
 // tag balance + bilingual coverage (no jsdom)
-const fs=require('fs');const VOID=new Set(['meta','br','input','img','hr','link']);let bad=0;
-for(const f of fs.readdirSync('out')){const h=fs.readFileSync('out/'+f,'utf8');
+const fs=require('fs');const VOID=new Set(['meta','br','input','img','hr','link','base']);let bad=0;
+for(const f of fs.readdirSync('out').filter(f=>f.endsWith('.html'))){const h=fs.readFileSync('out/'+f,'utf8');
  const body=h.replace(/<button id="lang"[\s\S]*?<\/button>/,'').replace(/<script[\s\S]*?<\/script>/g,'').replace(/<style[\s\S]*?<\/style>/g,'').replace(/<title>[\s\S]*?<\/title>/,'').replace(/<!DOCTYPE[^>]*>/,'');
  const st=[];let mis=0,zhOut=0,enOnly=0,zhCnt=0,enCnt=0;const re=/<(\/?)([a-zA-Z0-9]+)([^>]*)>|([^<]+)/g;let m;
  while(m=re.exec(body)){

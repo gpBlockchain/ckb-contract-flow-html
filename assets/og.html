@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!-- Source of assets/og.png, the Open Graph / social preview image (1200×630) that gen.js copies to out/og.png.
+     After editing, re-render it: open this file with a 1200×630 viewport (device scale 1) and save a screenshot as assets/og.png. -->
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>og</title>
+<style>
+:root{--bg:#f7f7f8;--surface:#fff;--surface-2:#f9f9fb;--line:#e5e6ea;--line-2:#eeeff2;--fg:#16181d;--fg-2:#3b3f48;--fg-3:#646872;
+--ac:#3e63dd;--ac-fg:#3a5bc7;--ac-bg:#eef2fe;--ac-line:#c9d5fb;--in:#c54a00;--in-bg:#fffaf5;--in-line:#f6dcc6;--out:#18794e;--out-bg:#f5fbf7;--out-line:#cce8d6;
+--hl-bg:#fff0b0;--hl-fg:#7f4500;--hl-line:#ecc75a;--err:#c9252b;--err-bg:#fff1f1;--err-line:#f5cccc;
+--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Noto Sans SC",monospace}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{width:1200px;height:630px;overflow:hidden;background:radial-gradient(80% 110% at 0% 0%,var(--ac-bg) 0%,transparent 62%),var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 492px;gap:44px;align-items:center;height:100%;padding:0 64px 0 72px}
+.brand{display:flex;align-items:center;gap:14px;font-size:24px;font-weight:650;letter-spacing:-.01em}
+.brand svg{width:44px;height:44px;border-radius:13px;box-shadow:0 2px 6px rgba(16,24,40,.18)}
+h1{margin:36px 0 18px;font-size:62px;line-height:1.14;font-weight:750;letter-spacing:-.02em}
+.en{margin:0;color:var(--fg-3);font-size:24px;line-height:1.45}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:32px}
+.pill{padding:5px 13px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--fg-2);font-size:16px;font-weight:500}
+.card{padding:24px;border:1px solid var(--line);border-radius:22px;background:var(--surface);box-shadow:0 2px 4px rgba(16,24,40,.04),0 24px 48px -16px rgba(16,24,40,.18)}
+.h{display:flex;align-items:center;gap:12px;margin-bottom:18px;font-size:21px;font-weight:650}
+.tg{padding:3px 10px;border:1px solid var(--ac-line);border-radius:9px;background:var(--ac-bg);color:var(--ac-fg);font:600 16px/1.3 var(--mono)}
+.flow{display:flex;align-items:center;gap:10px}
+.col{flex:1;padding:10px;border:1px solid;border-radius:14px}
+.cin{border-color:var(--in-line);background:var(--in-bg)}.cout{border-color:var(--out-line);background:var(--out-bg)}
+.colh{display:flex;align-items:center;gap:7px;margin:0 2px 8px;font:650 12px/1 var(--sans);letter-spacing:.08em}
+.colh::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
+.cin .colh{color:var(--in)}.cout .colh{color:var(--out)}
+.cell{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font:14px/1.7 var(--mono);white-space:pre}
+.hl{padding:1px 4px;border-radius:4px;background:var(--hl-bg);color:var(--hl-fg);font-weight:600;box-shadow:inset 0 -1px 0 var(--hl-line)}
+.arrow{flex:none;display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--fg-3)}
+.arrow svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.lims{margin-top:16px;border-top:1px solid var(--line)}
+.lim{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:12px;padding:9px 2px;border-bottom:1px solid var(--line-2);font-size:15px;color:var(--fg-2)}
+.lim:last-child{border-bottom:0}
+.lim b{color:var(--fg);font:600 14px var(--mono)}
+.e{padding:1px 8px;border:1px solid var(--err-line);border-radius:7px;background:var(--err-bg);color:var(--err);font:500 13px/1.5 var(--mono)}
+</style></head><body>
+<div class="wrap">
+<div>
+<div class="brand"><svg viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="8" fill="#3e63dd"></rect><rect x="6.3" y="8.3" width="6.4" height="11.4" rx="2" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="1.6"></rect><rect x="15.3" y="8.3" width="6.4" height="11.4" rx="2" fill="#fff"></rect></svg>CKB Contract Flow</div>
+<h1>CKB 合约<br>Cell 流转约束</h1>
+<p class="en">Cell-flow constraints of CKB contracts: inputs → outputs, checked fields and error codes.</p>
+<div class="pills"><span class="pill">输入 → 输出 Cell</span><span class="pill">被检查的字段</span><span class="pill">错误码</span><span class="pill">链上交易解码</span></div>
+</div>
+<div class="card">
+<div class="h"><span class="tg">0 → 1</span>Deposit · 存款</div>
+<div class="flow">
+<div class="col cin"><div class="colh">INPUTS</div><div class="cell">Cell{
+  capacity: X,
+  type: null
+}</div></div>
+<div class="arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></div>
+<div class="col cout"><div class="colh">OUTPUTS</div><div class="cell">Cell{
+  type: <span class="hl">DAO</span>,
+  data: <span class="hl">0x00…00</span>
+}</div></div>
+</div>
+<div class="lims">
+<div class="lim"><b>type.args</b><span>must be empty</span><span class="e">-2</span></div>
+<div class="lim"><b>data</b><span>exactly 8 bytes, all zero</span><span class="e">-19</span></div>
+<div class="lim"><b>capacity</b><span>Σ outputs ≤ Σ inputs</span><span class="e">-15</span></div>
+</div>
+</div>
+</div>
+</body></html>

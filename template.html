@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-CN" data-lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f7f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0c0e" media="(prefers-color-scheme: dark)">
 <title>{{DOC_TITLE}}</title>
+{{HEAD}}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='8' fill='%233e63dd'/%3E%3Crect x='6.3' y='8.3' width='6.4' height='11.4' rx='2' fill='none' stroke='%23fff' stroke-opacity='.75' stroke-width='1.6'/%3E%3Crect x='15.3' y='8.3' width='6.4' height='11.4' rx='2' fill='%23fff'/%3E%3C/svg%3E">
 <style>
 /* ---- tokens (light) ---- */
@@ -88,6 +91,31 @@ h1{margin:0 0 10px;font-size:34px;line-height:1.2;font-weight:700;letter-spacing
 .toc a{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px 0 4px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg-2);font-size:13px;font-weight:500;transition:border-color .15s,color .15s}
 .toc a:hover{border-color:var(--line-strong);color:var(--fg);text-decoration:none}
 .toc .tg{height:22px;padding:0 6px;font-size:11.5px;border-radius:6px}
+/* legend: how to read the cards, what badges and check marks mean */
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;margin:0 0 20px;padding:10px 16px;border:1px dashed var(--line-strong);border-radius:12px;color:var(--fg-3);font-size:12.5px;line-height:1.5}
+.lg{display:inline-flex;align-items:center;gap:8px}
+.legend .hl{font:600 12px/1.4 var(--mono)}
+.legend .e{margin:0;padding:0 6px;font-size:11.5px}
+.sw{flex:none;width:11px;height:11px;border:1.5px solid currentColor;border-radius:3px}
+.sw-in{color:var(--in);background:var(--in-bg)}.sw-out{color:var(--out);background:var(--out-bg)}
+.lg-b{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:8px 24px;margin:0 0 16px}
+.lg-b .lg{align-items:flex-start}
+.lg-b .badge{flex:none;margin-top:1px}
+.lg-tx{margin:14px 0 0}
+.bm{color:var(--fg-2)}
+/* real transactions on contract pages */
+.txl{list-style:none;margin:14px 0 0;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.txl li{display:flex}
+.txl li+li{border-top:1px solid var(--line-2)}
+.txa{flex:1 1 auto;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:14px;padding:10px 14px;color:var(--fg);transition:background .15s}
+.txa:hover,.exp:hover{background:var(--surface-2);text-decoration:none}
+.txn{font-size:14px;font-weight:500;overflow-wrap:anywhere}
+.txa code{color:var(--fg-3);font-size:12px}
+.txa>.tag{justify-self:start}
+.txa .go{display:inline-flex;align-items:center;gap:4px;color:var(--ac-fg);font-size:12.5px;font-weight:500;white-space:nowrap}
+.txa .go svg,.exp svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.exp{flex:none;display:grid;place-items:center;width:44px;border-left:1px solid var(--line-2);color:var(--fg-4)}
+.exp:hover{color:var(--fg)}
 /* ---- cards ---- */
 .card{position:relative;margin:0 0 20px;padding:28px 32px 30px;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--sh-1)}
 .card>h2{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:0 0 22px;font-size:19px;line-height:1.35;font-weight:650;letter-spacing:-.012em}
@@ -209,7 +237,7 @@ h1{margin:0 0 10px;font-size:34px;line-height:1.2;font-weight:700;letter-spacing
 .btn:hover{background:var(--ac-hover)}
 .btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .copyl{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg-2);font-size:12.5px;font-weight:500;cursor:pointer;transition:border-color .15s,color .15s}
-.copyl:hover{border-color:var(--line-strong);color:var(--fg)}
+.copyl:hover{border-color:var(--line-strong);color:var(--fg);text-decoration:none}
 .copyl .okm{display:none}
 .copyl[data-ok]{border-color:color-mix(in srgb,var(--ok) 40%,transparent);color:var(--ok)}
 .copyl[data-ok] .okm{display:inline}
@@ -267,6 +295,10 @@ button.tag[aria-pressed=true]{border-color:var(--fg);background:var(--fg);color:
 .people{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;padding:0}
 .people li{display:inline-flex;align-items:center;gap:8px;padding:4px 6px 4px 4px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);font-size:13.5px}
 .people .k{min-width:20px;padding:0 6px;border-radius:999px;background:var(--surface-3);color:var(--fg-3);font:600 11.5px/20px var(--sans);text-align:center;font-variant-numeric:tabular-nums}
+/* ---- 404 ---- */
+.nf .bar{max-width:560px}
+.nf-a{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.nf-a .copyl{height:34px;padding:0 14px;font-size:13px}
 /* ---- responsive ---- */
 @media (max-width:860px){
  .flow{flex-direction:column;gap:8px}
@@ -300,6 +332,12 @@ button.tag[aria-pressed=true]{border-color:var(--fg);background:var(--fg);color:
  .fg{padding-left:0}
  .fg>b{position:static;width:100%;line-height:1.4}
  .notes{padding:14px 16px}
+ .legend{gap:6px 16px;padding:10px 12px}
+ .txa{grid-template-columns:minmax(0,1fr) auto;row-gap:4px}
+ .txn{grid-column:1/-1}
+ .txa code{display:none}
+ .txa .go{justify-self:end}
+ .txa .go [data-l]{display:none}
 }
 @media (max-width:640px){
  .bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:0;border:0;background:none;box-shadow:none}
