@@ -8,11 +8,11 @@
   "contributors": [],
   "source": {
     "repo": "https://github.com/nervosnetwork/fiber-scripts",
-    "commit": "e7e1c9ba512960819b852362b1931991e3f4124a",
+    "commit": "6bfcebfb62f2eee2af2cec881eaa795595268c58",
     "paths": [
       "contracts/funding-lock/src/main.rs"
     ],
-    "commit_note": "commit read when writing this spec",
+    "commit_note": "same fiber-scripts HEAD as commitment-lock; funding-lock source and data hash unchanged",
     "binary": {
       "status": "unverified",
       "per": [
@@ -20,7 +20,9 @@
           "data_hash": "0x17b1910fbcfdfc146ee2ed05587f0e862b799d33ca3c8e1c52d18f2f67716e47",
           "evidence": [
             "listed in deployment/mainnet/migrations/2026-01-14-030304.json",
-            "listed in deployment/testnet/migrations/2025-11-25-060540.json"
+            "listed in deployment/mainnet/migrations/2026-11-09-031528.json",
+            "listed in deployment/testnet/migrations/2025-11-25-060540.json",
+            "listed in deployment/testnet/migrations/2026-10-21-013837.json"
           ],
           "matches_commit": false
         }
@@ -80,5 +82,5 @@
       "deploy_block": 19249889
     }
   ],
-  "checked_at": "2026-10-20"
+  "checked_at": "2026-11-09"
 }

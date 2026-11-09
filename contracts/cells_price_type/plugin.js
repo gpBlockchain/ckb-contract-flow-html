@@ -1,4 +1,4 @@
-// cells price-cell-type — LusoCryptoLabs/cells-contracts contracts/price-cell-type/src/main.rs + cells-core parse_price_factor / price_step_ok @34dad3c
+// cells price-cell-type — LusoCryptoLabs/cells-contracts contracts/price-cell-type/src/main.rs + cells-core parse_price_factor / price_step_ok @6d29dab
 // code_hash: cellula-sdk@0.2.1 dist/deployments.js (official SDK) + docs/TRUST.md (mainnet)
 // @requires type_id
 (function (R) {

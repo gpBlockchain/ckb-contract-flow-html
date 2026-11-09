@@ -8,27 +8,29 @@
   "contributors": [],
   "source": {
     "repo": "https://github.com/LusoCryptoLabs/cells-contracts",
-    "commit": "34dad3c2102b23b974ef05cc9ecf3021ffd469b9",
+    "commit": "6d29dab2770fa0980e13b9cbeefff0c844ef4101",
     "paths": [
       "contracts/account-cell-type/src/main.rs",
       "crates/cells-core/src/lib.rs"
     ],
-    "commit_note": "exact commit read when writing spec/plugin (default-branch HEAD, 2026-09-28). Deployment constants from cellula-sdk@0.2.1 dist/deployments.js and docs/TRUST.md.",
+    "commit_note": "commit read after #5 plain-payment fix (2026-11-06 mainnet upgrade); docs/TRUST.md hashes",
     "binary": {
       "status": "unverified",
       "per": [
         {
-          "data_hash": "0x99ea60a4369ed3d596338b66d6818710a1d047758f478dd854dd814b786aa088",
-          "evidence": [],
+          "data_hash": "0xe44bd56626ef4d17d8a62c6819924f213e5151836a60fdbc630645cdd37c7d98",
+          "evidence": [
+            "listed in README.md"
+          ],
           "matches_commit": false
         },
         {
-          "data_hash": "0x11d8695e47f02b5cf96ae7cf5ab870bea08a04aa84231229b8989883220a352b",
+          "data_hash": "0x7fbd4d36d9b467d894919ba5cfdf1e7040223535178c671931a98267eeccff06",
           "evidence": [],
           "matches_commit": false
         }
       ],
-      "note": "Live mainnet code cell (upgraded 2026-09-28 21:00Z, block 20583638) has data hash 0x99ea…a088, which docs/TRUST.md at this commit lists; README and tests/fixtures still show the pre-upgrade 0xf86b…ae30 (the fixture blake2b = 0xf86b…). No artifact at this commit hashes to 0x99ea…; reproducible build (gcc 13.2 + rustc 1.96 + 3 env values) not attempted. Testnet 0x11d8…352b also unverified."
+      "note": "no binary or checksum at the recorded commit matched the deployed data hash (reproducible build not attempted); mainnet data hash matches docs/TRUST.md at recorded commit (script does not treat TRUST.md as checksum evidence); testnet hash also upgraded on-chain (TRUST.md testnet table may lag)"
     }
   },
   "deployments": [
@@ -40,22 +42,22 @@
       "cell_dep": {
         "out_point": {
           "index": "0x0",
-          "tx_hash": "0x3072417e797a39a6ead341947dae3350b47a1b7d6571b326d3d7f8fe7677bf0b"
+          "tx_hash": "0x0d48aa833f97aa1c10f803c03a58e32b4184556f0ddba3137b014aa48df55109"
         },
         "dep_type": "code"
       },
       "code_cell": {
         "index": "0x0",
-        "tx_hash": "0x3072417e797a39a6ead341947dae3350b47a1b7d6571b326d3d7f8fe7677bf0b"
+        "tx_hash": "0x0d48aa833f97aa1c10f803c03a58e32b4184556f0ddba3137b014aa48df55109"
       },
       "type_script": {
         "args": "0x51709700704ca6cb5dd695e42b9637bccbbd28bb6c29dd6d31dab9aab3de9a5a",
         "code_hash": "0x00000000000000000000000000000000000000000000000000545950455f4944",
         "hash_type": "type"
       },
-      "data_hash": "0x99ea60a4369ed3d596338b66d6818710a1d047758f478dd854dd814b786aa088",
-      "deploy_tx": "0x3072417e797a39a6ead341947dae3350b47a1b7d6571b326d3d7f8fe7677bf0b",
-      "deploy_block": 20583638
+      "data_hash": "0xe44bd56626ef4d17d8a62c6819924f213e5151836a60fdbc630645cdd37c7d98",
+      "deploy_tx": "0x0d48aa833f97aa1c10f803c03a58e32b4184556f0ddba3137b014aa48df55109",
+      "deploy_block": 20943808
     },
     {
       "network": "testnet",
@@ -65,23 +67,23 @@
       "cell_dep": {
         "out_point": {
           "index": "0x0",
-          "tx_hash": "0xe3c204947c3f457410af242747146b3330a05d9f02d095b2636ac9368a3acce4"
+          "tx_hash": "0x1d791fd5f8edfa9199346ff8ec19d0d341a3adb4f43c26ea32a4d59b94fc1eab"
         },
         "dep_type": "code"
       },
       "code_cell": {
         "index": "0x0",
-        "tx_hash": "0xe3c204947c3f457410af242747146b3330a05d9f02d095b2636ac9368a3acce4"
+        "tx_hash": "0x1d791fd5f8edfa9199346ff8ec19d0d341a3adb4f43c26ea32a4d59b94fc1eab"
       },
       "type_script": {
         "args": "0x4b33dfe66b3f11ca7ac2626bd538d2933f3ebfda237c2c2a185a961b2d7a98f0",
         "code_hash": "0x00000000000000000000000000000000000000000000000000545950455f4944",
         "hash_type": "type"
       },
-      "data_hash": "0x11d8695e47f02b5cf96ae7cf5ab870bea08a04aa84231229b8989883220a352b",
-      "deploy_tx": "0xe3c204947c3f457410af242747146b3330a05d9f02d095b2636ac9368a3acce4",
-      "deploy_block": 22559039
+      "data_hash": "0x7fbd4d36d9b467d894919ba5cfdf1e7040223535178c671931a98267eeccff06",
+      "deploy_tx": "0x1d791fd5f8edfa9199346ff8ec19d0d341a3adb4f43c26ea32a4d59b94fc1eab",
+      "deploy_block": 22975812
     }
   ],
-  "checked_at": "2026-10-21"
+  "checked_at": "2026-11-09"
 }
