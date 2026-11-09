@@ -176,15 +176,15 @@
             "en": "seller"
           },
           "body": {
-            "zh": "纯输出（无 type），lock hash = seller：≥ Σ(price − fee + deposit)（该卖家所有挂单）",
-            "en": "pure outputs (no type) to seller lock hash: ≥ Σ(price − fee + deposit) over that seller’s offers"
+            "zh": "纯输出（无 type 且 data 为空），lock hash = seller：≥ Σ(price − fee + deposit)（该卖家所有挂单）",
+            "en": "pure outputs (no type and empty data) to seller lock hash: ≥ Σ(price − fee + deposit) over that seller’s offers"
           }
         },
         {
           "label": "treasury",
           "body": {
-            "zh": "纯输出 ≥ Σ fee（本交易所有卖家不在场的挂单）",
-            "en": "pure outputs ≥ Σ fee (every offer in the tx whose seller is absent)"
+            "zh": "纯输出（无 type 且 data 为空）≥ Σ fee（本交易所有卖家不在场的挂单）",
+            "en": "pure outputs (no type and empty data) ≥ Σ fee (every offer in the tx whose seller is absent)"
           }
         }
       ],
@@ -301,16 +301,16 @@
             "en": "seller payout"
           },
           "cond": {
-            "zh": "纯输出合计 ≥ 应得",
-            "en": "pure outputs total ≥ owed"
+            "zh": "纯输出（无 type 且 data 为空）合计 ≥ 应得",
+            "en": "pure outputs (no type and empty data) total ≥ owed"
           },
           "err": "3"
         },
         {
           "field": "treasury",
           "cond": {
-            "zh": "纯输出合计 ≥ Σ fee（卖家即 treasury 时为 0）",
-            "en": "pure outputs total ≥ Σ fee (zero if seller is the treasury)"
+            "zh": "纯输出（无 type 且 data 为空）合计 ≥ Σ fee（卖家即 treasury 时为 0）",
+            "en": "pure outputs (no type and empty data) total ≥ Σ fee (zero if seller is the treasury)"
           },
           "err": "4"
         }

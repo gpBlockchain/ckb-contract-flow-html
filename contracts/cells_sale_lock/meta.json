@@ -8,27 +8,29 @@
   "contributors": [],
   "source": {
     "repo": "https://github.com/LusoCryptoLabs/cells-contracts",
-    "commit": "34dad3c2102b23b974ef05cc9ecf3021ffd469b9",
+    "commit": "6d29dab2770fa0980e13b9cbeefff0c844ef4101",
     "paths": [
       "contracts/sale-lock/src/main.rs",
       "crates/cells-core/src/lib.rs"
     ],
-    "commit_note": "exact commit read when writing spec/plugin (default-branch HEAD, 2026-09-28). Deployment constants from cellula-sdk@0.2.1 dist/deployments.js and docs/TRUST.md.",
+    "commit_note": "commit read after #5 plain-payment fix (2026-11-06 mainnet upgrade); docs/TRUST.md hashes",
     "binary": {
       "status": "unverified",
       "per": [
         {
-          "data_hash": "0x57cdfaa46bc62012315f7c64719f01b43accb66bfc091183a751d59309da3068",
-          "evidence": [],
+          "data_hash": "0x00744b0fbf48cf261c0263843f38099ce0d66c57695f9e7330b80299fe20be61",
+          "evidence": [
+            "listed in README.md"
+          ],
           "matches_commit": false
         },
         {
-          "data_hash": "0x6858391c112dcea08e7a61d7a492fd948946cab0732dfddf39e67493f2734fd4",
+          "data_hash": "0xa5c166bb3a317d49afa4b3bb1efb9ce34cea2b080b3dc27fbf698e2ca0d5ee69",
           "evidence": [],
           "matches_commit": false
         }
       ],
-      "note": "Live mainnet code cell (upgraded block 20583642) has data hash 0x57cd…3068, listed in docs/TRUST.md; README/fixture still show pre-upgrade 0xf116…2a93. Reproducible build not attempted. Testnet 0x6858…4fd4 unverified."
+      "note": "no binary or checksum at the recorded commit matched the deployed data hash (reproducible build not attempted); mainnet data hash matches docs/TRUST.md at recorded commit (script does not treat TRUST.md as checksum evidence); testnet hash also upgraded on-chain (TRUST.md testnet table may lag)"
     }
   },
   "deployments": [
@@ -40,22 +42,22 @@
       "cell_dep": {
         "out_point": {
           "index": "0x0",
-          "tx_hash": "0x020f7f9e5607a8e7d1e94d4c1f3d5c52c204d2f53fb097f43ce7f524d2edcabb"
+          "tx_hash": "0xe72ac6421e9b9cd582dda77383ca0f100d7e05f1f08ae191d1f3b569f35ab7da"
         },
         "dep_type": "code"
       },
       "code_cell": {
         "index": "0x0",
-        "tx_hash": "0x020f7f9e5607a8e7d1e94d4c1f3d5c52c204d2f53fb097f43ce7f524d2edcabb"
+        "tx_hash": "0xe72ac6421e9b9cd582dda77383ca0f100d7e05f1f08ae191d1f3b569f35ab7da"
       },
       "type_script": {
         "args": "0x05238ca98c4bc67cb6592707ba40301141344b53687f73d73f702f0cc2d7985f",
         "code_hash": "0x00000000000000000000000000000000000000000000000000545950455f4944",
         "hash_type": "type"
       },
-      "data_hash": "0x57cdfaa46bc62012315f7c64719f01b43accb66bfc091183a751d59309da3068",
-      "deploy_tx": "0x020f7f9e5607a8e7d1e94d4c1f3d5c52c204d2f53fb097f43ce7f524d2edcabb",
-      "deploy_block": 20583642
+      "data_hash": "0x00744b0fbf48cf261c0263843f38099ce0d66c57695f9e7330b80299fe20be61",
+      "deploy_tx": "0xe72ac6421e9b9cd582dda77383ca0f100d7e05f1f08ae191d1f3b569f35ab7da",
+      "deploy_block": 20943808
     },
     {
       "network": "testnet",
@@ -65,23 +67,23 @@
       "cell_dep": {
         "out_point": {
           "index": "0x0",
-          "tx_hash": "0x03507c8cbe51212d10bda95575a121afeccdbe156366c7a6db95a3e90878b0fc"
+          "tx_hash": "0x279ab20ee45be9a58be6cb5cfecfc16d368ca03b62e6f115f48a55e0bb161e40"
         },
         "dep_type": "code"
       },
       "code_cell": {
         "index": "0x0",
-        "tx_hash": "0x03507c8cbe51212d10bda95575a121afeccdbe156366c7a6db95a3e90878b0fc"
+        "tx_hash": "0x279ab20ee45be9a58be6cb5cfecfc16d368ca03b62e6f115f48a55e0bb161e40"
       },
       "type_script": {
         "args": "0xd02a9ec3afff1b51bcb54e46ff7f79a7a587bb69e5ecf2bc1454c842ea749585",
         "code_hash": "0x00000000000000000000000000000000000000000000000000545950455f4944",
         "hash_type": "type"
       },
-      "data_hash": "0x6858391c112dcea08e7a61d7a492fd948946cab0732dfddf39e67493f2734fd4",
-      "deploy_tx": "0x03507c8cbe51212d10bda95575a121afeccdbe156366c7a6db95a3e90878b0fc",
-      "deploy_block": 22559042
+      "data_hash": "0xa5c166bb3a317d49afa4b3bb1efb9ce34cea2b080b3dc27fbf698e2ca0d5ee69",
+      "deploy_tx": "0x279ab20ee45be9a58be6cb5cfecfc16d368ca03b62e6f115f48a55e0bb161e40",
+      "deploy_block": 22975820
     }
   ],
-  "checked_at": "2026-10-21"
+  "checked_at": "2026-11-09"
 }

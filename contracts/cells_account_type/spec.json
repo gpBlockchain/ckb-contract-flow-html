@@ -315,7 +315,7 @@
             "zh": "output[2] treasury",
             "en": "output[2] treasury"
           },
-          "body": "Cell{\n  capacity: {{Σ pure ≥ fee×factor − referral + sale fees owed}},\n  lock: {{lock hash == TREASURY_LOCK_HASH}} (mainnet 0x57d9…742d),\n  type: {{null}}  // typed outputs do not count,\n  data: 0x\n}"
+          "body": "Cell{\n  capacity: {{Σ pure ≥ fee×factor − referral + sale fees owed}},\n  lock: {{lock hash == TREASURY_LOCK_HASH}} (mainnet 0x57d9…742d),\n  type: {{null}},  // typed or non-empty-data outputs do not count\n  data: 0x\n}"
         },
         {
           "label": {
@@ -365,7 +365,7 @@
                 "zh": "cell_dep：推荐人名字（可选）",
                 "en": "cell_dep: inviter name (optional)"
               },
-              "body": "Cell{ type: {{same ACCOUNT_TYPE script}}, data: AccountData{ owner: I } }\n// referral_discount(): every cell dep with this type is a candidate;\n// pays only if I ≠ treasury, no input under I, and pure outputs to I ≥ cut"
+              "body": "Cell{ type: {{same ACCOUNT_TYPE script}}, data: AccountData{ owner: I } }\n// referral_discount(): every cell dep with this type is a candidate;\n// pays only if I ≠ treasury, no input under I, and pure outputs (no type and empty data) to I ≥ cut"
             }
           ]
         },
@@ -781,8 +781,8 @@
         {
           "field": "treasury",
           "cond": {
-            "zh": "纯输出足额",
-            "en": "pure outputs paid in full"
+            "zh": "纯输出（无 type 且 data 为空）足额",
+            "en": "pure outputs (no type and empty data) paid in full"
           },
           "err": "42"
         }
@@ -940,8 +940,8 @@
         {
           "field": "treasury",
           "cond": {
-            "zh": "纯输出足额",
-            "en": "pure outputs paid in full"
+            "zh": "纯输出（无 type 且 data 为空）足额",
+            "en": "pure outputs (no type and empty data) paid in full"
           },
           "err": "42"
         },

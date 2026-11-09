@@ -1,4 +1,4 @@
-// cells account-cell-type — LusoCryptoLabs/cells-contracts contracts/account-cell-type/src/main.rs + crates/cells-core/src/lib.rs @34dad3c
+// cells account-cell-type — LusoCryptoLabs/cells-contracts contracts/account-cell-type/src/main.rs + crates/cells-core/src/lib.rs @6d29dab
 // code_hash: cellula-sdk@0.2.1 dist/deployments.js (official SDK) + docs/TRUST.md (mainnet). Also exposes R.cells (AccountData helpers).
 (function (R) {
   const H = R.hexToBytes, X = R.bytesToHex;

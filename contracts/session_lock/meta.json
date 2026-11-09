@@ -7,14 +7,14 @@
   "contributors": [],
   "source": {
     "repo": "https://github.com/luongthanhtung03/ckb-session-kit",
-    "commit": "f51f07ccae4b45fa0c2cacfecc2dd8e799781f4a",
+    "commit": "8157a64458ebe20e83b28e71f26331fdd95965e4",
     "paths": [
       "contracts/session-lock/src/main.rs",
       "src/lock.ts",
       "deployment/testnet.json",
       "docs/SECURITY-EVIDENCE.md"
     ],
-    "commit_note": "commit read when writing this spec; deployment constants from src/lock.ts TESTNET_DEPLOYMENT, deployment/testnet.json and docs/SECURITY-EVIDENCE.md",
+    "commit_note": "commit bumped after docs/SDK work (58 commits); contracts/session-lock/src/main.rs unchanged since before f51f07cc",
     "binary": {
       "status": "unverified",
       "per": [

@@ -8,11 +8,11 @@
   "contributors": [],
   "source": {
     "repo": "https://github.com/LusoCryptoLabs/cells-contracts",
-    "commit": "34dad3c2102b23b974ef05cc9ecf3021ffd469b9",
+    "commit": "6d29dab2770fa0980e13b9cbeefff0c844ef4101",
     "paths": [
       "contracts/account-lock/src/main.rs"
     ],
-    "commit_note": "exact commit read when writing spec/plugin (default-branch HEAD, 2026-09-28). Deployment constants from cellula-sdk@0.2.1 dist/deployments.js and docs/TRUST.md.",
+    "commit_note": "commit read after #5 plain-payment fix (2026-11-06 mainnet upgrade); docs/TRUST.md hashes",
     "binary": {
       "status": "unverified",
       "per": [
@@ -24,7 +24,7 @@
           "matches_commit": false
         }
       ],
-      "note": "Data hash 0xa46c…f13b (same on both networks) appears in README and docs/TRUST.md as the reproduced build output (a doc listing, not a binary at the commit); reproducible build not attempted here."
+      "note": "hash appears in the repo only as a deployment record or doc, which does not prove the recorded commit builds this binary (reproducible build not attempted)"
     }
   },
   "deployments": [
@@ -79,5 +79,5 @@
       "deploy_block": 22382771
     }
   ],
-  "checked_at": "2026-10-21"
+  "checked_at": "2026-11-09"
 }

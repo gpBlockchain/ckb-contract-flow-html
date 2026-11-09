@@ -1,4 +1,4 @@
-// cells sale-lock — LusoCryptoLabs/cells-contracts contracts/sale-lock/src/main.rs + cells-core sale_fee / lets_anyone_spend @34dad3c
+// cells sale-lock — LusoCryptoLabs/cells-contracts contracts/sale-lock/src/main.rs + cells-core sale_fee / lets_anyone_spend @6d29dab
 // code_hash: cellula-sdk@0.2.1 dist/deployments.js (official SDK) + docs/TRUST.md (mainnet). Treasury lock hash: README mainnet build values / SDK.
 (function (R) {
   const H = R.hexToBytes, X = R.bytesToHex;
@@ -24,7 +24,8 @@
     for (const x of ctx.inputs) { const l = x.output.lock; if (l.code_hash !== g.script.code_hash || l.hash_type !== g.script.hash_type) continue; const a = H(l.args); if (a.length !== 40) continue;
       const s = X(a.subarray(0, 32)), pr = le64(a.subarray(32)), f = saleFee(pr), here = ctx.inputs.some(y => R.scriptHash(y.output.lock) === s);
       if (s === p.seller) owedS += pr - f + BigInt(x.output.capacity); if (!here) owedT += f; }
-    const paid = h => ctx.tx.outputs.reduce((t, o) => t + (!o.type && R.scriptHash(o.lock) === h ? BigInt(o.capacity) : 0n), 0n);
+    const emptyData = d => !d || d === '0x';
+    const paid = h => ctx.tx.outputs.reduce((t, o, i) => t + (!o.type && emptyData(ctx.tx.outputs_data[i]) && R.scriptHash(o.lock) === h ? BigInt(o.capacity) : 0n), 0n);
     const ps = paid(p.seller), pt = paid(TREASURY[net]);
     c.push(R.check(ps >= owedS, `卖家纯输出 ${ckb(ps)} ≥ 应得 ${ckb(owedS)}（price − fee + 挂单押金，汇总该卖家所有挂单）`, `pure outputs to seller ${ckb(ps)} ≥ owed ${ckb(owedS)} (price − fee + listing deposit, summed over the seller's offers)`, 3));
     c.push(pt >= owedT || p.seller === TREASURY[net] ? R.check(true, `treasury 纯输出 ${ckb(pt)} ≥ ${ckb(owedT)}`, `pure outputs to treasury ${ckb(pt)} ≥ ${ckb(owedT)}`, 4) : R.check(false, `treasury 纯输出 ${ckb(pt)} < ${ckb(owedT)}`, `pure outputs to treasury ${ckb(pt)} < ${ckb(owedT)}`, 4));

@@ -1,4 +1,4 @@
-// cells account-lock — LusoCryptoLabs/cells-contracts contracts/account-lock/src/main.rs @34dad3c (always returns 0)
+// cells account-lock — LusoCryptoLabs/cells-contracts contracts/account-lock/src/main.rs @6d29dab (always returns 0)
 // code_hash: cellula-sdk@0.2.1 dist/deployments.js (official SDK) + docs/TRUST.md (mainnet)
 (function (R) {
   R.register({ id: 'cells_account_lock', kind: 'lock', name: { zh: 'Cells 名字 lock（account-lock）', en: 'Cells name lock (account-lock)' },
