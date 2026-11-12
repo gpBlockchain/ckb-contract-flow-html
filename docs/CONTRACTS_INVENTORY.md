@@ -130,3 +130,4 @@ Contracts surfaced by the Nervos Talk daily digests in chainTe/ckb-talk-radar (`
 
 | id | Name | Mainnet code_hash | Testnet code_hash | Constant source | Source code | Status |
 |---|---|---|---|---|---|---|
+| zk_lock | zk-Lock: Groth16 proof lock, generic + transaction-bound (pi[0] = tx_hash) | — | `0x24172f2dc2ebd6634fe925a6f0beda7cfd4cdb9aab1214f2e1cbd3127ea1fa7b` (type, generic); `0xfbb4acb5c3f8fc8b24216dc8dc8d6bb8f8d3ea9aab4b29a210571959a1f9028e` (type, bound) | zk-Lock README.md "Pudge testnet", web/src/lib/config.ts | CECILIA-MULANDI/zk-Lock@699c63a `crates/zk-lock-core`, `contracts/zk-lock{,-bound}` | added (Groth16 pairing + VK cell_dep lookup not checked; pi_commitment and bound pi[0] recomputed; talk.nervos.org/t/10448) |
