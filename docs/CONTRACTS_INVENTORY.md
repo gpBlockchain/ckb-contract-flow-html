@@ -123,3 +123,10 @@ Hash findings, not added yet:
 - dCKB DAO info type `0x6fb198a4ef2cc0fa63c2ef7596c169452323d8ce678bdb3f75c77dc1eac2f47f` (data) and Udt owner lock `0x29a81473e24924e394a9148ab357c2492fedf65241848b7a87539a7db9c3d43f` (data): from dckb-rescuer/v1-core README (community); source in NexisDao-core; not added.
 - Nervape shadow lock (nervape/delegate-lock @f12f49c): no deployed hash found.
 - CKBFS V1: not requested.
+
+## Added on branch `add-talk-radar-contracts` (2026-11-12)
+
+Contracts surfaced by the Nervos Talk daily digests in chainTe/ckb-talk-radar (`site-history` branch). Each row: one commit authored by the upstream contract author. Deployment constants only from each project's own README / deployment files, re-resolved on chain with `scripts/check-deployments.js`.
+
+| id | Name | Mainnet code_hash | Testnet code_hash | Constant source | Source code | Status |
+|---|---|---|---|---|---|---|
