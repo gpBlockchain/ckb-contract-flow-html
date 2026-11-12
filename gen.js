@@ -28,6 +28,9 @@ const UI = {
 };
 // shared inline icons (paths closed explicitly: scripts/check.js balances every tag)
 const ARROW = '<div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></div>';
+// pointers to the agent-readable files written by lib/agent.js (--all only): a visible line under the title + <link rel=alternate>
+const agentLine = files => `<p class="agent">${T({ zh: '给 AI agent：', en: 'For AI agents:' }, esc)} ${files.map(f => `<a href="${f}">${f}</a>`).join(' · ')}</p>`;
+const mdLink = f => `<link rel="alternate" type="text/markdown" href="${f}" title="Markdown for AI agents">`;
 
 function loadSpec(file) {
   const txt = fs.readFileSync(file, 'utf8');
@@ -128,6 +131,7 @@ ${t.limits.map(l => `<li><b>${T(l.field, esc)}</b><span class="lc">${T(l.cond)}$
   const title = spec.title || UI.defTitle;
   const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
   return tpl.replace('{{DOC_TITLE}}', esc(plain(title, 'zh') === plain(title, 'en') ? plain(title, 'en') : plain(title, 'zh') + ' / ' + plain(title, 'en')))
+    .replace('{{HEAD}}', id ? mdLink(id + '.md') : '').replace('{{AGENT}}', id ? agentLine([id + '.md', 'llms.txt']) : '')
     .replace('{{CRUMB}}', () => crumb)
     .replace('{{TITLE}}', T(title, esc))
     .replace('{{SUBTITLE}}', T(spec.subtitle) + head)
@@ -163,7 +167,7 @@ function buildTx(outFile) {
 <p class="small dnote">${T({ zh: '按 lock / type script hash 分组；签名不校验（标记 ○）；数据仅从你选择的 RPC 读取。', en: 'Grouped by lock / type script hash; signatures are NOT verified (marked ○); data is read only from the RPC you choose.' })}</p>
 <details class="more"><summary>${T({ zh: '已加载插件', en: 'Loaded plugins' }, esc)}<span class="cnt">${ids.length}</span></summary><p class="plg">${ids.map(x => `<code>${esc(x)}</code>`).join(' ')}</p></details></div>
 <div id="result"></div>`;
-  const html = tpl.replace('{{DOC_TITLE}}', esc(UI.txTitle.zh + ' / ' + UI.txTitle.en)).replace('{{CRUMB}}', '')
+  const html = tpl.replace('{{DOC_TITLE}}', esc(UI.txTitle.zh + ' / ' + UI.txTitle.en)).replace('{{HEAD}}', '').replace('{{AGENT}}', agentLine(['decode-tx.js', 'llms.txt'])).replace('{{CRUMB}}', '')
     .replace('{{TITLE}}', T(UI.txTitle, esc)).replace('{{SUBTITLE}}', T({ zh: '输入交易 hash，解码为 cell 流转卡片并做无签名约束检查', en: 'Enter a tx hash to decode it into cell-flow cards with signature-free constraint checks' }))
     .replace('{{CARDS}}', form).replace('{{FOOTER}}', '')
     .replace('</style>', () => css.replace('<style>', '').replace('</style>', '') + '</style>');
@@ -176,8 +180,8 @@ function main() {
   const a = process.argv.slice(2);
   if (!a.length) { console.error('Usage / 用法: node gen.js <spec.json|yaml> [out.html]\n                 node gen.js --all [outDir=out]   (discovers contracts/*/spec.json)'); process.exit(1); }
   if (a[0] === '--all') {
-    const od = a[1] || 'out', items = [];
-    for (const c of require('./lib/contracts.js').list()) if (c.spec) items.push([c.id, build(c.spec, path.join(od, c.id + '.html'), c.id).title || c.id]);
+    const od = a[1] || 'out', items = [], specs = {}, AG = require('./lib/agent.js');
+    for (const c of require('./lib/contracts.js').list()) if (c.spec) items.push([c.id, (specs[c.id] = build(c.spec, path.join(od, c.id + '.html'), c.id)).title || c.id]);
     buildTx(path.join(od, 'tx.html'));
     items.push(['tx', UI.txTitle]);
     const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8'), mh = MH(), counts = {};
@@ -245,8 +249,10 @@ document.addEventListener('keydown',function(e){var t=e.target;if(e.key==='/'&&!
 var cp=document.getElementById('copylink');if(cp)cp.onclick=function(){var url=location.href,done=function(){cp.setAttribute('data-ok','1');setTimeout(function(){cp.removeAttribute('data-ok')},1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done,function(){prompt('URL',url)});else prompt('URL',url)};
 fromURL()})();</script>`;
     fs.writeFileSync(path.join(od, 'index.html'), tpl.replace('{{DOC_TITLE}}', esc(UI.indexTitle.zh + ' / ' + UI.indexTitle.en))
+      .replace('{{HEAD}}', mdLink('llms.txt')).replace('{{AGENT}}', agentLine(['llms.txt', 'contracts.json', 'decode-tx.js']))
       .replace('{{CRUMB}}', '').replace('{{TITLE}}', T(UI.indexTitle, esc)).replace('{{SUBTITLE}}', () => `<p class="lead">${T(UI.indexSub, esc)}</p>`)
       .replace('{{CARDS}}', () => list).replace('{{FOOTER}}', ''));
+    AG.write(od, specs);
   } else {
     build(a[0], a[1] || path.join('out', path.basename(a[0]).replace(/\.(json|ya?ml)$/i, '') + '.html'));
   }

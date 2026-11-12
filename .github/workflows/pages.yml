@@ -18,8 +18,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - id: pages
+        uses: actions/configure-pages@v5
       - run: node gen.js --all out && node scripts/check.js
-      - uses: actions/configure-pages@v5
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }} # absolute links in llms.txt / <id>.md / decode-tx.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out
