@@ -22,8 +22,8 @@
    - 部署与二进制核验：运行 `node scripts/check-deployments.js --write --only <id>`，自动从链上解析 cell_dep、type_id、数据哈希、部署交易，并比对该 commit 的二进制 / checksum 文件（verified / unverified / mismatch / no-source / builtin）。
 6. **构建与测试**：
    ```bash
-   node gen.js --all out        # 静态页 + tx.html + index.html
-   node scripts/check.js        # 标签闭合 + 双语覆盖 + meta.json（tags / contributors / source / deployments）
+   node gen.js --all out        # 静态页 + tx.html + index.html + 给 AI agent 的 llms.txt / <id>.md / contracts.json / decode-tx.js（从同一份文件自动生成，无需另写）
+   node scripts/check.js        # 标签闭合 + 双语覆盖 + meta.json（tags / contributors / source / deployments）+ agent 输出
    node scripts/test-tx.js <id> # 真实交易：识别 + 所有检查不为 ✗ + 双语
    ```
 7. **人工核对**：逐条对照源码 `return ERROR_*` / `CHECK2(..., ERROR_*)`，确认无遗漏、无虚构。
@@ -101,8 +101,8 @@ Repo: <合约仓库 URL>  Contract: <文件路径>  Deployment: <code_hash/hash_
    - Deployments + binary check: run `node scripts/check-deployments.js --write --only <id>`. It resolves the cell_dep, type_id, data hash and deploy tx from chain, then compares them against binaries / checksum files at that commit (verified / unverified / mismatch / no-source / builtin).
 6. **Build & test**:
    ```bash
-   node gen.js --all out        # static pages + tx.html + index.html
-   node scripts/check.js        # tag balance + bilingual coverage
+   node gen.js --all out        # static pages + tx.html + index.html + llms.txt / <id>.md / contracts.json / decode-tx.js for AI agents (generated from the same files, nothing extra to write)
+   node scripts/check.js        # tag balance + bilingual coverage + meta.json + agent outputs
    node scripts/test-tx.js <id> # real txs: recognized + no ✗ checks + bilingual
    ```
 7. **Manual review**: compare every `return ERROR_*` / `CHECK2(..., ERROR_*)` in the source; nothing missing, nothing invented.

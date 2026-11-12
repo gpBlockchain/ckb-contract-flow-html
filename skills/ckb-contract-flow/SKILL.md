@@ -14,6 +14,8 @@ description: >-
 Generator: https://github.com/gpBlockchain/ckb-contract-flow-html.
 Source of truth for formats and the plugin API: `README.md` and `docs/ADD_CONTRACT.md` in that repo. Read them before writing a contract.
 
+Only looking up existing contracts (what is deployed on mainnet / testnet, how to use one) or decoding a transaction? No clone needed: read https://gpblockchain.github.io/ckb-contract-flow-html/llms.txt (every contract by network, a Markdown doc per contract, and the single-file `decode-tx.js`).
+
 ## Quick path (do this first, no questions needed)
 This file may have been handed to you as a URL together with a contract source: a **repo URL or a local path**. Do everything yourself; never ask the user to clone or install anything.
 
@@ -63,6 +65,10 @@ node gen.js contracts/sudt/spec.json                # same, written to out/spec.
 
 ## 4. Decode an on-chain transaction
 - Browser: open `out/tx.html`, paste a tx hash, choose mainnet/testnet or a custom RPC. Deep link: `tx.html#tx=0x…&rpc=https://testnet.ckb.dev/rpc`. The public RPCs send `Access-Control-Allow-Origin: *`; a custom node needs CORS enabled.
+- CLI, full decode as Markdown (every cell, the contract behind each script group, parsed fields, ✓/✗/○ checks, doc links); `out/decode-tx.js` is the same thing as one file:
+  ```bash
+  node scripts/decode-tx.js 0x<txhash>                  # mainnet; --testnet, --rpc <url>, --json
+  ```
 - CLI (same decoder + checks, prints PASS/FAIL):
   ```bash
   node scripts/test-tx.js 0x<txhash>                                   # ad-hoc, mainnet

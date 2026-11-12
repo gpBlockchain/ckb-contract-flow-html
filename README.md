@@ -13,10 +13,11 @@
 ### 用法
 
 ```bash
-node gen.js --all out                 # 构建 contracts/*/spec.json + tx.html + index.html
+node gen.js --all out                 # 构建 contracts/*/spec.json + tx.html + index.html + 给 agent 的文件（见下文）
 node gen.js contracts/sudt/spec.json my.html   # 单个 spec
 node scripts/new-contract.js <id>     # 新合约骨架（见 docs/ADD_CONTRACT.md）
 node scripts/test-tx.js [id|txhash…]  # 真实交易测试（contracts/*/tests.json）
+node scripts/decode-tx.js 0x<txhash>  # 把交易解码成 Markdown（--testnet / --rpc <url> / --json）
 node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在仓库根目录运行）
 ```
 
@@ -73,6 +74,25 @@ node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在�
 
 代码：`lib/ckb.js`（blake2b、molecule、script hash、RPC、分组、插件注册表）+ `contracts/*/plugin.js`（各合约解析与检查）+ `tx-app.js`（通用渲染），由 `gen.js --all` 内联打包成单文件。测试：`node scripts/test-tx.js`（运行各 `tests.json`，需能访问 RPC，`RPC=` / `TESTNET_RPC=` 可覆盖）。
 
+### 给 AI agent：一个链接查合约、解析交易
+
+把这句话发给任意 agent（0x… 换成交易 hash，也可以换成任何关于合约的问题），无需安装：
+
+```text
+阅读 https://gpblockchain.github.io/ckb-contract-flow-html/llms.txt，然后解析交易 0x…
+```
+
+`node gen.js --all` 在 HTML 之外还生成给 agent 读的文件（英文 Markdown / JSON，CI 一并发布到 GitHub Pages），agent 不用解析 HTML：
+
+| 文件 | 内容 |
+| --- | --- |
+| `llms.txt` | 入口：主网 / 测试网各有哪些合约（code_hash、hash_type）、每个合约能做什么、怎么解析交易 |
+| `<id>.md` | 单个合约：可直接复制的 `script` + `cell_dep` JSON、字节布局、状态转换、约束与错误码、示例交易、源码 |
+| `contracts.json` | 全部合约与部署（JSON） |
+| `decode-tx.js` | 单文件解码器（`lib/ckb.js` + 全部插件 + `scripts/decode-tx.js`，零依赖，Node ≥ 18）：`node decode-tx.js 0x… [--testnet] [--json]` 列出每个 cell、每个脚本组对应的合约与文档链接、解析出的字段和检查结果 ✓/✗/○ |
+
+每个 HTML 页面标题下有“给 AI agent”链接，`<head>` 里有 `<link rel="alternate" type="text/markdown">`，agent 拿到 HTML 链接也能找到 Markdown 版。
+
 ### 一句话让 AI 生成
 
 复制这句话发给任意 coding agent，无需安装：
@@ -98,9 +118,10 @@ Zero dependencies; Node.js ≥ 16.
 ### Usage
 
 ```bash
-node gen.js --all out                 # build contracts/*/spec.json + tx.html + index.html
+node gen.js --all out                 # build contracts/*/spec.json + tx.html + index.html + agent files (below)
 node scripts/new-contract.js <id>     # scaffold a contract (see docs/ADD_CONTRACT.md)
 node scripts/test-tx.js [id|txhash…]  # real-tx tests (contracts/*/tests.json)
+node scripts/decode-tx.js 0x<txhash>  # decode a tx as Markdown (--testnet / --rpc <url> / --json)
 node scripts/check.js                 # tag balance + bilingual coverage (run from repo root)
 ```
 
@@ -122,7 +143,26 @@ Enter a tx hash and an RPC URL (presets: mainnet `https://mainnet.ckb.dev/rpc`, 
 
 Code: `lib/ckb.js` (blake2b, molecule, script hash, RPC, grouping, plugin registry) + `contracts/*/plugin.js` (per-contract parse & check) + `tx-app.js` (generic rendering), inlined into a single file by `gen.js --all`. Test: `node scripts/test-tx.js` (runs every `tests.json`; needs RPC access; override with `RPC=` / `TESTNET_RPC=`). To add a contract see **[docs/ADD_CONTRACT.md](docs/ADD_CONTRACT.md)**.
 
-### One sentence to your AI agent
+### For AI agents: one link to look up contracts and decode transactions
+
+Send this to any agent (replace 0x… with a tx hash, or ask anything about the contracts); no install needed:
+
+```text
+Read https://gpblockchain.github.io/ckb-contract-flow-html/llms.txt, then decode transaction 0x…
+```
+
+Besides the HTML, `node gen.js --all` writes agent-readable files (English Markdown / JSON, published to GitHub Pages by CI), so agents never parse the HTML:
+
+| File | Content |
+| --- | --- |
+| `llms.txt` | Entry point: which contracts are on mainnet / testnet (code_hash, hash_type), what each one does, how to decode a tx |
+| `<id>.md` | One contract: copy-ready `script` + `cell_dep` JSON, byte layouts, transitions, constraints with error codes, example txs, source |
+| `contracts.json` | Every contract and deployment as JSON |
+| `decode-tx.js` | Single-file decoder (`lib/ckb.js` + all plugins + `scripts/decode-tx.js`, zero dependencies, Node ≥ 18): `node decode-tx.js 0x… [--testnet] [--json]` lists every cell, names the contract behind each script group with its doc link, and prints parsed fields and ✓/✗/○ checks |
+
+Every HTML page links them under its title ("For AI agents") and in `<head>` via `<link rel="alternate" type="text/markdown">`, so an agent handed an HTML link finds the Markdown.
+
+### One sentence to your AI agent (generate a page)
 
 Paste this to any coding agent, no install needed:
 
@@ -162,6 +202,8 @@ template.html          page template
 tx-template.html, tx-app.js   tx decoder UI (generic rendering)
 lib/ckb.js             core: blake2b, molecule, script hash, RPC, fetching, grouping, plugin registry
 lib/contracts.js       discovers contracts/*/ (Node), plugin order via // @requires
+lib/agent.js           agent outputs: llms.txt, <id>.md, contracts.json, decode-tx.js bundle
+scripts/decode-tx.js   tx decoder CLI (Markdown / JSON), bundled into out/decode-tx.js
 contracts/<id>/        spec.json · plugin.js · tests.json
 scripts/check.js       tag balance & bilingual coverage
 scripts/test-tx.js     real-tx tests

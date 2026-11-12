@@ -2,6 +2,7 @@
 <html lang="zh-CN" data-lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>{{DOC_TITLE}}</title>
+{{HEAD}}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='8' fill='%233e63dd'/%3E%3Crect x='6.3' y='8.3' width='6.4' height='11.4' rx='2' fill='none' stroke='%23fff' stroke-opacity='.75' stroke-width='1.6'/%3E%3Crect x='15.3' y='8.3' width='6.4' height='11.4' rx='2' fill='%23fff'/%3E%3C/svg%3E">
 <style>
 /* ---- tokens (light) ---- */
@@ -84,6 +85,8 @@ main{max-width:1168px;margin:0 auto;padding:44px 24px 72px}
 h1{margin:0 0 10px;font-size:34px;line-height:1.2;font-weight:700;letter-spacing:-.022em;overflow-wrap:anywhere;text-wrap:balance}
 .sub{color:var(--fg-3);font-size:15px;max-width:880px}
 .lead{margin:0;font-size:16.5px;color:var(--fg-3);max-width:860px;text-wrap:pretty}
+.agent{margin:12px 0 0;color:var(--fg-4);font-size:13px}
+.agent a{font-family:var(--mono);font-size:12.5px}
 .toc{display:flex;flex-wrap:wrap;gap:6px;margin:-12px 0 24px}
 .toc a{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px 0 4px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg-2);font-size:13px;font-weight:500;transition:border-color .15s,color .15s}
 .toc a:hover{border-color:var(--line-strong);color:var(--fg);text-decoration:none}
@@ -328,6 +331,7 @@ window.toggleTheme=function(){var c=d.getAttribute('data-theme')||(window.matchM
 <header class="ph">{{CRUMB}}
 <h1>{{TITLE}}</h1>
 <div class="sub">{{SUBTITLE}}</div>
+{{AGENT}}
 </header>
 {{CARDS}}
 {{FOOTER}}
