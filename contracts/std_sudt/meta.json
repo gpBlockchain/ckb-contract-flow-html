@@ -4,7 +4,9 @@
     "open-source",
     "community"
   ],
-  "contributors": [],
+  "contributors": [
+    "xcshuan"
+  ],
   "source": {
     "repo": "https://github.com/xcshuan/ckb-standard-udt-contracts",
     "commit": "d6e6da0109e082551af9873c64cda0d1f514c9e3",

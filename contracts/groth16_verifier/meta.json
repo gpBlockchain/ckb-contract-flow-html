@@ -4,7 +4,9 @@
     "open-source",
     "community"
   ],
-  "contributors": [],
+  "contributors": [
+    "CECILIA-MULANDI"
+  ],
   "source": {
     "repo": "https://github.com/CECILIA-MULANDI/groth16-ckb",
     "commit": "e969ad154ea2c00df57f68238ddfbcbc9ceb1419",

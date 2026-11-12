@@ -5,7 +5,9 @@
     "open-source",
     "community"
   ],
-  "contributors": [],
+  "contributors": [
+    "ashuralyk"
+  ],
   "source": {
     "repo": "https://github.com/Opticrum/ckb-contract-script",
     "commit": "803523a472041262b6f1b049067550801d136f66",

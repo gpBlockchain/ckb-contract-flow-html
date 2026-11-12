@@ -4,7 +4,9 @@
     "open-source",
     "community"
   ],
-  "contributors": [],
+  "contributors": [
+    "wamimi"
+  ],
   "source": {
     "repo": "https://github.com/wamimi/noir-ckb-verifier",
     "commit": "e4ba787626031a8bed92beaa567a87fe51a6b5f8",

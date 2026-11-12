@@ -5,7 +5,9 @@
     "open-source",
     "community"
   ],
-  "contributors": [],
+  "contributors": [
+    "ckbswap"
+  ],
   "source": {
     "repo": "https://github.com/ckbswap/contracts",
     "commit": "b7cd8458a798b4386c1b401ce7dd10333a728443",

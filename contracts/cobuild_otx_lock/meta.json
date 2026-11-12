@@ -4,7 +4,9 @@
     "open-source",
     "community"
   ],
-  "contributors": [],
+  "contributors": [
+    "xcshuan"
+  ],
   "source": {
     "repo": "https://github.com/xcshuan/cobuild-otx-contracts",
     "commit": "f18eeaf22f29820ecd9a089481ab45b78b2b7454",
