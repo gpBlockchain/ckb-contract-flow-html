@@ -5,7 +5,9 @@
     "open-source",
     "p-rgbpp"
   ],
-  "contributors": [],
+  "contributors": [
+    "jjyr"
+  ],
   "source": {
     "repo": "https://github.com/utxostack/rgbpp",
     "commit": "4abd216dbd5d25b8f59e843de39643f9b7513f9d",

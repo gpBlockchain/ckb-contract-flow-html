@@ -4,7 +4,9 @@
     "nervos",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "XuJiandong"
+  ],
   "source": {
     "repo": "https://github.com/nervosnetwork/omnilock",
     "commit": "280dd97ac0930ea1ed766a18d49478229347c832",

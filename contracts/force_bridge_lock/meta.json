@@ -4,7 +4,9 @@
     "nervos",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "JacobDenver007"
+  ],
   "source": {
     "repo": "https://github.com/nervosnetwork/force-bridge",
     "commit": "f3d7df767eff27b58e58bedd7b0990392ca8066a",

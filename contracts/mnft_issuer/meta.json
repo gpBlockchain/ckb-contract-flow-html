@@ -4,7 +4,9 @@
     "community",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "duanyytop"
+  ],
   "source": {
     "repo": "https://github.com/nervina-labs/ckb-nft-scripts",
     "commit": "b5af002e78eb2ff375ce098cde24d77ff414822c",

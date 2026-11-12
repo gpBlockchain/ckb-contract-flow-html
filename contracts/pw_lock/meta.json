@@ -4,7 +4,9 @@
     "community",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "johnz1019"
+  ],
   "source": {
     "repo": "https://github.com/lay2dev/pw-lock",
     "commit": "9445db0aece263df76255d84c55c3b538b188435",

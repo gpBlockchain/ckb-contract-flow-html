@@ -4,7 +4,10 @@
     "community",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "jjyr",
+    "XuJiandong"
+  ],
   "source": {
     "repo": "https://github.com/nervosnetwork/ckb-production-scripts",
     "commit": "26b0b4f15bb6eeb268b70d7ae006e244b7c06649",

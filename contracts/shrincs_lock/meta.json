@@ -5,7 +5,9 @@
     "open-source",
     "community"
   ],
-  "contributors": [],
+  "contributors": [
+    "XuJiandong"
+  ],
   "source": {
     "repo": "https://github.com/XuJiandong/shrincs-lock",
     "commit": "d9326f524216acf3c6972e82ea600041631efeed",

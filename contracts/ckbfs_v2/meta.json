@@ -4,7 +4,9 @@
     "community",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "code-tsao"
+  ],
   "source": {
     "repo": "https://github.com/code-monad/ckbfs",
     "commit": "db973a8e80322b2bc50b0096c97b0ce7531cfb01",

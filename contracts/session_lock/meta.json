@@ -4,7 +4,9 @@
     "open-source",
     "community"
   ],
-  "contributors": [],
+  "contributors": [
+    "luongthanhtung03"
+  ],
   "source": {
     "repo": "https://github.com/luongthanhtung03/ckb-session-kit",
     "commit": "8157a64458ebe20e83b28e71f26331fdd95965e4",

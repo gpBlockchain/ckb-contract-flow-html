@@ -5,7 +5,9 @@
     "open-source",
     "p-fiber"
   ],
-  "contributors": [],
+  "contributors": [
+    "quake"
+  ],
   "source": {
     "repo": "https://github.com/nervosnetwork/fiber-scripts",
     "commit": "6bfcebfb62f2eee2af2cec881eaa795595268c58",

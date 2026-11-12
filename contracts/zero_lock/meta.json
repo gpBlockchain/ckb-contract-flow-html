@@ -4,7 +4,9 @@
     "nervos",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "mohanson"
+  ],
   "source": {
     "repo": "https://github.com/nervosnetwork/ckb",
     "commit": "426736a4816e4cda0dfa4ebdf7ba3b4f46e3ecb9",

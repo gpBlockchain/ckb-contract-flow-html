@@ -4,7 +4,9 @@
     "community",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "linkdesu"
+  ],
   "source": {
     "repo": "https://github.com/dotbitHQ/did-contracts",
     "commit": "0cc9fbf51bd508a0c8f532a9e43bb7cb17b79370",

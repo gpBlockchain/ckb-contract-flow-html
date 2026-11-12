@@ -5,7 +5,9 @@
     "cryptape",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "xxuejie"
+  ],
   "source": {
     "repo": "https://github.com/cryptape/quantum-resistant-lock-script",
     "commit": "082c0a19ce4e0b2c0b00f7b46f423f59a30afc71",

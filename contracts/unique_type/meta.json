@@ -5,7 +5,9 @@
     "community",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "duanyytop"
+  ],
   "source": {
     "repo": "https://github.com/utxostack/unique-cell",
     "commit": "beabe978910be29e89930e2ab75f43bd8daf47de",

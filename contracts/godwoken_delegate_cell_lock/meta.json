@@ -5,7 +5,9 @@
     "open-source",
     "p-godwoken"
   ],
-  "contributors": [],
+  "contributors": [
+    "blckngm"
+  ],
   "source": {
     "repo": "https://github.com/godwokenrises/godwoken",
     "commit": "c2b1f8501de16ef93a4d659f384041bcb1f7bd92",

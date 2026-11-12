@@ -6,7 +6,9 @@
     "open-source",
     "p-ickb"
   ],
-  "contributors": [],
+  "contributors": [
+    "phroi"
+  ],
   "source": {
     "repo": "https://github.com/ickb/contracts",
     "commit": "c951927e35fb5d4a13e28c5e55687d49cea7ca05",

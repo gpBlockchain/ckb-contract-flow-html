@@ -5,7 +5,9 @@
     "open-source",
     "community"
   ],
-  "contributors": [],
+  "contributors": [
+    "CECILIA-MULANDI"
+  ],
   "source": {
     "repo": "https://github.com/CECILIA-MULANDI/zk-Lock",
     "commit": "699c63a7ef424345180d24dfc1764ff7947c728b",
