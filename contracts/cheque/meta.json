@@ -5,7 +5,9 @@
     "nervos",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "duanyytop"
+  ],
   "source": {
     "repo": "https://github.com/nervosnetwork/ckb-cheque-script",
     "commit": "4ca3e62ae39c32cfcc061905515a2856cad03fd8",

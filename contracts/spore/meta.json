@@ -5,7 +5,9 @@
     "open-source",
     "p-spore"
   ],
-  "contributors": [],
+  "contributors": [
+    "ashuralyk"
+  ],
   "source": {
     "repo": "https://github.com/sporeprotocol/spore-contract",
     "commit": "9a6010e43ffd09ac9e6fe7ee389cc915e3e4f999",

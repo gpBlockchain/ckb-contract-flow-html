@@ -5,7 +5,9 @@
     "open-source",
     "p-rgbpp"
   ],
-  "contributors": [],
+  "contributors": [
+    "chaoticlonghair"
+  ],
   "source": {
     "repo": "https://github.com/ckb-cell/ckb-bitcoin-spv-contracts",
     "commit": "f3e3ba846c1de580ae7f0720cbb64df13036b80a",

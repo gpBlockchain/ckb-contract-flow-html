@@ -5,7 +5,9 @@
     "open-source",
     "p-cells"
   ],
-  "contributors": [],
+  "contributors": [
+    "LusoCryptoLabs"
+  ],
   "source": {
     "repo": "https://github.com/LusoCryptoLabs/cells-contracts",
     "commit": "6d29dab2770fa0980e13b9cbeefff0c844ef4101",

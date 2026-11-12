@@ -4,7 +4,9 @@
     "community",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "XuJiandong"
+  ],
   "source": {
     "repo": "https://github.com/web5fans/did-ckb",
     "commit": "f37c14afeaeb4162e7c66ac336372eb81474c39d",

@@ -4,7 +4,9 @@
     "community",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "NexisDao"
+  ],
   "source": {
     "repo": "https://github.com/NexisDao/NexisDao-core",
     "commit": "1447fed98e74935394e877c9a78a368ae3e6dbd5",

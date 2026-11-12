@@ -5,7 +5,9 @@
     "nervos",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "jjyr"
+  ],
   "source": {
     "repo": "https://github.com/nervosnetwork/ckb-system-scripts",
     "commit": "72eb92fca090700dcb398cd8cad8fbd8bad40355",

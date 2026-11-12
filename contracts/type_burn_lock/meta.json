@@ -5,7 +5,9 @@
     "open-source",
     "p-proxy-locks"
   ],
-  "contributors": [],
+  "contributors": [
+    "ashuralyk"
+  ],
   "source": {
     "repo": "https://github.com/ckb-devrel/ckb-proxy-locks",
     "commit": "38b7e1df19828f2203c01b30340be26691b70d7a",

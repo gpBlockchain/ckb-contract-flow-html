@@ -5,7 +5,9 @@
     "nervos",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "jjyr"
+  ],
   "source": {
     "repo": "https://github.com/nervosnetwork/ckb-production-scripts",
     "commit": "e570c11aff3eca12a47237c21598429088c610d5",

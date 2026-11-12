@@ -4,7 +4,10 @@
     "community",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "duanyytop",
+    "linkdesu"
+  ],
   "source": {
     "repo": "https://github.com/dotbitHQ/ckb-time-script",
     "commit": "37343ab501e71b9eb8a83f04a66c3cafb48044d3",

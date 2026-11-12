@@ -4,7 +4,9 @@
     "nervos",
     "open-source"
   ],
-  "contributors": [],
+  "contributors": [
+    "XuJiandong"
+  ],
   "source": {
     "repo": "https://github.com/nervosnetwork/nostr-binding",
     "commit": "eef134e0a09dd07ccc367eb4eca84c1a5a73fb8b",
