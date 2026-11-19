@@ -332,6 +332,10 @@
     {
       "zh": "错误码（error.rs）：0x01–0x05 syscall · 0x10 UnknownOperation · 0x20–0x28 创建 · 0x2f DestroyNotEnoughCells · 0x30–0x3a 更新 · 0x40–0x51 重组 · 0x60 + BootstrapError / UpdateError（0x69 EmptyHeaders · 0x6a UncontinuousHeaders · 0x6b Difficulty · 0x6c Pow · 0x71 Mmr · 0x72 HeadersMmrProof · 0x79 ClientId · 0x7a ClientTipBlockHash · 0x7b/0x7c 高度 · 0x7d ClientTargetAdjustInfo）",
       "en": "Error codes (error.rs): 0x01–0x05 syscall · 0x10 UnknownOperation · 0x20–0x28 create · 0x2f DestroyNotEnoughCells · 0x30–0x3a update · 0x40–0x51 reorg · 0x60 + BootstrapError / UpdateError (0x69 EmptyHeaders · 0x6a UncontinuousHeaders · 0x6b Difficulty · 0x6c Pow · 0x71 Mmr · 0x72 HeadersMmrProof · 0x79 ClientId · 0x7a ClientTipBlockHash · 0x7b/0x7c heights · 0x7d ClientTargetAdjustInfo)"
+    },
+    {
+      "zh": "2026-11-19 上游审阅（非链上升级声明）：主网 production 分支及 btc-mainnet-v0.1.0 仍为 f3e3ba8；master 新增销毁、testnet reset、操作分类和 verifier 变更，checksum 也不同，不能直接套到现有主网部署。",
+      "en": "2026-11-19 upstream review (not an on-chain upgrade claim): Mainnet production and btc-mainnet-v0.1.0 still point to f3e3ba8. Master adds destroy, testnet reset, operation-dispatch and verifier changes and has a different checksum; these must not be applied to the existing mainnet deployment."
     }
   ]
 }
