@@ -28,6 +28,29 @@
         }
       ],
       "note": "no binary or checksum at the recorded commit matched the deployed data hash (reproducible build not attempted)"
+    },
+    "upstream_review": {
+      "repo": "https://github.com/code-monad/ckbfs",
+      "base_commit": "db973a8e80322b2bc50b0096c97b0ce7531cfb01",
+      "commit": "4ee6689bf7ec2515df95311a05a9cdc709f358cb",
+      "paths": [
+        "contracts/ckbfs/src/entry.rs",
+        "contracts/ckbfs/src/error.rs",
+        "contracts/ckbfs/src/hash.rs",
+        "contracts/ckb-adler32/src/process.rs",
+        "contracts/ckb-adler32/src/utils.rs"
+      ],
+      "disposition": "retain-deployed-version",
+      "reason": {
+        "zh": "README 仍将 V2 部署标为 20241025.db973a8e8032；HEAD 是 V3，新增链式 witness、前序位置校验和 110–112 错误码，并更换 adler32 hash。V3 已由 ckbfs_v3 独立描述，V2 继续保留旧 schema / checksum 规则。",
+        "en": "README still identifies V2 deployments as 20241025.db973a8e8032. HEAD is V3: linked witnesses, previous-position validation, errors 110–112 and another adler32 hash. V3 is already described by ckbfs_v3; retain V2 schema and checksum rules."
+      },
+      "evidence": [
+        "https://github.com/code-monad/ckbfs/blob/4ee6689bf7ec2515df95311a05a9cdc709f358cb/README.md",
+        "https://github.com/code-monad/ckbfs/tree/v3",
+        "https://github.com/code-monad/ckbfs/compare/db973a8e80322b2bc50b0096c97b0ce7531cfb01...4ee6689bf7ec2515df95311a05a9cdc709f358cb"
+      ],
+      "reviewed_at": "2026-11-19"
     }
   },
   "deployments": [

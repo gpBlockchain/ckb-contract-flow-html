@@ -344,6 +344,10 @@
     {
       "zh": "错误码（error.rs）：-1 IndexOutOfBound · -2 ItemMissing · -3 LengthNotEnough · -4 Encoding · 101 InvalidInitialData · 102 InvalidTypeId · 103 DeletionForbidden · 104 ChecksumMismatch · 105 InvalidFieldUpdate · 106 NoChecksumHasherFound · 107 DuplicatedOutputs · 108 InvalidAppend · 109 InvalidTransfer；ckb-adler32：-101 ValidateFailure",
       "en": "Error codes (error.rs): -1 IndexOutOfBound · -2 ItemMissing · -3 LengthNotEnough · -4 Encoding · 101 InvalidInitialData · 102 InvalidTypeId · 103 DeletionForbidden · 104 ChecksumMismatch · 105 InvalidFieldUpdate · 106 NoChecksumHasherFound · 107 DuplicatedOutputs · 108 InvalidAppend · 109 InvalidTransfer; ckb-adler32: -101 ValidateFailure"
+    },
+    {
+      "zh": "2026-11-19 上游审阅（非链上升级声明）：README 仍将 V2 部署标为 20241025.db973a8e8032；HEAD 是 V3，新增链式 witness、前序位置校验和 110–112 错误码，并更换 adler32 hash。V3 已由 ckbfs_v3 独立描述，V2 继续保留旧 schema / checksum 规则。",
+      "en": "2026-11-19 upstream review (not an on-chain upgrade claim): README still identifies V2 deployments as 20241025.db973a8e8032. HEAD is V3: linked witnesses, previous-position validation, errors 110–112 and another adler32 hash. V3 is already described by ckbfs_v3; retain V2 schema and checksum rules."
     }
   ]
 }
