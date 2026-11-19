@@ -11,9 +11,14 @@ const args = process.argv.slice(2), opt = k => { const i = args.indexOf(k); retu
 const WRITE = args.includes('--write'), ONLY = opt('--only') ? opt('--only').split(',') : null, REPORT = opt('--report');
 const NETS = ['mainnet', 'testnet'];
 const S = require('./source-drift-lib.js');
+const ghCache = new Map();
 function gh(p) {
-  try { return JSON.parse(cp.execFileSync('gh', ['api', p], { stdio: ['ignore', 'pipe', 'ignore'] }).toString()); }
-  catch (e) { try { return JSON.parse(cp.execFileSync('curl', ['-sfL', 'https://api.github.com/' + p]).toString()); } catch (e2) { return null; } }
+  if (ghCache.has(p)) return ghCache.get(p);
+  const result = ghRead(p); ghCache.set(p, result); return result;
+}
+function ghRead(p) {
+  try { return JSON.parse(cp.execFileSync('gh', ['api', p], { stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 32 * 1024 * 1024, timeout: 60000 }).toString()); }
+  catch (e) { try { return JSON.parse(cp.execFileSync('curl', ['-sfL', 'https://api.github.com/' + p], { maxBuffer: 32 * 1024 * 1024, timeout: 60000 }).toString()); } catch (e2) { return null; } }
 }
 const repoOf = url => url && url.replace(/^https:\/\/github.com\//, '').replace(/\.git$/, '');
 // verified = deployed data hash equals the blake2b of a binary in the repo at the recorded commit, or is listed in a checksum / deployment file there

@@ -97,3 +97,22 @@ node scripts/check-deployments.js --report drift.md
 ```
 
 Generated `out/` files are intentionally not committed.
+
+## Additional findings from the full scan / 全量扫描额外发现
+
+- The iCKB compare response is 1,188,872 bytes, exceeding Node's old 1 MiB
+  `execFileSync` buffer. That explains the issue's `?` and later unreadable-compare
+  warnings despite a valid API response. Increase the bounded buffer to 32 MiB,
+  add a 60-second subprocess timeout and cache identical GitHub reads per scan.
+  This is not a source pin update.
+- Full scan also discovered **new drift outside #19**: `groth16_verifier`,
+  `e969ad154ea2c00df57f68238ddfbcbc9ceb1419` →
+  `06a6ba8db1704b2838306e753cbaeaa678743baf` in
+  `script/crates/verifier-core/src/lib.rs`. The new source uses a single-product
+  pairing check and an explicit decoded input-count guard. It is not silently
+  acknowledged here: the drift warning remains. Existing source/binary provenance
+  for its old testnet deployment is already unverified. This needs its own review,
+  not an automatic deployment upgrade or a blanket suppression.
+
+全量扫描另发现 groth16_verifier 的新源码变化（不在 #19 原始条目中），本 PR 不冒充
+已同步该实现，继续保留告警。iCKB 的问号则是比较响应超过旧 1 MiB 缓冲区，已修复读取。
