@@ -32,6 +32,28 @@
         }
       ],
       "note": "no binary or checksum at the recorded commit matched the deployed data hash (reproducible build not attempted)"
+    },
+    "upstream_review": {
+      "repo": "https://github.com/nervina-labs/ckb-nft-scripts",
+      "base_commit": "b5af002e78eb2ff375ce098cde24d77ff414822c",
+      "commit": "88caddde5489ce019fab3e5f811eb4f869d7f139",
+      "paths": [
+        "contracts/issuer-type/src/entry.rs",
+        "contracts/script-utils/src/issuer.rs",
+        "contracts/script-utils/src/helper.rs",
+        "contracts/script-utils/src/error.rs"
+      ],
+      "disposition": "retain-deployed-version",
+      "reason": {
+        "zh": "官方 wiki 仍固定 Lina=b5af002、Aggron=d0a844d；与 HEAD 的差异为格式/导入整理及 helper 内 CLASS_TYPE_CODE_HASH 从 Lina 改为 Aggron。不能用 Aggron 常量替换主网；维持按网络选择 class hash，数据布局、转换和错误码不变。",
+        "en": "Official wiki still pins Lina=b5af002 and Aggron=d0a844d. HEAD differs by formatting/import cleanup and switching helper CLASS_TYPE_CODE_HASH from Lina to Aggron. Do not replace the mainnet constant with Aggron; retain network-specific class hashes, layouts, transitions and errors."
+      },
+      "evidence": [
+        "https://github.com/nervina-labs/ckb-nft-scripts/wiki/Lina-Mainnet-deployment",
+        "https://github.com/nervina-labs/ckb-nft-scripts/wiki/Aggron-Testnet-deployment",
+        "https://github.com/nervina-labs/ckb-nft-scripts/compare/b5af002e78eb2ff375ce098cde24d77ff414822c...88caddde5489ce019fab3e5f811eb4f869d7f139"
+      ],
+      "reviewed_at": "2026-11-19"
     }
   },
   "deployments": [
