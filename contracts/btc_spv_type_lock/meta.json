@@ -28,6 +28,26 @@
         }
       ],
       "note": "verified by hand via sha256 checksums.txt (check-deployments compares blake2b only and would rewrite this as unverified)"
+    },
+    "upstream_review": {
+      "repo": "https://github.com/ckb-cell/ckb-bitcoin-spv-contracts",
+      "base_commit": "f3e3ba846c1de580ae7f0720cbb64df13036b80a",
+      "commit": "94f5606bf3a80c201dc1bd341d739c32c1a29198",
+      "paths": [
+        "contracts/ckb-bitcoin-spv-type-lock/src",
+        "checksums.txt"
+      ],
+      "disposition": "retain-deployed-version",
+      "reason": {
+        "zh": "主网 production 分支及 btc-mainnet-v0.1.0 仍为 f3e3ba8；master 新增销毁、testnet reset、操作分类和 verifier 变更，checksum 也不同，不能直接套到现有主网部署。",
+        "en": "Mainnet production and btc-mainnet-v0.1.0 still point to f3e3ba8. Master adds destroy, testnet reset, operation-dispatch and verifier changes and has a different checksum; these must not be applied to the existing mainnet deployment."
+      },
+      "evidence": [
+        "https://github.com/ckb-cell/ckb-bitcoin-spv-contracts/tree/btc-mainnet-v0.1.0",
+        "https://github.com/ckb-cell/ckb-bitcoin-spv-contracts/blob/f3e3ba846c1de580ae7f0720cbb64df13036b80a/checksums.txt",
+        "https://github.com/ckb-cell/ckb-bitcoin-spv-contracts/compare/f3e3ba846c1de580ae7f0720cbb64df13036b80a...94f5606bf3a80c201dc1bd341d739c32c1a29198"
+      ],
+      "reviewed_at": "2026-11-19"
     }
   },
   "deployments": [

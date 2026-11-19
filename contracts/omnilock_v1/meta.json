@@ -5,7 +5,7 @@
     "open-source"
   ],
   "contributors": [
-    "jjyr"
+    "XuJiandong"
   ],
   "source": {
     "repo": "https://github.com/nervosnetwork/ckb-production-scripts",
@@ -34,6 +34,30 @@
         }
       ],
       "note": "no binary or checksum at the recorded commit matched the deployed data hash (reproducible build not attempted)"
+    },
+    "upstream_review": {
+      "repo": "https://github.com/nervosnetwork/ckb-production-scripts",
+      "base_commit": "ddaeae8f065a5b600805b46d75c53de9bf290e68",
+      "commit": "26b0b4f15bb6eeb268b70d7ae006e244b7c06649",
+      "paths": [
+        "c/omni_lock.c",
+        "c/ckb_identity.h",
+        "c/omni_lock_time_lock.h",
+        "c/omni_lock_acp.h",
+        "c/omni_lock_supply.h",
+        "build.rs"
+      ],
+      "disposition": "retain-deployed-version",
+      "reason": {
+        "zh": "V1 源码已迁仓删除；build.rs 原有主网 hash 为 f18e…dee5。HEAD 的共享 identity 多签数组修复不证明 V1 已升级；V2 已有独立 omnilock 插件。继续保留 V1 认证方式及部署；testnet/Force Bridge 二进制的精确源码仍未证实。",
+        "en": "V1 files were removed on repository migration; the old build.rs records mainnet hash f18e…dee5. A later shared-identity multisig array fix is not evidence of a V1 upgrade; V2 has its own omnilock plugin. Retain V1 auth/deployments; exact source of testnet/Force Bridge binaries remains unproven."
+      },
+      "evidence": [
+        "https://github.com/nervosnetwork/ckb-production-scripts/blob/26b0b4f15bb6eeb268b70d7ae006e244b7c06649/README.md",
+        "https://github.com/nervosnetwork/ckb-production-scripts/blob/ddaeae8f065a5b600805b46d75c53de9bf290e68/build.rs",
+        "https://github.com/nervosnetwork/ckb-production-scripts/compare/ddaeae8f065a5b600805b46d75c53de9bf290e68...26b0b4f15bb6eeb268b70d7ae006e244b7c06649"
+      ],
+      "reviewed_at": "2026-11-19"
     }
   },
   "deployments": [

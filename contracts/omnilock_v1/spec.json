@@ -361,6 +361,10 @@
     {
       "zh": "witness 缺失不会立即失败（owner lock 模式可不需要 witness）",
       "en": "A missing witness doesn't fail immediately (owner-lock mode may need none)"
+    },
+    {
+      "zh": "2026-11-19 上游审阅（非链上升级声明）：V1 源码已迁仓删除；build.rs 原有主网 hash 为 f18e…dee5。HEAD 的共享 identity 多签数组修复不证明 V1 已升级；V2 已有独立 omnilock 插件。继续保留 V1 认证方式及部署；testnet/Force Bridge 二进制的精确源码仍未证实。",
+      "en": "2026-11-19 upstream review (not an on-chain upgrade claim): V1 files were removed on repository migration; the old build.rs records mainnet hash f18e…dee5. A later shared-identity multisig array fix is not evidence of a V1 upgrade; V2 has its own omnilock plugin. Retain V1 auth/deployments; exact source of testnet/Force Bridge binaries remains unproven."
     }
   ]
 }

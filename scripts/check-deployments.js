@@ -10,9 +10,15 @@ const C = require('../lib/contracts.js'), CKB = C.loadAll(), D = require('./depl
 const args = process.argv.slice(2), opt = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
 const WRITE = args.includes('--write'), ONLY = opt('--only') ? opt('--only').split(',') : null, REPORT = opt('--report');
 const NETS = ['mainnet', 'testnet'];
+const S = require('./source-drift-lib.js');
+const ghCache = new Map();
 function gh(p) {
-  try { return JSON.parse(cp.execFileSync('gh', ['api', p], { stdio: ['ignore', 'pipe', 'ignore'] }).toString()); }
-  catch (e) { try { return JSON.parse(cp.execFileSync('curl', ['-sfL', 'https://api.github.com/' + p]).toString()); } catch (e2) { return null; } }
+  if (ghCache.has(p)) return ghCache.get(p);
+  const result = ghRead(p); ghCache.set(p, result); return result;
+}
+function ghRead(p) {
+  try { return JSON.parse(cp.execFileSync('gh', ['api', p], { stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 32 * 1024 * 1024, timeout: 60000 }).toString()); }
+  catch (e) { try { return JSON.parse(cp.execFileSync('curl', ['-sfL', 'https://api.github.com/' + p], { maxBuffer: 32 * 1024 * 1024, timeout: 60000 }).toString()); } catch (e2) { return null; } }
 }
 const repoOf = url => url && url.replace(/^https:\/\/github.com\//, '').replace(/\.git$/, '');
 // verified = deployed data hash equals the blake2b of a binary in the repo at the recorded commit, or is listed in a checksum / deployment file there
@@ -68,15 +74,26 @@ async function resolveAll(c, meta) {
       if (JSON.stringify(old.type_script) !== JSON.stringify(cur.type_script)) drift.push(`${tag}: type_id script changed`);
     }
     const s = meta.source || {};
-    if (s.repo && s.commit) { const head = gh(`repos/${repoOf(s.repo)}/commits/HEAD`);
-      if (head && head.sha && head.sha !== s.commit) { const cmp = gh(`repos/${repoOf(s.repo)}/compare/${s.commit}...${head.sha}`);
-        const touched = cmp && cmp.files ? cmp.files.filter(f => (s.paths || []).some(p => f.filename.startsWith(p))).map(f => f.filename) : null;
-        lines.push(`- ${c.id}: upstream ${repoOf(s.repo)} is ${cmp ? cmp.ahead_by : '?'} commit(s) ahead of recorded ${s.commit.slice(0, 8)}` + (touched && touched.length ? ` — **source paths changed**: ${touched.join(', ')}` : ''));
-        if (touched && touched.length) drift.push(`${c.id}: outdated — upstream changed ${touched.join(', ')} since ${s.commit.slice(0, 8)}`); } }
+    if (s.repo && s.commit) {
+      const reviewErrors = S.validateReview(s);
+      reviewErrors.forEach(e => drift.push(`${c.id}: invalid upstream review: ${e}`));
+      const baseline = S.baseline(s), head = gh(`repos/${repoOf(s.repo)}/commits/HEAD`);
+      if (!head || !head.sha) drift.push(`${c.id}: upstream HEAD could not be read (not verified)`);
+      else if (head.sha !== baseline) {
+        const cmp = gh(`repos/${repoOf(s.repo)}/compare/${baseline}...${head.sha}`);
+        const result = S.changedPaths(s.paths, cmp);
+        if (result.error) drift.push(`${c.id}: ${result.error} (not verified)`);
+        else {
+          lines.push(`- ${c.id}: upstream ${repoOf(s.repo)} is ${cmp.ahead_by} commit(s) ahead of ${baseline === s.commit ? 'recorded' : 'reviewed'} ${baseline.slice(0, 8)}` + (result.paths.length ? ` — **source paths changed**: ${result.paths.join(', ')}` : ' — tracked source paths unchanged'));
+          if (result.paths.length) drift.push(`${c.id}: outdated — upstream changed ${result.paths.join(', ')} since ${baseline.slice(0, 8)}`);
+        }
+      }
+      if (!reviewErrors.length && s.upstream_review) lines.push(`- ${c.id}: retained deployment source ${s.commit}; upstream reviewed through ${baseline}. ${s.upstream_review.reason.en} Evidence: ${s.upstream_review.evidence.join(', ')}`);
+    }
     console.log(`${c.id}: checked ${now.length}`);
   }
   if (WRITE) return;
-  const md = `# Deployment / source drift report\n\n${drift.length ? '## Drift\n' + drift.map(d => '- ' + d).join('\n') : 'No on-chain drift.'}\n\n## Upstream\n${lines.join('\n') || 'All recorded commits are upstream HEAD.'}\n`;
+  const md = `# Deployment / source drift report\n\n${drift.length ? '## Drift\n' + drift.map(d => '- ' + d).join('\n') : 'No deployment or unreviewed source drift detected.'}\n\n## Upstream\n${lines.join('\n') || 'All recorded commits are upstream HEAD.'}\n`;
   if (REPORT) fs.writeFileSync(REPORT, md); console.log(md);
   process.exit(drift.length ? 1 : 0);
 })();
