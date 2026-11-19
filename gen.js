@@ -5,7 +5,7 @@
 // 任意文本字段可为字符串（语言无关）或 {"zh": "...", "en": "..."}。
 'use strict';
 const fs = require('fs'), path = require('path');
-const META = require('./lib/meta.js');
+const META = require('./lib/meta.js'), AG = require('./lib/agent.js');
 let _mh; const MH = () => _mh || (_mh = require('./lib/meta-html.js')(T, esc));
 const pluginOf = id => { try { return require('./lib/contracts.js').loadAll().PLUGINS.find(p => p.id === id); } catch (e) { return null; } };
 
@@ -28,8 +28,15 @@ const UI = {
 };
 // shared inline icons (paths closed explicitly: scripts/check.js balances every tag)
 const ARROW = '<div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></div>';
-// pointers to the agent-readable files written by lib/agent.js (--all only): a visible line under the title + <link rel=alternate>
-const agentLine = files => `<p class="agent">${T({ zh: '给 AI agent：', en: 'For AI agents:' }, esc)} ${files.map(f => `<a href="${f}">${f}</a>`).join(' · ')}</p>`;
+// pointers to the agent-readable files written by lib/agent.js (--all only): a line under the title with the files and a
+// "copy for AI" button (a prompt with absolute links, in the page language, to paste into any LLM) + <link rel=alternate>
+const attr = s => esc(s).replace(/"/g, '&quot;');
+const agentLine = (files, ask) => `<p class="agent">${T({ zh: '给 AI agent：', en: 'For AI agents:' }, esc)} ${files.map(f => `<a href="${f}">${f}</a>`).join(' · ')}<button class="copyl agent-cp" type="button" data-zh="${attr(ask.zh)}" data-en="${attr(ask.en)}">${T({ zh: '复制给 AI', en: 'Copy for AI' }, esc)}<span class="okm"> ✓</span></button></p>`;
+const ASK = {
+  index: { zh: `先阅读 ${AG.SITE}llms.txt（CKB 合约知识库：主网 / 测试网有哪些合约、怎么用、怎么解析交易），再回答我的问题：`, en: `First read ${AG.SITE}llms.txt (a CKB contract knowledge base: which contracts are on mainnet / testnet, how to use them, how to decode a transaction), then answer my question: ` },
+  tx: { zh: `先阅读 ${AG.SITE}llms.txt（CKB 合约知识库），按其中的方法用 decode-tx.js 解析这笔交易并解释它做了什么：`, en: `First read ${AG.SITE}llms.txt (a CKB contract knowledge base), then decode this transaction with its decode-tx.js and explain what it does: ` },
+  contract: id => ({ zh: `先阅读 ${AG.SITE}${id}.md（CKB 合约 ${id} 的文档：部署、用法、约束与错误码；全部合约见 ${AG.SITE}llms.txt），再回答我的问题：`, en: `First read ${AG.SITE}${id}.md (docs for the CKB contract ${id}: deployments, how to use it, constraints and error codes; all contracts: ${AG.SITE}llms.txt), then answer my question: ` }),
+};
 const mdLink = f => `<link rel="alternate" type="text/markdown" href="${f}" title="Markdown for AI agents">`;
 
 function loadSpec(file) {
@@ -131,7 +138,7 @@ ${t.limits.map(l => `<li><b>${T(l.field, esc)}</b><span class="lc">${T(l.cond)}$
   const title = spec.title || UI.defTitle;
   const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
   return tpl.replace('{{DOC_TITLE}}', esc(plain(title, 'zh') === plain(title, 'en') ? plain(title, 'en') : plain(title, 'zh') + ' / ' + plain(title, 'en')))
-    .replace('{{HEAD}}', id ? mdLink(id + '.md') : '').replace('{{AGENT}}', id ? agentLine([id + '.md', 'llms.txt']) : '')
+    .replace('{{HEAD}}', id ? mdLink(id + '.md') : '').replace('{{AGENT}}', id ? agentLine([id + '.md', 'llms.txt'], ASK.contract(id)) : '')
     .replace('{{CRUMB}}', () => crumb)
     .replace('{{TITLE}}', T(title, esc))
     .replace('{{SUBTITLE}}', T(spec.subtitle) + head)
@@ -167,7 +174,7 @@ function buildTx(outFile) {
 <p class="small dnote">${T({ zh: '按 lock / type script hash 分组；签名不校验（标记 ○）；数据仅从你选择的 RPC 读取。', en: 'Grouped by lock / type script hash; signatures are NOT verified (marked ○); data is read only from the RPC you choose.' })}</p>
 <details class="more"><summary>${T({ zh: '已加载插件', en: 'Loaded plugins' }, esc)}<span class="cnt">${ids.length}</span></summary><p class="plg">${ids.map(x => `<code>${esc(x)}</code>`).join(' ')}</p></details></div>
 <div id="result"></div>`;
-  const html = tpl.replace('{{DOC_TITLE}}', esc(UI.txTitle.zh + ' / ' + UI.txTitle.en)).replace('{{HEAD}}', '').replace('{{AGENT}}', agentLine(['decode-tx.js', 'llms.txt'])).replace('{{CRUMB}}', '')
+  const html = tpl.replace('{{DOC_TITLE}}', esc(UI.txTitle.zh + ' / ' + UI.txTitle.en)).replace('{{HEAD}}', '').replace('{{AGENT}}', agentLine(['decode-tx.js', 'llms.txt'], ASK.tx)).replace('{{CRUMB}}', '')
     .replace('{{TITLE}}', T(UI.txTitle, esc)).replace('{{SUBTITLE}}', T({ zh: '输入交易 hash，解码为 cell 流转卡片并做无签名约束检查', en: 'Enter a tx hash to decode it into cell-flow cards with signature-free constraint checks' }))
     .replace('{{CARDS}}', form).replace('{{FOOTER}}', '')
     .replace('</style>', () => css.replace('<style>', '').replace('</style>', '') + '</style>');
@@ -180,7 +187,7 @@ function main() {
   const a = process.argv.slice(2);
   if (!a.length) { console.error('Usage / 用法: node gen.js <spec.json|yaml> [out.html]\n                 node gen.js --all [outDir=out]   (discovers contracts/*/spec.json)'); process.exit(1); }
   if (a[0] === '--all') {
-    const od = a[1] || 'out', items = [], specs = {}, AG = require('./lib/agent.js');
+    const od = a[1] || 'out', items = [], specs = {};
     for (const c of require('./lib/contracts.js').list()) if (c.spec) items.push([c.id, (specs[c.id] = build(c.spec, path.join(od, c.id + '.html'), c.id)).title || c.id]);
     buildTx(path.join(od, 'tx.html'));
     items.push(['tx', UI.txTitle]);
@@ -249,7 +256,7 @@ document.addEventListener('keydown',function(e){var t=e.target;if(e.key==='/'&&!
 var cp=document.getElementById('copylink');if(cp)cp.onclick=function(){var url=location.href,done=function(){cp.setAttribute('data-ok','1');setTimeout(function(){cp.removeAttribute('data-ok')},1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done,function(){prompt('URL',url)});else prompt('URL',url)};
 fromURL()})();</script>`;
     fs.writeFileSync(path.join(od, 'index.html'), tpl.replace('{{DOC_TITLE}}', esc(UI.indexTitle.zh + ' / ' + UI.indexTitle.en))
-      .replace('{{HEAD}}', mdLink('llms.txt')).replace('{{AGENT}}', agentLine(['llms.txt', 'contracts.json', 'decode-tx.js']))
+      .replace('{{HEAD}}', mdLink('llms.txt')).replace('{{AGENT}}', agentLine(['llms.txt', 'contracts.json', 'decode-tx.js'], ASK.index))
       .replace('{{CRUMB}}', '').replace('{{TITLE}}', T(UI.indexTitle, esc)).replace('{{SUBTITLE}}', () => `<p class="lead">${T(UI.indexSub, esc)}</p>`)
       .replace('{{CARDS}}', () => list).replace('{{FOOTER}}', ''));
     AG.write(od, specs);

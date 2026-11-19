@@ -91,7 +91,7 @@ node scripts/check.js                 # 检查标签闭合 + 双语覆盖（在�
 | `contracts.json` | 全部合约与部署（JSON） |
 | `decode-tx.js` | 单文件解码器（`lib/ckb.js` + 全部插件 + `scripts/decode-tx.js`，零依赖，Node ≥ 18）：`node decode-tx.js 0x… [--testnet] [--json]` 列出每个 cell、每个脚本组对应的合约与文档链接、解析出的字段和检查结果 ✓/✗/○ |
 
-每个 HTML 页面标题下有“给 AI agent”链接，`<head>` 里有 `<link rel="alternate" type="text/markdown">`，agent 拿到 HTML 链接也能找到 Markdown 版。
+每个 HTML 页面标题下有“给 AI agent”一行：上述文件的链接 +「复制给 AI」按钮（复制一段带绝对链接、跟随页面语言的提示词，粘贴给任意 LLM 后接着写问题或交易 hash）。`<head>` 里还有 `<link rel="alternate" type="text/markdown">`，agent 拿到 HTML 链接也能找到 Markdown 版。
 
 ### 一句话让 AI 生成
 
@@ -160,7 +160,7 @@ Besides the HTML, `node gen.js --all` writes agent-readable files (English Markd
 | `contracts.json` | Every contract and deployment as JSON |
 | `decode-tx.js` | Single-file decoder (`lib/ckb.js` + all plugins + `scripts/decode-tx.js`, zero dependencies, Node ≥ 18): `node decode-tx.js 0x… [--testnet] [--json]` lists every cell, names the contract behind each script group with its doc link, and prints parsed fields and ✓/✗/○ checks |
 
-Every HTML page links them under its title ("For AI agents") and in `<head>` via `<link rel="alternate" type="text/markdown">`, so an agent handed an HTML link finds the Markdown.
+Every HTML page has a "For AI agents" line under its title: links to these files plus a "Copy for AI" button that copies a prompt with absolute links in the page language (paste it into any LLM, then add your question or tx hash). `<head>` also has `<link rel="alternate" type="text/markdown">`, so an agent handed an HTML link finds the Markdown.
 
 ### One sentence to your AI agent (generate a page)
 
