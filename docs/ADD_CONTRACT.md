@@ -151,3 +151,20 @@ Never invent constants or error codes; put uncertain items in note marked "unver
 `node scripts/check-deployments.js` 重新读取链上 cell，在 code cell 移动、type_id 脚本变化、数据哈希变化（合约升级）或上游源码路径在记录的 commit 之后有改动时报告；`.github/workflows/deployments.yml` 每周运行，发现漂移时开 issue。
 
 `node scripts/check-deployments.js` re-reads the on-chain cells and reports when a code cell moved, the type_id script changed, the data hash changed (an upgrade), or upstream source paths changed after the recorded commit. `.github/workflows/deployments.yml` runs it weekly and opens an issue on drift.
+
+### 已审阅的历史版本差异 / Reviewed historical-version differences
+
+`source.commit` always names the source actually described by the plugin, not upstream HEAD.
+When official deployment evidence requires retaining that version, an optional
+`source.upstream_review` records `repo`, `base_commit` (= `source.commit`), the
+reviewed upstream `commit`, the exact tracked `paths`, `disposition` =
+`retain-deployed-version`, bilingual `reason`, evidence URLs and `reviewed_at`.
+This is a bounded review, not binary verification or a claim that HEAD is deployed.
+The drift checker still checks every deployment against chain, displays the retained
+pin and rationale, and flags subsequent source-path changes after the reviewed commit.
+Changing repo/pin/paths invalidates the review. Failed/diverged/truncated upstream
+comparisons fail closed. Unit tests: `node --test tests/source-drift.test.js`.
+
+源码确实属于历史部署时，不应为了消除告警而改成 HEAD；可用上述字段记录有证据的、
+仅截至指定提交的差异审阅。检查器仍核对链上部署，显示保留版本及原因；后续源码变化
+继续告警，比较失败也告警。这不代表已复现编译，也不代表新源码已部署。
